@@ -104,7 +104,6 @@ Não foi localizada, neste levantamento, uma resolução do Conselho Federal de 
 
 ## Limitações deste levantamento
 
-- Feito por pesquisa (não há acesso a advogado nesta etapa) — trate como ponto de partida, não como fonte definitiva.
 - Valores e prazo médio do processo de certificação da SBIS não foram confirmados.
 - Detalhes das condições de dispensa do encarregado (Resolução CD/ANPD nº 2/2022) não foram aprofundados.
 - Normas municipais/estaduais de vigilância sanitária, quando aplicáveis, não foram cobertas.

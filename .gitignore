@@ -1,0 +1,14 @@
+# Genérico — nenhuma stack foi definida ainda (ver ROADMAP.md).
+# Entradas específicas de linguagem/framework serão adicionadas quando a tecnologia for escolhida.
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editores/IDEs
+.vscode/
+.idea/
+
+# Logs e segredos locais
+*.log
+.env

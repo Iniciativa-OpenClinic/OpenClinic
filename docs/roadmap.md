@@ -14,9 +14,7 @@ Primeiras pessoas desenvolvedoras e profissionais de saúde digital reunidas em 
 
 Decidir coletivamente as escolhas de tecnologia que o [`prd.md`](./prd.md) deliberadamente deixou em aberto. Cada decisão fica registrada em [`decisions/`](./decisions/), com contexto, consequências e alternativas descartadas.
 
-**Fechado:** padrão de dados ([0001](./decisions/0001-fhir-como-padrao-de-dados.md)), banco principal ([0002](./decisions/0002-postgresql-como-banco-principal.md)), unidade de implantação ([0003](./decisions/0003-docker-como-unidade-de-implantacao.md)), prioridade de API sobre interface ([0004](./decisions/0004-api-antes-de-interface.md)) e ambiente de homologação ([0007](./decisions/0007-ambiente-de-homologacao.md)).
-
-**Em aberto:** linguagem do backend ([0005](./decisions/0005-linguagem-do-backend.md)) e camada de cache e banco de apoio ([0006](./decisions/0006-camada-de-cache-e-banco-de-apoio.md)).
+O que já foi decidido e o que segue em aberto está no [índice de decisões](./decisions/) — esta fase termina quando não restar nenhuma em aberto.
 
 **Também em andamento:** desenho do esquema PostgreSQL em conformidade com FHIR, acompanhado de dados fictícios, para permitir construir e testar a API antes de qualquer dado real existir.
 

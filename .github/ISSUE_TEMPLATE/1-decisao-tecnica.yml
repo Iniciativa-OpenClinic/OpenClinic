@@ -1,0 +1,62 @@
+name: 🏛️ Proposta de decisão técnica
+description: Propor uma decisão de arquitetura, ou argumentar numa que já está em aberto
+labels: ["decisão"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de abrir, veja o [registro de decisões](https://github.com/iniciativa-openclinic/openclinic/blob/main/docs/decisions/).
+
+        Se a sua contribuição é um argumento sobre uma decisão **já em aberto**, comente diretamente na Issue dela em vez de abrir uma nova.
+
+  - type: input
+    id: assunto
+    attributes:
+      label: Assunto da decisão
+      description: Em uma linha, o que precisa ser decidido.
+      placeholder: "Ex.: qual biblioteca de validação de recursos FHIR adotar"
+    validations:
+      required: true
+
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Por que isso precisa ser decidido agora? O que acontece se não for decidido?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas
+      description: |
+        Quais caminhos existem, e o que cada um custa. Uma proposta com uma alternativa só normalmente é uma decisão já tomada procurando aprovação — vale listar ao menos as que você descartou e por quê.
+    validations:
+      required: true
+
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Critérios que deveriam pesar
+      description: |
+        O que deve orientar a escolha? Ex.: tamanho da base de desenvolvedores, consumo de recursos, segurança de tipos, conformidade regulatória, reversibilidade.
+    validations:
+      required: true
+
+  - type: textarea
+    id: posicao
+    attributes:
+      label: Sua posição (opcional)
+      description: |
+        Se você defende uma das alternativas, diga qual e por quê. Argumentos entram no registro permanente do projeto **com o nome de quem os assina**, e teses vencidas não são apagadas.
+
+  - type: checkboxes
+    id: confirmacoes
+    attributes:
+      label: Confirmações
+      options:
+        - label: Li o [registro de decisões](https://github.com/iniciativa-openclinic/openclinic/blob/main/docs/decisions/) e esta proposta não duplica uma decisão já registrada.
+          required: true
+        - label: Concordo que minha contribuição seja distribuída sob os [termos de licenciamento do projeto](https://github.com/iniciativa-openclinic/openclinic/blob/main/docs/licensing.md).
+          required: true

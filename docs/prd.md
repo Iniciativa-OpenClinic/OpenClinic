@@ -1,12 +1,15 @@
 # Requisitos de Produto (conceitual, pré-técnico)
 
-*v0.1 — documento vivo.*
+*v0.2 — documento vivo.*
+
+> [!NOTE]
+> Este documento foi escrito **antes** da primeira reunião técnica, e deliberadamente deixou as escolhas de tecnologia em aberto. Essa reunião já aconteceu: as decisões de stack estão em [`decisions/`](./decisions/), e o que segue abaixo continua valendo como a descrição do **quê** e do **porquê** que aquelas decisões precisam atender.
 
 ## O que este documento é — e o que não é
 
-Este é um PRD (Product Requirements Document) **conceitual**, escrito antes de qualquer decisão técnica. Ele descreve **o quê** o OpenClinic precisa fazer e **por quê**, não **como** — arquitetura, banco de dados, linguagem de programação e demais escolhas de stack ficam para a reunião técnica com os desenvolvedores da comunidade, prevista no [`ROADMAP.md`](./ROADMAP.md). Este documento existe para que essa conversa técnica comece com um objetivo compartilhado, não para substituí-la.
+Este é um PRD (Product Requirements Document) **conceitual**, escrito antes de qualquer decisão técnica. Ele descreve **o quê** o OpenClinic precisa fazer e **por quê**, não **como** — arquitetura, banco de dados, linguagem de programação e demais escolhas de stack couberam à reunião técnica com os desenvolvedores da comunidade e estão registradas em [`decisions/`](./decisions/). Este documento existe para que aquela conversa técnica começasse com um objetivo compartilhado, não para substituí-la.
 
-Para o contexto de missão e princípios, veja [`vision.md`](./vision.md). Para o mapeamento regulatório que fundamenta vários requisitos abaixo, veja [`COMPLIANCE.md`](./COMPLIANCE.md).
+Para o contexto de missão e princípios, veja [`vision.md`](./vision.md). Para o mapeamento regulatório que fundamenta vários requisitos abaixo, veja [`compliance.md`](./compliance.md).
 
 ## Personas de alto nível
 
@@ -17,7 +20,7 @@ Para o contexto de missão e princípios, veja [`vision.md`](./vision.md). Para 
 ## Pilares funcionais (nível de conceito)
 
 ### Registro de prontuário
-O núcleo do sistema: armazenar e organizar o histórico clínico do paciente de forma estruturada, íntegra e auditável — sem tomar decisões clínicas por conta própria (veja "núcleo neutro" em [`vision.md`](./vision.md) e em [`COMPLIANCE.md`](./COMPLIANCE.md)).
+O núcleo do sistema: armazenar e organizar o histórico clínico do paciente de forma estruturada, íntegra e auditável — sem tomar decisões clínicas por conta própria (veja "núcleo neutro" em [`vision.md`](./vision.md) e em [`compliance.md`](./compliance.md)).
 
 ### API aberta
 Toda funcionalidade relevante do sistema deve ser acessível também por API, não só pela interface do usuário — é assim que o OpenClinic evita se tornar mais um ecossistema fechado. Padrão de referência pretendido: **HL7 FHIR**.
@@ -37,19 +40,19 @@ O **catálogo concreto de eventos** (quais acontecimentos geram notificação) a
 
 ## Requisitos não-funcionais
 
-Derivados do mapeamento em [`COMPLIANCE.md`](./COMPLIANCE.md) — não são escolhas de tecnologia, são capacidades que o sistema precisa ter, para que uma clínica que o usa consiga cumprir suas próprias obrigações legais:
+Derivados do mapeamento em [`compliance.md`](./compliance.md) — não são escolhas de tecnologia, são capacidades que o sistema precisa ter, para que uma clínica que o usa consiga cumprir suas próprias obrigações legais:
 
 - **Trilha de auditoria imutável**: registro de quem acessou ou alterou o quê, sem possibilidade de remoção ou edição desse registro.
 - **Controle de acesso por perfil**: no mínimo, separação entre perfil administrativo (sem acesso a dado clínico), perfil de profissional de saúde e perfil de gestão do sistema.
 - **Suporte a assinatura digital**: para documentos e registros que precisem de validade jurídica plena sem papel.
-- **Portabilidade de dados**: exportação completa dos dados de um paciente, a pedido, em formato utilizável — é o que sustenta o compromisso de "o software não aprisinga ninguém" declarado na visão do projeto.
+- **Portabilidade de dados**: exportação completa dos dados de um paciente, a pedido, em formato utilizável — é o que sustenta o compromisso de "o software não aprisiona ninguém" declarado na visão do projeto.
 - **Retenção de dados**: suporte à guarda mínima de 20 anos exigida para prontuários.
 
 ## Fora de escopo deste documento
 
 - Escolha de linguagem de programação, banco de dados, framework ou infraestrutura de hospedagem.
 - Arquitetura de sistema (monolito, microsserviços, etc.).
-- Cronograma de desenvolvimento — veja [`ROADMAP.md`](./ROADMAP.md) para as fases planejadas.
+- Cronograma de desenvolvimento — veja [`roadmap.md`](./roadmap.md) para as fases planejadas.
 - Catálogo definitivo de eventos de webhook.
 - Funcionalidades de especialidades além da médica (odontologia etc.) — veja a filosofia de expansão em [`vision.md`](./vision.md).
 

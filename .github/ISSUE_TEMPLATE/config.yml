@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Grupo de WhatsApp da comunidade
+    url: https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7
+    about: Conversa em tempo real. Decisões do projeto continuam sendo registradas aqui no GitHub.
+  - name: 🔐 Reportar uma vulnerabilidade de segurança
+    url: https://github.com/iniciativa-openclinic/openclinic/security/policy
+    about: Não abra Issue pública para vulnerabilidades. Veja a política de segurança.

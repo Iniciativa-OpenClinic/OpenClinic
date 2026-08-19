@@ -59,7 +59,7 @@ Dois níveis de garantia de segurança:
 
 O certificado tem validade de 2 anos. O custo varia por faixa de faturamento da empresa solicitante — os valores exatos não foram confirmados neste levantamento.
 
-**Posição do OpenClinic**: a Iniciativa pretende buscar a certificação de S-RES da SBIS para a **distribuição oficial** do projeto quando houver um produto maduro o suficiente para ser auditado. A certificação vale para a versão específica auditada — forks modificados por terceiros não a herdam automaticamente (ver [`LICENSING.md`](./LICENSING.md)).
+**Posição do OpenClinic**: a Iniciativa pretende buscar a certificação de S-RES da SBIS para a **distribuição oficial** do projeto quando houver um produto maduro o suficiente para ser auditado. A certificação vale para a versão específica auditada — forks modificados por terceiros não a herdam automaticamente (ver [`licensing.md`](./licensing.md)).
 
 ## ANVISA — Software como Dispositivo Médico (SaMD)
 

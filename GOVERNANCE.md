@@ -18,6 +18,10 @@ O projeto organiza-se em duas frentes:
 
 As frentes não são compartimentos estanques: uma mesma pessoa pode atuar nas duas, e decisões de peso são discutidas em conjunto.
 
+**A frente técnica não se subdivide por especialidade.** A proposta inicial de criar subgrupos — infraestrutura, banco de dados, e assim por diante — foi revista já na primeira reunião. O argumento que prevaleceu: segmentar o desenvolvimento em times por área força comunicação entre as partes e leva, na prática, a definir interfaces internas desnecessárias, acabando por segmentar o próprio software por um motivo que é apenas organizacional. O projeto não tem escala que justifique especialização rígida.
+
+Se a subdivisão vier, virá de forma natural conforme o trabalho exigir — não por desenho antecipado.
+
 **Este repositório não publica a composição nominal das frentes.** Duas razões: a equipe está em formação e uma lista desatualizada informa mal; e ninguém tem seu nome publicado num repositório público sem ter dito que quer. Quem participa e deseja aparecer no registro do projeto o faz assinando suas próprias contribuições — em Issues, Pull Requests e no registro de decisões.
 
 Quando a composição estabilizar e houver consentimento de cada pessoa, um documento de mantenedores será publicado.

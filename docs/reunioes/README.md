@@ -12,6 +12,7 @@ Da mesma forma, **argumentos não são atribuídos nominalmente** nestes registr
 
 ## Reuniões registradas
 
-| Data | Assunto | Decisões geradas |
+| Data | Assunto | O que produziu |
 | :--- | :--- | :--- |
+| [12/08/2026](./2026-08-12-primeira-reuniao.md) | Primeira reunião: comunidade, frentes de trabalho e requisitos | Organização das frentes e o primeiro levantamento de requisitos, incorporado ao [`prd.md`](../prd.md) |
 | [19/08/2026](./2026-08-19-stack-tecnico.md) | Stack técnico | [0001](../decisions/0001-fhir-como-padrao-de-dados.md), [0002](../decisions/0002-postgresql-como-banco-principal.md), [0003](../decisions/0003-docker-como-unidade-de-implantacao.md), [0004](../decisions/0004-api-antes-de-interface.md), [0007](../decisions/0007-ambiente-de-homologacao.md) — e abertura de [0005](../decisions/0005-linguagem-do-backend.md) e [0006](../decisions/0006-camada-de-cache-e-banco-de-apoio.md) |

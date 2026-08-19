@@ -8,7 +8,7 @@ Definição da missão, princípios, licenciamento e mapeamento regulatório do 
 
 ## Fase 1 — Formação da comunidade ✅
 
-Primeiras pessoas desenvolvedoras e profissionais de saúde digital reunidas em torno do projeto, via GitHub e o grupo de WhatsApp (veja [`CONTRIBUTING.md`](../CONTRIBUTING.md)).
+Primeiras pessoas desenvolvedoras e profissionais de saúde digital reunidas em torno do projeto, via GitHub e o grupo de WhatsApp (veja [`CONTRIBUTING.md`](../CONTRIBUTING.md)). A [reunião de 12/08](./reunioes/2026-08-12-primeira-reuniao.md) organizou as frentes de trabalho e produziu o primeiro levantamento de requisitos do produto.
 
 ## Fase 2 — Reuniões técnicas e definição de stack 🔄 *(atual)*
 

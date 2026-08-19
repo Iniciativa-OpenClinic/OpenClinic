@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="logo.png" alt="OpenClinic" width="180">
+<img src="docs/assets/logo.png" alt="OpenClinic" width="180">
 
 # OpenClinic
 

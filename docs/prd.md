@@ -78,4 +78,4 @@ Levantados em reunião com justificativa que o mapeamento regulatório do projet
 - Catálogo definitivo de eventos de webhook.
 - Funcionalidades de especialidades além da médica (odontologia etc.) — veja a filosofia de expansão em [`vision.md`](./vision.md).
 
-Essas decisões pertencem à reunião técnica com a comunidade de desenvolvedores, não a este documento.
+Essas escolhas couberam às reuniões técnicas e estão registradas em [`decisions/`](./decisions/), não neste documento.

@@ -16,6 +16,8 @@ A ideia é simples: quem chega ao projeto seis meses depois consegue entender **
 | [0006](./0006-camada-de-cache-e-banco-de-apoio.md) | Camada de cache e banco de apoio | **Em aberto** |
 | [0007](./0007-ambiente-de-homologacao.md) | Ambiente de homologação | Aceita |
 
+Esta tabela e a do [`README` do projeto](../../README.md) são os dois únicos lugares que declaram situação de decisão. Ao mudar a situação de uma, atualize as duas — o resto da documentação aponta para cá em vez de repetir.
+
 ## Situações possíveis
 
 - **Proposta** — está escrita, mas ainda não foi decidida. O documento existe justamente para organizar o debate antes dele acontecer.

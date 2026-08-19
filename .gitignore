@@ -1,14 +1,28 @@
-# Genérico — nenhuma stack foi definida ainda (ver ROADMAP.md).
-# Entradas específicas de linguagem/framework serão adicionadas quando a tecnologia for escolhida.
-
 # Sistema operacional
 .DS_Store
 Thumbs.db
 
-# Editores/IDEs
+# Editores e IDEs
 .vscode/
 .idea/
+*.swp
 
-# Logs e segredos locais
-*.log
+# Segredos e configuração local
+# Nunca versione credenciais. Arquivos de exemplo (.env.example) são versionados; os reais, não.
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+
+# Dados locais de desenvolvimento
+# O projeto trabalha exclusivamente com dados fictícios (ver docs/decisions/0007).
+# Ainda assim, dumps de banco não pertencem ao repositório.
+*.sql.gz
+*.dump
+
+# Entradas específicas de linguagem e framework serão adicionadas quando a
+# decisão docs/decisions/0005-linguagem-do-backend.md for fechada.

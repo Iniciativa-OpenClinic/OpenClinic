@@ -1,0 +1,37 @@
+name: 💬 Dúvida ou discussão
+description: Perguntar, criticar um documento, ou propor algo que ainda não é uma decisão técnica
+labels: ["discussão"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Todo tipo de contribuição é bem-vinda nesta fase — inclusive discordar do que está escrito nos documentos do projeto.
+
+  - type: textarea
+    id: assunto
+    attributes:
+      label: Sobre o que é
+      description: Descreva sua dúvida, crítica ou ideia.
+    validations:
+      required: true
+
+  - type: input
+    id: documento
+    attributes:
+      label: Documento relacionado (opcional)
+      description: Se sua contribuição é sobre um documento específico, qual?
+      placeholder: "Ex.: docs/vision.md, docs/compliance.md"
+
+  - type: dropdown
+    id: experiencia
+    attributes:
+      label: Você tem experiência em alguma destas áreas? (opcional)
+      description: Ajuda a saber com quem estamos falando. Nenhuma delas é requisito para contribuir.
+      multiple: true
+      options:
+        - HL7 FHIR e interoperabilidade em saúde
+        - Saúde digital / prontuário eletrônico
+        - Segurança da informação
+        - Regulação em saúde (LGPD, ANVISA, SBIS, RNDS, TISS)
+        - Desenvolvimento de software
+        - Nenhuma das anteriores

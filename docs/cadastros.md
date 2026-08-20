@@ -217,7 +217,7 @@ Fundação da fonte pagadora — a V1 cadastra, não fatura. O pagador **Particu
 | Pagador | referência (Particular ou Plano) | Sim | |
 | Unidade | referência (Unidade) | Não | Ausente = vale para todas |
 | Vigência | estruturado | Sim | Início e fim; preço novo abre período novo |
-| Itens | lista de estruturado | Sim | Procedimento + preço |
+| Itens | lista de estruturado | Sim | Item (procedimento **ou** produto) + preço. Produto entra para os extras cobráveis do plano terapêutico |
 
 ---
 
@@ -327,6 +327,7 @@ O orçamento é registro operacional (itens com quantidade, procedimentos, pagad
 | Validade | número | Sim | Dias até expirar; alimenta o funil |
 | Desconto | percentual ou monetário | Não | Limitado pela alçada do perfil de quem concede — permissão, não campo livre |
 | Fonte pagadora | referência (Particular ou Plano) | Sim | Na V1, sempre Particular |
+| Origem | código (fixo do sistema) | Sim | Recepção ou plano terapêutico; quando plano, referencia o [plano](#plano-terapêutico) que o gerou |
 | Observações | texto longo | Não | |
 
 ---
@@ -461,3 +462,51 @@ O paciente sem alergias conhecidas tem o registro explícito **"nega alergias"**
 | Queixa | Descrição + código CIAP-2 | [`SBIS ECF.07.14`](./conformidade-sbis.md) |
 | Registro clínico de óbito | Data, causa (CID-10), profissional | Reflete a data administrativa do cadastro [`SBIS ECF.07.32`](./conformidade-sbis.md) |
 | Agravo de notificação compulsória | Agravo (da lista parametrizada) + atendimento | Alimenta o relatório de notificação [`SBIS ECF.19.01`](./conformidade-sbis.md) |
+
+---
+
+## Plano terapêutico
+
+Documento clínico do Prontuário: o profissional prescreve procedimentos com cronograma, assina, e o sistema gera o orçamento correspondente. **Sem preço aqui** — preço e desconto vivem no orçamento. As regras (geração do orçamento, fila de marcação, nova versão, acerto financeiro manual) estão em [`modulos.md`](./modulos.md#prontuário).
+
+### Plano
+
+| Campo | Tipo | Obrigatório | Observação |
+| :--- | :--- | :--- | :--- |
+| Atendimento de origem | referência (Atendimento) | Sim | Todo documento clínico nasce num Atendimento |
+| Profissional autor | referência (Profissional) | Sim | Quem assina; correções geram nova versão, só pelo autor |
+| Itens | lista de estruturado | Sim | Ver [Item do plano](#item-do-plano) |
+| Observações clínicas | texto longo | Não | Orientações à equipe; saem na impressão |
+| Situação | código (fixo do sistema) | Sim | Derivada dos fatos, nunca editada à mão: proposto, contratado, em andamento, concluído, não contratado, substituído, interrompido |
+| Orçamento gerado | referência (Orçamento) | Sim | Criado pelo sistema na finalização do plano |
+
+### Item do plano
+
+| Campo | Tipo | Obrigatório | Observação |
+| :--- | :--- | :--- | :--- |
+| Procedimento | referência (Procedimento) | Sim | Do Catálogo |
+| Número de sessões | número | Sim | |
+| Início | número + unidade (dias ou semanas) | Sim | Daqui a quanto tempo vem a primeira sessão; âncora padrão = aprovação do orçamento |
+| Intervalo entre sessões | número + unidade (dias ou semanas) | Condicional | Obrigatório com mais de uma sessão; pré-preenchido pelo intervalo mínimo do procedimento |
+
+### Sessão planejada
+
+Geradas pelo sistema a partir dos itens. São a fila "a marcar" da Agenda; consomem o mesmo saldo do pacote — o pacote diz quantas restam, a fila diz quando cada uma deve acontecer.
+
+| Campo | Tipo | Obrigatório | Observação |
+| :--- | :--- | :--- | :--- |
+| Item do plano | referência (Item do plano) | Sim | |
+| Número da sessão | número | Sim | 1..n dentro do item |
+| Data-alvo | data | Sim | Calculada (início + intervalos); a data marcada pode divergir — remarcar não altera o plano |
+| Produtos extras | lista de estruturado | Não | Produto + quantidade (em unidade de consumo) + marcação **"cobrar à parte"**. Cobrável vira item do orçamento; na sessão realizada, a baixa soma os extras ao kit |
+| Situação | código (fixo do sistema) | Sim | A marcar, marcada, realizada, cancelada |
+| Agendamento | referência (Agendamento) | Condicional | Preenchido quando a sessão é marcada |
+
+### Modelo de plano (protocolo)
+
+| Campo | Tipo | Obrigatório | Observação |
+| :--- | :--- | :--- | :--- |
+| Nome | texto | Sim | |
+| Dono | referência (Organização ou Profissional) | Sim | Protocolos da clínica e protocolos pessoais do profissional |
+| Itens e extras | estrutura do plano | Sim | Os mesmos campos do plano, sem paciente |
+| Ativo | booleano | Sim | |

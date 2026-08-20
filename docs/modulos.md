@@ -20,6 +20,7 @@ As tags no formato [`SBIS ECF.03.02`](./conformidade-sbis.md) apontam requisitos
 | **Terminologia** | Tabela de códigos oficiais (TUSS, CID-10, CBO…) tratada como **dado**, com versão e vigência — nunca fixada em código-fonte. |
 | **Vigência** | Período em que um valor vale (datas de início e fim). Preços, códigos, repasses e horários têm vigência: mudar um valor cria um período novo, sem apagar a história. |
 | **Pacote** | Venda de um conjunto de sessões de um procedimento. O pacote tem saldo; cada atendimento realizado consome uma sessão. |
+| **Plano terapêutico** | Documento clínico em que o profissional prescreve procedimentos com cronograma — quando começa, quantas sessões, com que intervalo — e produtos extras por sessão. Assinado, gera o orçamento correspondente; aprovado o orçamento, gera a fila de marcação na Agenda. |
 | **E1 / E2 / E3** | Estágios de maturidade da certificação SBIS. A V1 mira o Estágio 1 completo mais a certificação de segurança NGS2 — ver [`conformidade-sbis.md`](./conformidade-sbis.md). |
 
 ## A visão em camadas
@@ -250,7 +251,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 - **Operadora** — nome, registro ANS, CNPJ, contatos.
 - **Plano** — produto da operadora, com registro ANS do produto.
 - **Vínculo paciente–plano** — número de carteirinha e validade (vive no cadastro do paciente).
-- **Tabela de preços** — preços por pagador, com vigência; opcionalmente por unidade.
+- **Tabela de preços** — preços por pagador, com vigência; opcionalmente por unidade. Itens de procedimento **ou de produto** — produto entra para os extras cobráveis do plano terapêutico.
 - **Particular** — pagador padrão do sistema, existente em toda instalação.
 
 **Regras de negócio.**
@@ -278,6 +279,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 - **Disponibilidade** — janelas padrão de atendimento do recurso (dias, horários, duração de slot), **com vigência**: mudar o horário de um profissional cria um período novo e preserva a história.
 - **Bloqueio** — período indisponível, com motivo e recorrência opcional.
 - **Agendamento** — paciente + procedimento + profissional + unidade + data/hora (+ sala, quando o procedimento exige), com status, pagador e canal de origem. Campos em [`cadastros.md`](./cadastros.md#agendamento).
+- **Sessão planejada (fila "a marcar")** — sessão de plano terapêutico contratado e ainda sem horário: uma pendência com data-alvo, que o setor de agendamento converte em agendamento real. Estrutura em [`cadastros.md`](./cadastros.md#sessão-planejada).
 
 **Regras de negócio.**
 
@@ -286,6 +288,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 - Conflitos são checados nos dois recursos: um profissional não está em dois lugares, uma sala não recebe dois procedimentos.
 - Procedimento que exige sala só é agendado com sala alocada.
 - Cada agendamento registra o **canal de origem** (recepção, telefone, integração via API) — é a métrica de quanto cada canal e cada parceiro geram.
+- **Fila "a marcar"**: as sessões de plano contratado aparecem com data-alvo calculada (início + intervalos, ancorados na aprovação do orçamento). O agendamento confirma uma a uma, com checagem de conflito e a preferência do paciente — **nada entra na agenda sem confirmação humana**. Marcar vincula o agendamento à sessão e a retira da fila.
 - **Confirmação de agendamento fica fora do núcleo, de propósito**: lembretes e confirmação por mensagem são o primeiro caso de uso real da API e dos webhooks descritos no [`prd.md`](./prd.md). Parceiros constroem; o núcleo expõe agendamentos, instruções de preparo e recebe a mudança de status.
 
 **O que fica fora.** Envio de lembretes e confirmação (parceiros, via API); lista de espera; telemedicina.
@@ -305,6 +308,8 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 - **Modelos por especialidade** — templates de documentos, geridos pela clínica.
 - **Anexos** — arquivos vinculados ao atendimento ou ao paciente [`SBIS ECF.07.38`](./conformidade-sbis.md).
 - **Consentimentos** — TCLE emitido a partir do modelo do Catálogo e consentimentos do paciente sobre o uso dos seus dados, com status (autorizado, não autorizado, revogado) e anexo do termo assinado [`SBIS NGS1.11.05`](./conformidade-sbis.md).
+- **Plano terapêutico** — prescrição de procedimentos com cronograma: itens (procedimento, número de sessões, início, intervalo) e produtos extras por sessão. É documento clínico como os demais — ciclo de vida e assinatura incluídos. Estrutura em [`cadastros.md`](./cadastros.md#plano-terapêutico). Não confundir com a receita, que prescreve medicamentos.
+- **Modelo de plano (protocolo)** — plano sem paciente, reutilizável; a clínica mantém os seus e cada profissional os próprios.
 - **Resumo clínico** — listas estruturadas do paciente, mantidas a partir dos atendimentos: **alergias** (com o registro explícito "nega alergias") [`SBIS ECF.07.05`](./conformidade-sbis.md), **diagnósticos** [`SBIS ECF.07.15`](./conformidade-sbis.md) e **medicações em uso** [`SBIS ECF.07.52`](./conformidade-sbis.md) — esta última é **derivada**: coletada como campo estruturado na anamnese e na evolução, vira lista viva sem cadastro paralelo.
 - **Registros clínicos estruturados** — sinais vitais [`SBIS ECF.07.07`](./conformidade-sbis.md), peso e altura com unidade [`SBIS ECF.07.08`](./conformidade-sbis.md), imunizações [`SBIS ECF.07.03`](./conformidade-sbis.md), resultados de exames trazidos pelo paciente [`SBIS ECF.13.02`](./conformidade-sbis.md), órteses e próteses [`SBIS ECF.07.24`](./conformidade-sbis.md), contexto socioeconômico [`SBIS ECF.07.02`](./conformidade-sbis.md), queixas codificadas em CIAP-2 [`SBIS ECF.07.14`](./conformidade-sbis.md) e registro clínico de óbito [`SBIS ECF.07.32`](./conformidade-sbis.md). Estruturas em [`cadastros.md`](./cadastros.md#estruturas-clínicas-do-prontuário).
 
@@ -316,6 +321,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 - **Diagnósticos** registram estado (suspeito/confirmado), papel (principal/secundário) e situação (ativo/inativo), codificados em CID-10 — o modelo aceita mais de uma terminologia [`SBIS ECF.07.17`](./conformidade-sbis.md).
 - **Receita estruturada**: cada item tem medicamento (da referência clínica), dose, frequência, via, duração, uso contínuo, data de início e observações [`SBIS ECF.10.03`](./conformidade-sbis.md). A impressão sai com CNES, endereço e telefone da unidade [`SBIS ECF.10.04`](./conformidade-sbis.md); receita de controle especial inclui o endereço do paciente; prescrição de antimicrobiano registra idade e sexo.
 - **CID em atestado somente com autorização expressa do paciente**, registrada (Resolução CFM 1.658/2002).
+- **Plano terapêutico**: o profissional monta a partir de um protocolo ou em branco e assina. O documento **não carrega preço** — ao finalizar, o sistema gera o orçamento correspondente no Financeiro, e preço e desconto vivem só lá. Aprovado o orçamento, as sessões entram na fila "a marcar" da Agenda. Remarcar data é ato da recepção e não altera o plano; mudar conteúdo clínico (sessões, intervalos, produtos) é **nova versão do documento** — só o autor, com justificativa, como qualquer documento clínico. A situação do plano (proposto, contratado, em andamento, concluído, não contratado, substituído, interrompido) é **derivada dos fatos** — orçamento e sessões —, nunca editada à mão. O paciente sai com as duas impressões: o plano assinado, com o cronograma, e o orçamento.
 - **Agravos de notificação compulsória**: a lista de agravos é parametrizada e o sistema produz o relatório de apoio à notificação [`SBIS ECF.19.01`](./conformidade-sbis.md).
 - **Assinatura digital ICP-Brasil em todo documento clínico**, por dois caminhos:
   - **Certificado em nuvem (PSC)** — caminho primário. É certificado A3, o único aceito pelo Validador do ITI: **receita que a farmácia valida exige PSC**.
@@ -327,7 +333,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 
 **O que fica fora.** Apoio à decisão clínica (alertas de alergia e interação — Estágio 2 da certificação; ver [Questões abertas](#questões-abertas)); telemedicina; envio ao RNDS [`SBIS ECF.20.02`](./conformidade-sbis.md) (Estágio 2 — os identificadores CNS e CNES já nascem nos cadastros).
 
-**Mapeamento FHIR.** [`Encounter`](https://hl7.org/fhir/R4/encounter.html) (atendimento), [`Composition`](https://hl7.org/fhir/R4/composition.html) (documentos), [`Observation`](https://hl7.org/fhir/R4/observation.html) (sinais vitais, peso/altura, contexto socioeconômico), [`AllergyIntolerance`](https://hl7.org/fhir/R4/allergyintolerance.html) (alergias), [`Condition`](https://hl7.org/fhir/R4/condition.html) (diagnósticos), [`MedicationStatement`](https://hl7.org/fhir/R4/medicationstatement.html) (medicações em uso), [`MedicationRequest`](https://hl7.org/fhir/R4/medicationrequest.html) (receita), [`ServiceRequest`](https://hl7.org/fhir/R4/servicerequest.html) (solicitação e encaminhamento), [`Immunization`](https://hl7.org/fhir/R4/immunization.html) (vacinas), [`DocumentReference`](https://hl7.org/fhir/R4/documentreference.html) (anexos e PDFs assinados), [`QuestionnaireResponse`](https://hl7.org/fhir/R4/questionnaireresponse.html) (modelos estruturados), [`Signature`](https://hl7.org/fhir/R4/datatypes.html#Signature) + [`Provenance`](https://hl7.org/fhir/R4/provenance.html) (assinatura e autoria).
+**Mapeamento FHIR.** [`Encounter`](https://hl7.org/fhir/R4/encounter.html) (atendimento), [`Composition`](https://hl7.org/fhir/R4/composition.html) (documentos), [`CarePlan`](https://hl7.org/fhir/R4/careplan.html) (plano terapêutico), [`Observation`](https://hl7.org/fhir/R4/observation.html) (sinais vitais, peso/altura, contexto socioeconômico), [`AllergyIntolerance`](https://hl7.org/fhir/R4/allergyintolerance.html) (alergias), [`Condition`](https://hl7.org/fhir/R4/condition.html) (diagnósticos), [`MedicationStatement`](https://hl7.org/fhir/R4/medicationstatement.html) (medicações em uso), [`MedicationRequest`](https://hl7.org/fhir/R4/medicationrequest.html) (receita), [`ServiceRequest`](https://hl7.org/fhir/R4/servicerequest.html) (solicitação, encaminhamento e itens do plano — o cronograma é o [`Timing`](https://hl7.org/fhir/R4/datatypes.html#Timing)), [`Immunization`](https://hl7.org/fhir/R4/immunization.html) (vacinas), [`DocumentReference`](https://hl7.org/fhir/R4/documentreference.html) (anexos e PDFs assinados), [`QuestionnaireResponse`](https://hl7.org/fhir/R4/questionnaireresponse.html) (modelos estruturados), [`Signature`](https://hl7.org/fhir/R4/datatypes.html#Signature) + [`Provenance`](https://hl7.org/fhir/R4/provenance.html) (assinatura e autoria).
 
 **Dependências.** Todos os módulos de estrutura, Agenda, Terminologias, Identidade e Acesso, Auditoria e Proveniência.
 
@@ -349,7 +355,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 **Regras de negócio.**
 
 - Todo saldo e toda movimentação são **por unidade de atendimento** e **em unidade de consumo**.
-- Registrar procedimento realizado baixa automaticamente o(s) kit(s) associado(s).
+- Registrar procedimento realizado baixa automaticamente o(s) kit(s) associado(s) — e, quando a sessão pertence a um plano terapêutico, também os produtos extras daquela sessão.
 - Produto pode controlar lote e validade; entrada exige lote/validade quando o produto controla.
 - Estoque mínimo por unidade gera alerta na posição de estoque.
 - Códigos TUSS 19/20, registro ANVISA e EAN/GTIN são opcionais no produto; códigos Brasíndice/SIMPRO seguem a regra de Terminologias — campo existe, dado licenciado não é distribuído.
@@ -366,7 +372,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 
 **Entidades.**
 
-- **Orçamento** — itens com quantidade, validade, desconto e fonte pagadora. Orçamento aprovado gera contas a receber e, quando há itens com múltiplas sessões, pacotes com saldo.
+- **Orçamento** — itens com quantidade, validade, desconto e fonte pagadora. Nasce na recepção ou gerado por um plano terapêutico — já preenchido com procedimentos, sessões e extras cobráveis. Orçamento aprovado gera contas a receber e, quando há itens com múltiplas sessões, pacotes com saldo.
 - **Conta a receber / parcela** — o que há para receber, de quem, quando.
 - **Baixa** — recebimento vinculado a parcela: **total ou parcial**, em qualquer forma de pagamento.
 - **Pacote** — saldo de sessões por paciente e procedimento; cada atendimento consome uma sessão; a recepção vê o saldo.
@@ -380,7 +386,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 
 - **Baixa parcial é cidadã de primeira classe**: recebe-se qualquer valor contra uma parcela ou contra o total, e o saldo remanescente permanece visível.
 - Desconto em orçamento respeita **alçada por perfil** — quanto cada papel pode conceder é permissão, não campo livre.
-- Orçamento tem validade e situação (funil: aberto → aprovado → expirado/recusado).
+- Orçamento tem validade e situação (funil: aberto → aprovado → expirado/recusado). O orçamento gerado por plano terapêutico entra no mesmo funil; quando uma nova versão do plano muda o que foi contratado, o **acerto financeiro é manual** — orçamento adicional ou estorno, decidido por gente. Dinheiro negociado não muda por automatismo.
 - **Repasse:**
   - A regra imita a frase do gestor: *"50% de tudo, menos toxina botulínica, que é 60%"* — uma regra padrão por profissional e uma lista de exceções por procedimento.
   - A **aba Repasse do perfil do profissional** é a superfície de edição (hub de abas — módulo Pessoas); a tela do procedimento mostra consulta de quem recebe quanto.
@@ -404,7 +410,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 1. Recepção agenda o paciente (Agenda) — o pagador e o canal de origem ficam registrados.
 2. Um parceiro de confirmação, via API, envia lembrete e instruções de preparo, e devolve o status **confirmado** (Agenda + API).
 3. O paciente chega; a recepção marca **chegou/aguardando**; o painel do dia reflete na hora (Agenda).
-4. O profissional abre o Atendimento a partir do agendamento (Prontuário); registra anamnese, evolução, receita; assina digitalmente.
+4. O profissional abre o Atendimento a partir do agendamento (Prontuário); registra anamnese, evolução, receita — e, quando indica tratamento em série, o plano terapêutico; assina digitalmente.
 5. Ao registrar o procedimento realizado: o kit baixa no Estoque, a sessão consome saldo do pacote, a produção é lançada (Estoque + Financeiro).
 6. Na saída, a recepção recebe — total ou parcial — e o caixa do dia acumula (Financeiro).
 7. No fim do dia: fechamento de caixa com conferência e sangria; painel do dia mostra taxa de falta (Financeiro + Agenda).
@@ -413,15 +419,21 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 
 ```mermaid
 flowchart LR
+    PL["Plano terapêutico assinado"] -. gera .-> ORC
     ORC["Orçamento aprovado"] --> CR["Contas a receber"]
     ORC --> PAC["Pacote com saldo de sessões"]
+    ORC --> FILA["Sessões na fila a marcar"]
+    FILA --> AG["Agendamento confirmado"]
     CR --> BX["Baixa total ou parcial"]
     BX --> CX["Caixa do dia"]
+    AG --> AT
     PAC --> AT["Atendimento consome 1 sessão"]
     AT --> PROD["Produção do profissional"]
     PROD --> REP["Repasse pela regra vigente"]
     REP --> CP["Contas a pagar"]
 ```
+
+O plano terapêutico é a porta clínica deste fluxo — mas não a única: o orçamento também nasce direto na recepção, sem plano. A sessão planejada e a sessão do pacote são o mesmo saldo visto de ângulos diferentes: o pacote diz **quantas** sessões restam; a fila diz **quando** cada uma deve acontecer. Nada é contado duas vezes.
 
 ### Do procedimento ao estoque
 
@@ -435,6 +447,7 @@ Procedimento realizado no Atendimento → baixa automática do kit, em unidade d
 - **Funil de orçamentos** — abertos, aprovados, expirados; taxa de conversão.
 - **Produção e repasse** — por profissional e período; base do pagamento manual.
 - **Notificação compulsória** — atendimentos com agravos da lista parametrizada [`SBIS ECF.19.02`](./conformidade-sbis.md).
+- **Preparo do dia** — sessões agendadas com procedimento, kit e produtos extras, por unidade e sala. É a visão da equipe de enfermagem: leitura; quem registra o realizado continua sendo o profissional, no Atendimento.
 
 ## Fora da V1
 

@@ -28,27 +28,43 @@ As tags no formato [`SBIS ECF.03.02`](./conformidade-sbis.md) apontam requisitos
 ```mermaid
 flowchart TB
     subgraph apoio["Camada de apoio"]
-        Estoque
-        Financeiro
+        direction LR
+        Estoque(Estoque) ~~~ Financeiro(Financeiro)
     end
     subgraph operacao["Camada de operação"]
-        Agenda
-        Prontuario["Prontuário"]
+        direction LR
+        Agenda(Agenda) ~~~ Prontuario(Prontuário)
     end
     subgraph estrutura["Camada de estrutura"]
-        Organizacao["Organização"]
-        Pessoas
-        Catalogo["Catálogo"]
-        Convenios["Convênios e pagadores"]
+        direction LR
+        Organizacao(Organização) ~~~ Pessoas(Pessoas) ~~~ Catalogo(Catálogo) ~~~ Convenios(Convênios e pagadores)
     end
     subgraph transversal["Camada transversal"]
-        Identidade["Identidade e Acesso"]
-        Auditoria["Auditoria e Proveniência"]
-        Terminologias
+        direction LR
+        Identidade(Identidade e Acesso) ~~~ Auditoria(Auditoria e Proveniência) ~~~ Terminologias(Terminologias)
     end
-    apoio --> operacao
-    operacao --> estrutura
-    estrutura --> transversal
+
+    apoio ==>|depende de| operacao
+    operacao ==>|depende de| estrutura
+    estrutura ==>|depende de| transversal
+
+    classDef mApoio fill:#ffffff,stroke:#d4a72c,color:#24292f
+    classDef mOper fill:#ffffff,stroke:#3fa46a,color:#24292f
+    classDef mEstr fill:#ffffff,stroke:#5a8fd6,color:#24292f
+    classDef mTrans fill:#ffffff,stroke:#848d97,color:#24292f
+    classDef lApoio fill:#fdf3df,stroke:#d4a72c,color:#24292f
+    classDef lOper fill:#e3f2e9,stroke:#3fa46a,color:#24292f
+    classDef lEstr fill:#e4eef9,stroke:#5a8fd6,color:#24292f
+    classDef lTrans fill:#edeff2,stroke:#848d97,color:#24292f
+
+    class Estoque,Financeiro mApoio
+    class Agenda,Prontuario mOper
+    class Organizacao,Pessoas,Catalogo,Convenios mEstr
+    class Identidade,Auditoria,Terminologias mTrans
+    class apoio lApoio
+    class operacao lOper
+    class estrutura lEstr
+    class transversal lTrans
 ```
 
 Cada camada só depende das camadas abaixo dela. Os módulos transversais não dependem de ninguém — todos os outros dependem deles.

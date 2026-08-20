@@ -90,6 +90,9 @@ Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde*
 | :--- | :--- |
 | [`docs/vision.md`](./docs/vision.md) | Missão, problema, princípios e escopo |
 | [`docs/prd.md`](./docs/prd.md) | O que o sistema precisa fazer, e por quê |
+| [`docs/modulos.md`](./docs/modulos.md) | Proposta de arquitetura de módulos da V1 |
+| [`docs/cadastros.md`](./docs/cadastros.md) | Dicionário de dados dos cadastros, insumo para o esquema de banco |
+| [`docs/conformidade-sbis.md`](./docs/conformidade-sbis.md) | Matriz de rastreabilidade da certificação SBIS v5.2 |
 | [`docs/decisions/`](./docs/decisions/) | As decisões de arquitetura, uma por arquivo |
 | [`docs/compliance.md`](./docs/compliance.md) | Normas brasileiras aplicáveis (LGPD, ANVISA, SBIS, RNDS, TISS) |
 | [`docs/roadmap.md`](./docs/roadmap.md) | As fases do projeto |

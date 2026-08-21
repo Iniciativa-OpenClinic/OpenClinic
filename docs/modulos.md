@@ -105,7 +105,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 **Entidades.**
 
 - **Usuário** — a conta de acesso de um profissional ou funcionário.
-- **Papel e permissões** — permissões granulares por domínio (clínico, administrativo, financeiro, gestão), agrupadas em papéis.
+- **Papel e permissões** — permissões granulares por domínio (clínico, administrativo, financeiro, gestão), agrupadas em papéis. O modelo de dados da permissão nasce granular por operação — consultar, incluir, alterar, excluir —, ainda que a V1 exponha papéis compostos [`SBIS NGS1.03.04`](./conformidade-sbis.md).
 - **Chave de API** — credencial de uma ferramenta externa que acessa o OpenClinic.
 - **Segredo** — credencial que o OpenClinic usa para acessar um serviço externo, guardada no cofre de segredos.
 - **Termo de uso** — versão vigente dos termos e o aceite de cada usuário.
@@ -344,6 +344,7 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
   - **Certificado A1** (arquivo no cofre de segredos) — válido para os demais documentos [`SBIS NGS2.02.02`](./conformidade-sbis.md).
   - O CPF do certificado precisa coincidir com o CPF do usuário que assina [`SBIS NGS2.01.02`](./conformidade-sbis.md); o sistema aceita ao menos duas Autoridades Certificadoras por modalidade [`SBIS NGS2.01.05`](./conformidade-sbis.md).
   - Documento assinado é exportado em PDF no padrão PAdES com **QR Code do Validador do ITI**, e a impressão leva o rodapé padrão que explica onde validar [`SBIS NGS2.06.06`](./conformidade-sbis.md).
+  - O registro de assinatura nasce com metadados extensíveis: o carimbo de tempo do Estágio 2 entra sem mudança de estrutura [`SBIS NGS2.04.02`](./conformidade-sbis.md).
 - **Impressão do prontuário**: comando único imprime o prontuário completo ou por período, com páginas numeradas X de Y, anexos incluídos e campos vazios sinalizados [`SBIS ECF.18.04`](./conformidade-sbis.md); a entrega ao paciente gera **recibo** com solicitante, finalidade e registro da entrega [`SBIS ECF.18.05`](./conformidade-sbis.md) — é a portabilidade prometida no [`vision.md`](./vision.md) em forma de função.
 - O procedimento realizado no atendimento **consome**: baixa o kit no Estoque, consome sessão do pacote e gera produção para repasse no Financeiro.
 

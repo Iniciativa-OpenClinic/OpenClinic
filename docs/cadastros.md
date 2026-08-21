@@ -2,6 +2,8 @@
 
 > [!IMPORTANT]
 > **Insumo para o desenho do esquema de banco — primeira versão.** Este documento lista os campos que o produto precisa, para que o time de banco de dados desenhe o esquema com o quadro completo. Ele evolui com o time, e a hierarquia é explícita: **quando o esquema e a API existirem, eles são a verdade** — este documento vira registro de intenção, não contrato.
+>
+> **O esquema nasce compatível com os estágios E2/E3 da certificação — por adição.** Os dados primários sobre os quais os requisitos de estágios futuros operam já estão neste dicionário; a evolução de estágio acrescenta tabelas e colunas, nunca redesenha as existentes. Onde um requisito futuro pede uma decisão de estrutura hoje, a observação do campo diz isso explicitamente.
 
 ## Convenções
 
@@ -456,7 +458,7 @@ O paciente sem alergias conhecidas tem o registro explícito **"nega alergias"**
 | Peso e altura | Valor + unidade explícita | [`SBIS ECF.07.08`](./conformidade-sbis.md) |
 | Medicação em uso | Derivada do campo estruturado da anamnese/evolução | Lista viva; sem cadastro paralelo [`SBIS ECF.07.52`](./conformidade-sbis.md) |
 | Imunização | Vacina + dose + data | [`SBIS ECF.07.03`](./conformidade-sbis.md) |
-| Resultado de exame trazido | Exame + resultado + data + origem | Entrada manual de laudo externo [`SBIS ECF.13.02`](./conformidade-sbis.md) |
+| Resultado de exame trazido | Exame + resultado + data + origem + solicitação vinculada (opcional) | Entrada manual de laudo externo [`SBIS ECF.13.02`](./conformidade-sbis.md); o vínculo com a solicitação prepara o fluxo automático de status do Estágio 2 [`SBIS ECF.13.03`](./conformidade-sbis.md) |
 | Órteses e próteses | Descrição + data | [`SBIS ECF.07.24`](./conformidade-sbis.md) |
 | Contexto socioeconômico | Ocupação e condições relevantes | Referencia a profissão do cadastro [`SBIS ECF.07.02`](./conformidade-sbis.md) |
 | Queixa | Descrição + código CIAP-2 | [`SBIS ECF.07.14`](./conformidade-sbis.md) |

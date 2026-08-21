@@ -28,10 +28,10 @@ Quando a composição estabilizar e houver consentimento de cada pessoa, um docu
 
 ## Como as decisões técnicas são tomadas
 
-1. **A proposta é pública.** Toda decisão de arquitetura começa numa Issue, antes de virar decisão.
+1. **Toda decisão termina em registro público.** A conversa nasce onde nascer — hoje, no grupo de WhatsApp e nas reuniões — e nenhuma decisão existe para o projeto enquanto não estiver registrada em [`docs/decisions/`](./docs/decisions/).
 2. **O debate é registrado.** Decisões relevantes são gravadas em [`docs/decisions/`](./docs/decisions/), com contexto, consequências assumidas e — obrigatoriamente — as alternativas descartadas e o motivo.
 3. **Teses vencidas não são apagadas.** Elas permanecem no registro. É o que permite a uma revisão futura saber o que já foi pesado, e é o que garante a quem discordou que sua posição não foi varrida para debaixo do tapete.
-4. **Uma decisão não é considerada tomada** enquanto quem participou do debate não tiver tido oportunidade real de se posicionar. Encaminhamento verbal ao final de uma reunião, com participantes ausentes, não fecha decisão.
+4. **Uma decisão não é considerada tomada** enquanto quem participou do debate não tiver tido oportunidade real de se posicionar. Encaminhamento verbal ao final de uma reunião, com participantes ausentes, não fecha decisão — e uma conversa no grupo encerrada sem tempo razoável para os envolvidos se posicionarem também não.
 5. **Decisões são reversíveis, com custo.** Uma decisão aceita pode ser substituída por outra; o documento antigo ganha um aviso apontando para o novo, e não é reescrito.
 
 Argumentos **não são atribuídos nominalmente** a partir de transcrição de reunião: transcrições automáticas erram, e atribuir publicamente uma posição técnica a alguém com base nelas é injusto. Atribuição é sempre de quem assina.
@@ -46,7 +46,7 @@ Espelhando o que está em [`licensing.md`](./docs/licensing.md):
 
 - A versão do OpenClinic sob AGPL-3.0 permanecerá sempre completa e funcional.
 - Qualquer CLA (acordo de licenciamento de contribuidor) será publicado para comentário público antes de passar a ser exigido.
-- Decisões relevantes do projeto serão registradas publicamente (em Issues do GitHub e em [`docs/decisions/`](./docs/decisions/), não apenas em conversas de canais como o WhatsApp — veja [`CONTRIBUTING.md`](./CONTRIBUTING.md)).
+- Decisões relevantes do projeto serão registradas publicamente (em [`docs/decisions/`](./docs/decisions/) e nas atas de [`docs/reunioes/`](./docs/reunioes/), não apenas em conversas de canais como o WhatsApp — veja [`CONTRIBUTING.md`](./CONTRIBUTING.md)).
 
 ## Titularidade
 

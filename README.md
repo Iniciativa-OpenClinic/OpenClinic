@@ -11,7 +11,10 @@ Um contraponto aos prontuários de mercado que fecham seu ecossistema e não lib
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-AGPL--3.0-2E7D9A?style=flat-square)](./LICENSE)
 [![Status](https://img.shields.io/badge/status-pr%C3%A9--alfa-E8A33D?style=flat-square)](./docs/roadmap.md)
 [![Padrão](https://img.shields.io/badge/interoperabilidade-HL7%20FHIR-3B6FB0?style=flat-square)](./docs/decisions/0001-fhir-como-padrao-de-dados.md)
-[![Comunidade](https://img.shields.io/badge/comunidade-entrar%20no%20WhatsApp-25D366?style=flat-square&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7)
+
+[![Entrar no grupo de WhatsApp](https://img.shields.io/badge/ENTRAR%20NO%20GRUPO%20DE%20WHATSAPP-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7)
+
+*É no grupo que a conversa do projeto acontece.*
 
 </div>
 
@@ -74,11 +77,11 @@ Detalhes em [`GOVERNANCE.md`](./GOVERNANCE.md).
 
 ## Como participar
 
-**Abra uma [Issue](../../issues).** É o canal oficial e pesquisável do projeto.
+**A conversa do projeto acontece no [grupo de WhatsApp](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7) — entre.** Se o link estiver expirado, avise por uma [Issue](../../issues).
 
-A contribuição mais valiosa hoje é **ajudar a fechar as decisões que ainda estão em aberto** — elas estão marcadas como tal no [índice de decisões](./docs/decisions/), e são as mais caras de reverter depois. Comente na Issue da decisão e assine sua posição.
+Quem chega de fora, ou prefere um canal público e permanente, **abre uma [Issue](../../issues)** — é a porta registrada e pesquisável do projeto, e o time responde por lá.
 
-Também há um **[grupo de WhatsApp da comunidade](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7)** para conversa em tempo real — mas decisão do projeto se registra aqui, não lá. Se o link estiver expirado, avise por uma Issue.
+A contribuição mais valiosa hoje é **ajudar a fechar as decisões que ainda estão em aberto** — elas estão marcadas como tal no [índice de decisões](./docs/decisions/), e são as mais caras de reverter depois. Traga sua posição ao grupo ou registre-a numa Issue: posição assinada entra no registro da decisão.
 
 Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde**, **modelagem de dados clínicos**, **segurança da informação em dado sensível** e **quem já operou um prontuário na prática** e sabe onde dói. Guia completo em [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 

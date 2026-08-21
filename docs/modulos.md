@@ -1,7 +1,7 @@
 # Arquitetura de módulos da V1
 
 > [!IMPORTANT]
-> **Este documento é uma proposta, não uma decisão.** Ele traduz os requisitos de produto ([`prd.md`](./prd.md)) em módulos, entidades e regras de negócio, para revisão da comunidade técnica. Discordâncias e lacunas devem virar Issue ou Pull Request. O que a revisão confirmar passa a orientar o desenho do esquema de banco e da API.
+> **Este documento é uma proposta, não uma decisão.** Ele traduz os requisitos de produto ([`prd.md`](./prd.md)) em módulos, entidades e regras de negócio, para revisão da comunidade técnica. Discordâncias e lacunas: traga-as ao grupo de WhatsApp ou abra uma Issue ou Pull Request — os canais estão em [`CONTRIBUTING.md`](../CONTRIBUTING.md). O que a revisão confirmar passa a orientar o desenho do esquema de banco e da API.
 
 ## Como ler este documento
 

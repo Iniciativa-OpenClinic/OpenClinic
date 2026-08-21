@@ -26,12 +26,12 @@ Esta tabela e a do [`README` do projeto](../../README.md) são os dois únicos l
 
 ## Como propor uma decisão
 
-1. Abra uma [Issue](https://github.com/iniciativa-openclinic/openclinic/issues/new/choose) do tipo **Proposta de decisão técnica**, para que o debate aconteça em público.
+1. Leve a proposta a debate — no grupo de WhatsApp (link em [`CONTRIBUTING.md`](../../CONTRIBUTING.md)), numa reunião ou numa [Issue](https://github.com/iniciativa-openclinic/openclinic/issues/new/choose) do tipo **Proposta de decisão técnica**. A Issue é o caminho de quem chega de fora: pública e pesquisável desde o primeiro dia.
 2. Quando houver convergência, abra um Pull Request criando o arquivo `NNNN-titulo-curto.md` nesta pasta, seguindo a estrutura dos existentes.
 3. O número é o próximo da sequência e não se reaproveita, mesmo que a decisão seja depois substituída.
 
 ## Como registrar sua posição numa decisão em aberto
 
-Decisões marcadas como **Em aberto** têm uma seção de posições registradas. Se você participou do debate e quer que seu argumento fique no registro **com seu nome**, comente na Issue vinculada ou abra um Pull Request adicionando sua posição.
+Decisões marcadas como **Em aberto** têm uma seção de posições registradas. O debate pode acontecer em qualquer canal — grupo de WhatsApp, reunião, Issue —, mas posição só entra no registro **por escrito e assinada**: abra um Pull Request adicionando a sua, ou deixe-a escrita numa Issue para ser incorporada com seu nome.
 
 O projeto não atribui argumentos a pessoas por conta própria a partir de transcrição de reunião: a atribuição é sempre de quem assina.

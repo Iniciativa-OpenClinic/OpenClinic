@@ -35,6 +35,8 @@ Quando o projeto entrar em fase de código, um **CLA (Contributor License Agreem
 
 Os requisitos de engenharia já acordados para o backend, qualquer que seja a linguagem escolhida: conformidade com **SOLID**, desenho orientado ao domínio (**DDD**), **arquitetura limpa** e documentação técnica da API suficiente para viabilizar uma reimplementação independente.
 
+**Quem muda a API atualiza o contrato no mesmo Pull Request.** O contrato OpenAPI nasce antes do código ([roadmap, Fase 3](./docs/roadmap.md)) e é a fonte da verdade: endpoint sem contrato não existe, e a verificação automática rejeita código que divirja dele. Documentar não é etapa posterior — é parte da mudança.
+
 A documentação do projeto é escrita em **português**. Código, identificadores, mensagens de commit e a especificação da API são escritos em **inglês**.
 
 ## Código de conduta

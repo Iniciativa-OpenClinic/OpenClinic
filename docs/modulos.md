@@ -94,6 +94,8 @@ Cada camada só depende das camadas abaixo dela. Os módulos transversais não d
 
 **Obrigações de plataforma** (valem para qualquer implementação): cópia de segurança cifrada, com restauração e verificação de integridade pela própria aplicação ou pelo banco [`SBIS NGS1.04.01`](./conformidade-sbis.md); comunicação cifrada entre cliente e servidor [`SBIS NGS1.05.01`](./conformidade-sbis.md), com validação de toda entrada no lado do servidor [`SBIS NGS1.06.03`](./conformidade-sbis.md); anexos armazenados fora do banco somente com sigilo garantido e nomes de arquivo que não revelam conteúdo [`SBIS NGS1.06.01`](./conformidade-sbis.md); data e hora com fuso horário parametrizável [`SBIS NGS1.09.06`](./conformidade-sbis.md); interface de usuário 100% em português do Brasil [`SBIS ECF.17.18`](./conformidade-sbis.md) — código, identificadores e API continuam em inglês, conforme o [`README`](../README.md).
 
+Três obrigações de fronteira completam a lista. A API pública aplica **limites de requisição** por chave e por origem — o limite existe e é parametrizável; os números são decisão de operação. Proteção de borda adicional, como WAF, é responsabilidade da implantação, não do produto. **Nenhum canal auxiliar** — trilhas, filas, logs, mensagens de integração — carrega dado clínico ou identificação de paciente: referências opacas apenas, a mesma regra que já vale para a trilha de auditoria [`SBIS NGS1.07.06`](./conformidade-sbis.md). E cada serviço acessa o banco com **credencial própria e permissões mínimas** — aplicação jamais roda como superusuário.
+
 ---
 
 ## Camada transversal

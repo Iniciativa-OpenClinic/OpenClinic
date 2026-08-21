@@ -24,9 +24,13 @@ Traduzir os requisitos conceituais do [`prd.md`](./prd.md) em um PRD técnico e 
 
 Requisitos de engenharia já acordados para esta fase: conformidade com SOLID, desenho orientado ao domínio (DDD), arquitetura limpa e documentação técnica da API suficiente para viabilizar uma reimplementação independente.
 
+A API é **REST** — o estilo de conversa da web, o mesmo do FHIR e do RNDS; o **contrato OpenAPI** a descreve, e o **FHIR** dá a forma do dado clínico que ela carrega. O mapeamento dos endpoints nasce aqui como **contrato OpenAPI, escrito antes do código**, derivado de [`modulos.md`](./modulos.md) e [`cadastros.md`](./cadastros.md) — é a decisão [0004](./decisions/0004-api-antes-de-interface.md) em forma de artefato: interface e parceiros de integração constroem contra o contrato sem esperar o backend. Esta frente é neutra de linguagem e pode começar assim que a revisão da arquitetura estabilizar, mesmo com a decisão [0005](./decisions/0005-linguagem-do-backend.md) em aberto — o tamanho e a forma reais da API são, inclusive, insumo dela. O contrato aplica **minimização por endpoint** — cada um devolve o mínimo da sua finalidade — e coleções são **paginadas por padrão**. O desenho do contrato abre uma decisão de arquitetura a registrar em [`decisions/`](./decisions/): o formato dos endpoints — API no padrão FHIR puro, ou API própria com os dados clínicos em recursos FHIR e uma fachada FHIR para interoperabilidade.
+
 ## Fase 4 — Desenvolvimento do MVP
 
 Construção da primeira versão funcional do OpenClinic, publicada continuamente no ambiente de homologação ([0007](./decisions/0007-ambiente-de-homologacao.md)) com dados fictícios.
+
+O MVP cresce em incrementos que seguem a ordem das camadas da arquitetura ([`modulos.md`](./modulos.md)): transversal → estrutura → operação → apoio. Versões 0.x são cortadas conforme os incrementos ficam prontos; o fatiamento fino vive nos épicos e milestones do repositório, não aqui. A cada mudança, o código é verificado automaticamente contra o contrato OpenAPI — a ferramenta dessa verificação é escolha do time — e a documentação navegável da API é publicada junto com a homologação.
 
 ## Fase 5 (futuro) — Certificação da distribuição oficial
 

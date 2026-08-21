@@ -11,7 +11,7 @@
 
 Este é um PRD (Product Requirements Document) **conceitual**, escrito antes de qualquer decisão técnica. Ele descreve **o quê** o OpenClinic precisa fazer e **por quê**, não **como** — arquitetura, banco de dados, linguagem de programação e demais escolhas de stack couberam à reunião técnica com os desenvolvedores da comunidade e estão registradas em [`decisions/`](./decisions/). Este documento existe para que aquela conversa técnica começasse com um objetivo compartilhado, não para substituí-la.
 
-Para o contexto de missão e princípios, veja [`vision.md`](./vision.md). Para o mapeamento regulatório que fundamenta vários requisitos abaixo, veja [`compliance.md`](./compliance.md).
+Para o contexto de missão e princípios, veja [`vision.md`](./vision.md). Para o mapeamento regulatório que fundamenta vários requisitos abaixo, veja [`compliance.md`](./compliance.md). A tradução destes requisitos em módulos, entidades e campos está proposta em [`modulos.md`](./modulos.md) e [`cadastros.md`](./cadastros.md).
 
 ## Personas de alto nível
 
@@ -68,7 +68,7 @@ Derivados do mapeamento em [`compliance.md`](./compliance.md) — não são esco
 Levantados em reunião com justificativa que o mapeamento regulatório do projeto ainda não sustenta. Ficam registrados como **pendentes de verificação**, e não como requisitos firmes — publicar afirmação regulatória incorreta é o tipo de erro que custa credibilidade a um projeto de saúde.
 
 - **Localização dos dados em território nacional.** Levantado como proibição da LGPD. O [`compliance.md`](./compliance.md) registra algo mais preciso: a LGPD não proíbe hospedagem no exterior, ela sujeita a transferência internacional às regras dos artigos 33 a 36. Manter os dados no Brasil segue sendo uma decisão de projeto legítima e provavelmente desejável — simplifica a conformidade e atende à expectativa do mercado —, mas é decisão do OpenClinic, não imposição legal preexistente. Se adotada, merece registro próprio em [`decisions/`](./decisions/).
-- **Senha com mínimo de 8 caracteres como exigência obrigatória.** Atribuído aos requisitos de certificação. O `compliance.md` declara que seu levantamento foi feito com auxílio de inteligência artificial e não verificado contra as fontes primárias — este ponto precisa ser confirmado no manual de certificação de S-RES da SBIS antes de virar requisito. Registrada também a divergência técnica manifestada na própria reunião: autenticação por link de uso único ou código enviado por e-mail seria mais segura que senha. Se a exigência se confirmar, o projeto a cumpre; se não, o mecanismo de autenticação fica em aberto.
+- **Senha com mínimo de 8 caracteres como exigência obrigatória — confirmado.** Verificado contra a fonte primária: é o requisito NGS1.02.03 da certificação SBIS v5.2, de Estágio 1, e o projeto o cumpre — ver [`conformidade-sbis.md`](./conformidade-sbis.md). A divergência técnica manifestada em reunião — autenticação por link de uso único ou código por e-mail seria mais segura que senha — permanece registrada como possível evolução, mas não substitui a exigência da certificação.
 
 ## Fora de escopo deste documento
 

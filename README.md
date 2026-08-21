@@ -9,100 +9,105 @@
 Um contraponto aos prontuários de mercado que fecham seu ecossistema e não liberam suas APIs.
 
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-AGPL--3.0-2E7D9A?style=flat-square)](./LICENSE)
-[![Status](https://img.shields.io/badge/status-defini%C3%A7%C3%A3o%20de%20stack-E8A33D?style=flat-square)](./docs/roadmap.md)
+[![Status](https://img.shields.io/badge/status-pr%C3%A9--alfa-E8A33D?style=flat-square)](./docs/roadmap.md)
 [![Padrão](https://img.shields.io/badge/interoperabilidade-HL7%20FHIR-3B6FB0?style=flat-square)](./docs/decisions/0001-fhir-como-padrao-de-dados.md)
+[![Comunidade](https://img.shields.io/badge/comunidade-entrar%20no%20WhatsApp-25D366?style=flat-square&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7)
 
 </div>
 
 <br>
 
 > [!WARNING]
-> **Ainda não existe software.** O projeto está definindo seu stack técnico. Nada aqui pode ser usado em atendimento a pacientes.
+> **Não use em atendimento a pacientes.** O OpenClinic ainda não é um produto. Em que fase ele está, o [`roadmap.md`](./docs/roadmap.md) diz.
 
 <br>
 
 ## Por que este projeto existe
 
-Prontuários eletrônicos comerciais, em geral, fecham seus dados. Sair de um fornecedor ou integrar outro sistema costuma ser difícil, caro ou simplesmente impossível.
+Prontuários eletrônicos comerciais, em geral, fecham seus dados. Sair de um fornecedor ou integrar outro sistema costuma ser difícil, caro ou simplesmente impossível — a clínica gera os dados, mas depende da boa vontade de quem vende o software para acessá-los.
 
-O OpenClinic nasce para ser diferente: um prontuário cujo código é aberto e cuja API é, desde o primeiro dia, tratada como um produto tão importante quanto a própria interface.
+O OpenClinic nasce como contraponto: um prontuário cujo código é aberto e cuja API é, desde o primeiro dia, tratada como um produto tão importante quanto a própria interface. E cuja licença — [AGPL-3.0](./LICENSE) — impede que alguém pegue o que nasceu aberto e feche.
 
-<br>
-
-## Os pilares
-
-### 🔓 API aberta e pública
-Robusta e bem documentada desde a concepção, com [HL7 FHIR](https://www.hl7.org/fhir/) como padrão de dados — implementado como especificação, não como formato de exportação.
-
-### 🔐 Segurança e conformidade desde o desenho
-Dado de saúde é dado sensível. O projeto assume isso desde a fundação, não como um remendo posterior. Veja o mapeamento regulatório em [`compliance.md`](./docs/compliance.md).
-
-### 🤝 Comunidade aberta
-Construído com quem quiser participar, não atrás de portas fechadas. As decisões técnicas são tomadas e registradas em público — inclusive as que ainda não foram tomadas.
-
-Detalhes completos em [`vision.md`](./docs/vision.md).
+Missão, princípios e escopo completos em [`vision.md`](./docs/vision.md).
 
 <br>
 
-## Onde o projeto está
+## O que torna isto difícil
 
-Fase de **definição do stack técnico**. Cada decisão abaixo tem um registro próprio com o contexto, as consequências assumidas e as alternativas descartadas.
+Um prontuário parece um CRUD. Não é.
 
-### Já decidido
+O **[HL7 FHIR](https://www.hl7.org/fhir/)** não é um formato de exportação que se acrescenta no fim — no OpenClinic ele é a forma como o sistema pensa ([decisão 0001](./docs/decisions/0001-fhir-como-padrao-de-dados.md)). O padrão organiza informação em *bundles*: conjuntos montados para fazer sentido a quem lê, reunindo dados de várias entidades e repetindo o que o contexto clínico exigir. Um banco relacional quer exatamente o oposto — normalizar, separar, não repetir nada.
 
-| Decisão | Registro |
-| :--- | :--- |
-| **HL7 FHIR** como padrão de dados, implementado como especificação | [0001](./docs/decisions/0001-fhir-como-padrao-de-dados.md) |
-| **PostgreSQL** como banco principal | [0002](./docs/decisions/0002-postgresql-como-banco-principal.md) |
-| **Docker** como unidade de implantação | [0003](./docs/decisions/0003-docker-como-unidade-de-implantacao.md) |
-| **API antes de interface** — frontend deliberadamente adiado | [0004](./docs/decisions/0004-api-antes-de-interface.md) |
-| **Ambiente de homologação** em hardware modesto, com dados fictícios | [0007](./docs/decisions/0007-ambiente-de-homologacao.md) |
+Esse descasamento **não é um obstáculo que se resolve uma vez e passa**. Ele reaparece a cada recurso novo que o sistema implementa: um esquema que responde bem a um recurso pode inviabilizar a consulta que outro exige. É a restrição que governa cada decisão de modelagem deste projeto, e vai continuar governando.
 
-### Ainda em aberto
+Some-se o que a regulação exige de um prontuário, e que molda o modelo de dados antes da primeira linha de código:
 
-| Decisão | Situação |
-| :--- | :--- |
-| [**Linguagem e plataforma do backend**](./docs/decisions/0005-linguagem-do-backend.md) | Teses concorrentes registradas. Aberta a contribuição. |
-| [**Camada de cache e banco de apoio**](./docs/decisions/0006-camada-de-cache-e-banco-de-apoio.md) | Consenso de que existirá na v2; candidato em avaliação. |
-| [**Tecnologia de frontend**](./docs/decisions/0004-api-antes-de-interface.md) | Adiada por decisão, não por indefinição. |
+- Nada é apagado de verdade — exclusão marca, não remove.
+- Toda informação carrega de onde veio e quem a registrou, de forma permanente.
+- O registro precisa sobreviver **vinte anos**.
+- Dados de clínicas diferentes nunca se encostam.
+- Quem acessou o quê fica registrado em trilha que ninguém pode editar.
 
-Se você tem experiência que ajude a fechar alguma delas, [sua opinião é bem-vinda](#como-participar) — e fica registrada com o seu nome.
+Nenhum desses requisitos é opcional. O mapeamento completo das normas está em [`compliance.md`](./docs/compliance.md); os requisitos de produto, em [`prd.md`](./docs/prd.md).
+
+**Se isso te parece um problema interessante em vez de um aborrecimento, você é o tipo de pessoa que este projeto procura.**
 
 <br>
 
-## Documentação
+## Como este projeto decide
 
-Toda a documentação está em [`docs/`](./docs/). Os pontos de partida:
+Toda decisão de arquitetura vira um documento com contexto, consequências assumidas e — obrigatoriamente — as alternativas descartadas e o motivo. Ficam em **[`docs/decisions/`](./docs/decisions/)**, que é sempre a fonte atual do que já está fechado e do que segue em aberto.
 
-| Documento | O que contém |
-| :--- | :--- |
-| [`docs/vision.md`](./docs/vision.md) | Missão, problema, princípios e escopo |
-| [`docs/prd.md`](./docs/prd.md) | Requisitos de produto conceituais, pré-técnicos |
-| [`docs/decisions/`](./docs/decisions/) | As decisões de arquitetura, uma por arquivo |
-| [`docs/compliance.md`](./docs/compliance.md) | Normas brasileiras relevantes (LGPD, ANVISA, SBIS, RNDS, TISS) |
-| [`docs/roadmap.md`](./docs/roadmap.md) | As fases planejadas do projeto |
-| [`GOVERNANCE.md`](./GOVERNANCE.md) | Como o projeto é decidido, e como isso deve evoluir |
-| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Como participar |
+Três regras valem aqui:
+
+**Argumento é assinado.** Quem defende uma posição assina. O projeto não atribui opinião a ninguém por conta própria.
+
+**Tese vencida não é apagada.** Ela permanece no registro, explicando o que já foi pesado. Discordar e perder não apaga sua contribuição do histórico do projeto.
+
+**Decisão não se fecha com gente ausente.** Encaminhamento verbal no fim de uma reunião, com participantes fora da sala, não vale como decisão tomada.
+
+Isso quer dizer que aqui se defende ideia por escrito e se aceita ser contrariado em público. Dá mais trabalho que abrir um pull request e sumir — e é de propósito.
+
+Detalhes em [`GOVERNANCE.md`](./GOVERNANCE.md).
 
 <br>
 
 ## Como participar
 
-O projeto ainda não tem código. Nesta fase, o que mais vale é **ajudar a fechar bem as decisões técnicas em aberto** — elas são caras de reverter depois.
+**Abra uma [Issue](../../issues).** É o canal oficial e pesquisável do projeto.
 
-**Abra uma [Issue](../../issues).** É o canal oficial e pesquisável do projeto. Para opinar sobre uma decisão em aberto, comente nela e assine sua posição — argumentos entram no registro permanente com o nome de quem os defende.
+A contribuição mais valiosa hoje é **ajudar a fechar as decisões que ainda estão em aberto** — elas estão marcadas como tal no [índice de decisões](./docs/decisions/), e são as mais caras de reverter depois. Comente na Issue da decisão e assine sua posição.
 
-**Entre no [grupo de WhatsApp da comunidade](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7).** Se o link estiver expirado, avise por uma Issue.
+Também há um **[grupo de WhatsApp da comunidade](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7)** para conversa em tempo real — mas decisão do projeto se registra aqui, não lá. Se o link estiver expirado, avise por uma Issue.
 
-O mais valioso agora é gente com experiência em **saúde digital**, **HL7 FHIR** e **segurança da informação**. Veja o guia completo em [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde**, **modelagem de dados clínicos**, **segurança da informação em dado sensível** e **quem já operou um prontuário na prática** e sabe onde dói. Guia completo em [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+<br>
+
+## Documentação
+
+| Documento | O que contém |
+| :--- | :--- |
+| [`docs/vision.md`](./docs/vision.md) | Missão, problema, princípios e escopo |
+| [`docs/prd.md`](./docs/prd.md) | O que o sistema precisa fazer, e por quê |
+| [`docs/modulos.md`](./docs/modulos.md) | Proposta de arquitetura de módulos da V1 |
+| [`docs/cadastros.md`](./docs/cadastros.md) | Dicionário de dados dos cadastros, insumo para o esquema de banco |
+| [`docs/conformidade-sbis.md`](./docs/conformidade-sbis.md) | Matriz de rastreabilidade da certificação SBIS v5.2 |
+| [`docs/decisions/`](./docs/decisions/) | As decisões de arquitetura, uma por arquivo |
+| [`docs/compliance.md`](./docs/compliance.md) | Normas brasileiras aplicáveis (LGPD, ANVISA, SBIS, RNDS, TISS) |
+| [`docs/roadmap.md`](./docs/roadmap.md) | As fases do projeto |
+| [`docs/reunioes/`](./docs/reunioes/) | O que cada reunião decidiu e deixou em aberto |
+| [`GOVERNANCE.md`](./GOVERNANCE.md) | Como o projeto é conduzido, e como isso deve evoluir |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Como participar |
+| [`SECURITY.md`](./SECURITY.md) | Como reportar uma vulnerabilidade |
 
 <br>
 
 ## Licença
 
-Este repositório, código e conteúdo, é distribuído sob a **[GNU Affero General Public License v3.0](./LICENSE)**.
+Distribuído sob a **[GNU Affero General Public License v3.0](./LICENSE)**.
 
-Qualquer pessoa pode usar, modificar e hospedar o OpenClinic, inclusive comercialmente, desde que mantenha as modificações abertas sob a mesma licença. O projeto também prevê uma licença comercial alternativa para quem não puder cumprir essa condição. Detalhes em [`licensing.md`](./docs/licensing.md).
+Qualquer pessoa pode usar, modificar e hospedar o OpenClinic, inclusive comercialmente, desde que mantenha as modificações abertas sob a mesma licença. Existe também a previsão de uma licença comercial alternativa para quem não puder cumprir essa condição — detalhes e limites em [`licensing.md`](./docs/licensing.md).
 
 Copyright © 2026 Dr. Daniel Dorta Santiago de Carvalho Duarte, CRM 174209, e colaboradores do OpenClinic.
 
@@ -110,9 +115,7 @@ Copyright © 2026 Dr. Daniel Dorta Santiago de Carvalho Duarte, CRM 174209, e co
 
 ## Idioma
 
-A documentação deste repositório é escrita em português — é onde está a comunidade do projeto e é brasileira a regulação que o condiciona. Código, identificadores, mensagens de commit e a especificação da API seguem o padrão internacional e são escritos em inglês.
-
-Tradução da documentação para inglês e espanhol está nos planos, conforme o projeto e sua comunidade crescerem.
+A documentação deste repositório é escrita em português — é onde está a comunidade do projeto, e é brasileira a regulação que o condiciona. Código, identificadores, mensagens de commit e a especificação da API seguem o padrão internacional e são escritos em inglês.
 
 <div align="center">
 <br>

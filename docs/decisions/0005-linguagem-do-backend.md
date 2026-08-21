@@ -10,6 +10,8 @@ Definidos o padrão de dados ([0001](./0001-fhir-como-padrao-de-dados.md)), o ba
 
 Esta decisão é diferente das anteriores. As outras foram consenso rápido. Esta tem **teses concorrentes, sustentadas por pessoas com experiência real e argumentos legítimos** — e é a decisão mais cara de reverter depois.
 
+Como insumo desta decisão, a proposta de arquitetura de módulos da V1 ([`modulos.md`](../modulos.md)) e o dicionário de dados ([`cadastros.md`](../cadastros.md)) dimensionam o que a linguagem escolhida vai construir.
+
 ## Situação do debate
 
 A reunião de 19/08/2026 dedicou a maior parte do tempo a este tema e foi **encerrada sem decisão**, com a finalização remarcada para o encontro seguinte, expressamente para que as teses amadurecessem.

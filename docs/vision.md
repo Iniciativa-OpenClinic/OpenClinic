@@ -55,7 +55,7 @@ Clínicas e consultórios médicos. O modelo de negócio da oferta oficial do Op
 
 ## Antes de um prontuário, uma comunidade
 
-Queremos, antes de ser um prontuário, ser uma **comunidade unida de desenvolvedores da área da saúde**: gente que se ajuda de verdade e que busca servir à comunidade como um todo.
+Queremos, antes de ser um prontuário, ser uma **comunidade unida de desenvolvedores da área da saúde e de quem vive a clínica por dentro**, seus donos e gestores: gente que se ajuda de verdade e que busca servir à comunidade como um todo. São dois saberes que raramente se encontram, e é do encontro deles que nasce um prontuário cada vez melhor e mais completo. Quem escreve o código nem sempre sabe onde dói na recepção às sete da manhã; quem administra a clínica sabe, e não tem como transformar isso em software sozinho.
 
 O coração deste projeto nasceu do interesse genuíno de ajudar e de abrir as portas de um nicho que sempre foi fechado. Por isso o mínimo que esperamos de quem usar esta base, construída com tanto carinho, é que retribua de alguma forma à comunidade de desenvolvedores da saúde. Pode ser código devolvido, uma dúvida respondida, uma documentação melhorada, um conhecimento repassado a quem está começando.
 

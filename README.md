@@ -83,7 +83,7 @@ Quem chega de fora, ou prefere um canal público e permanente, **abre uma [Issue
 
 A contribuição mais valiosa hoje é **ajudar a fechar as decisões que ainda estão em aberto**. Elas estão marcadas como tal no [índice de decisões](./docs/decisions/), e são as mais caras de reverter depois. Traga sua posição ao grupo ou registre-a numa Issue: posição assinada entra no registro da decisão.
 
-Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde**, **modelagem de dados clínicos**, **segurança da informação em dado sensível** e **quem já operou um prontuário na prática** e sabe onde dói. Guia completo em [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde**, **modelagem de dados clínicos**, **segurança da informação em dado sensível** e **quem já operou um prontuário na prática** e sabe onde dói. **Não é preciso programar para contribuir**: donos e gestores de clínica são parte da comunidade que este projeto quer formar, e o que eles sabem da operação orienta o desenho tanto quanto o código. Guia completo em [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 <br>
 

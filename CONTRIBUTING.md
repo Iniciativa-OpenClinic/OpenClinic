@@ -4,7 +4,7 @@ Obrigado pelo interesse no OpenClinic! O projeto está na fase de **definição 
 
 ## O que mais precisamos agora
 
-**Ajudar a fechar bem as [decisões em aberto](./docs/decisions/).** Duas estão em disputa neste momento — a linguagem do backend e a camada de cache e banco de apoio. Se você tem experiência que ajude a decidir qualquer uma delas, é a contribuição de maior impacto que existe hoje no projeto.
+**Ajudar a fechar bem as [decisões em aberto](./docs/decisions/).** Três estão em disputa neste momento — a linguagem do backend, a camada de cache e banco de apoio, e a ordem entre contrato da API e código. Se você tem experiência que ajude a decidir qualquer uma delas, é a contribuição de maior impacto que existe hoje no projeto.
 
 Nesta fase, é especialmente valiosa a experiência em:
 - **HL7 FHIR** e interoperabilidade em saúde — em particular sobre a modelagem de *bundles* FHIR sobre banco relacional, o problema técnico central já identificado ([0001](./docs/decisions/0001-fhir-como-padrao-de-dados.md));
@@ -35,7 +35,7 @@ Quando o projeto entrar em fase de código, um **CLA (Contributor License Agreem
 
 Os requisitos de engenharia já acordados para o backend, qualquer que seja a linguagem escolhida: conformidade com **SOLID**, desenho orientado ao domínio (**DDD**), **arquitetura limpa** e documentação técnica da API suficiente para viabilizar uma reimplementação independente.
 
-**Quem muda a API atualiza o contrato no mesmo Pull Request.** O contrato OpenAPI nasce antes do código ([roadmap, Fase 3](./docs/roadmap.md)) e é a fonte da verdade: endpoint sem contrato não existe, e a verificação automática rejeita código que divirja dele. Documentar não é etapa posterior — é parte da mudança.
+**Quem muda a API atualiza o contrato no mesmo Pull Request.** Se o contrato OpenAPI é escrito antes do código ou gerado a partir dele é decisão em aberto ([0008](./docs/decisions/0008-contrato-antes-ou-depois-do-codigo.md)) — mas a regra vale nos dois caminhos: endpoint sem contrato não existe, e a verificação automática rejeita código que divirja dele. Documentar não é etapa posterior — é parte da mudança.
 
 A documentação do projeto é escrita em **português**. Código, identificadores, mensagens de commit e a especificação da API são escritos em **inglês**.
 

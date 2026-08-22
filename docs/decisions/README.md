@@ -15,8 +15,9 @@ A ideia é simples: quem chega ao projeto seis meses depois consegue entender **
 | [0005](./0005-linguagem-do-backend.md) | Linguagem e plataforma do backend | **Em aberto** |
 | [0006](./0006-camada-de-cache-e-banco-de-apoio.md) | Camada de cache e banco de apoio | **Em aberto** |
 | [0007](./0007-ambiente-de-homologacao.md) | Ambiente de homologação | Aceita |
+| [0008](./0008-contrato-antes-ou-depois-do-codigo.md) | Contrato da API antes ou depois do código | **Em aberto** |
 
-Esta tabela e a do [`README` do projeto](../../README.md) são os dois únicos lugares que declaram situação de decisão. Ao mudar a situação de uma, atualize as duas — o resto da documentação aponta para cá em vez de repetir.
+Esta tabela é o único lugar que declara a situação de cada decisão — o resto da documentação aponta para cá em vez de repetir.
 
 ## Situações possíveis
 

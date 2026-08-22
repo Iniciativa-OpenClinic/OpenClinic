@@ -27,9 +27,9 @@ Um contraponto aos prontuários de mercado que fecham seu ecossistema e não lib
 
 ## Por que este projeto existe
 
-Prontuários eletrônicos comerciais, em geral, fecham seus dados. Sair de um fornecedor ou integrar outro sistema costuma ser difícil, caro ou simplesmente impossível — a clínica gera os dados, mas depende da boa vontade de quem vende o software para acessá-los.
+Prontuários eletrônicos comerciais, em geral, fecham seus dados. Sair de um fornecedor ou integrar outro sistema costuma ser difícil, caro ou simplesmente impossível. A clínica gera os dados, mas depende da boa vontade de quem vende o software para acessá-los.
 
-O OpenClinic nasce como contraponto: um prontuário cujo código é aberto e cuja API é, desde o primeiro dia, tratada como um produto tão importante quanto a própria interface. E cuja licença — [AGPL-3.0](./LICENSE) — impede que alguém pegue o que nasceu aberto e feche.
+O OpenClinic nasce como contraponto: um prontuário cujo código é aberto e cuja API é, desde o primeiro dia, tratada como um produto tão importante quanto a própria interface. E cuja licença, a [AGPL-3.0](./LICENSE), impede que alguém pegue o que nasceu aberto e feche.
 
 Missão, princípios e escopo completos em [`vision.md`](./docs/vision.md).
 
@@ -39,13 +39,13 @@ Missão, princípios e escopo completos em [`vision.md`](./docs/vision.md).
 
 Um prontuário parece um CRUD. Não é.
 
-O **[HL7 FHIR](https://www.hl7.org/fhir/)** não é um formato de exportação que se acrescenta no fim — no OpenClinic ele é a forma como o sistema pensa ([decisão 0001](./docs/decisions/0001-fhir-como-padrao-de-dados.md)). O padrão organiza informação em *bundles*: conjuntos montados para fazer sentido a quem lê, reunindo dados de várias entidades e repetindo o que o contexto clínico exigir. Um banco relacional quer exatamente o oposto — normalizar, separar, não repetir nada.
+O **[HL7 FHIR](https://www.hl7.org/fhir/)** não é um formato de exportação que se acrescenta no fim. No OpenClinic, ele é a forma como o sistema pensa ([decisão 0001](./docs/decisions/0001-fhir-como-padrao-de-dados.md)). O padrão organiza informação em *bundles*: conjuntos montados para fazer sentido a quem lê, reunindo dados de várias entidades e repetindo o que o contexto clínico exigir. Um banco relacional quer exatamente o oposto: normalizar, separar, não repetir nada.
 
 Esse descasamento **não é um obstáculo que se resolve uma vez e passa**. Ele reaparece a cada recurso novo que o sistema implementa: um esquema que responde bem a um recurso pode inviabilizar a consulta que outro exige. É a restrição que governa cada decisão de modelagem deste projeto, e vai continuar governando.
 
 Some-se o que a regulação exige de um prontuário, e que molda o modelo de dados antes da primeira linha de código:
 
-- Nada é apagado de verdade — exclusão marca, não remove.
+- Nada é apagado de verdade: exclusão marca, não remove.
 - Toda informação carrega de onde veio e quem a registrou, de forma permanente.
 - O registro precisa sobreviver **vinte anos**.
 - Dados de clínicas diferentes nunca se encostam.
@@ -59,7 +59,7 @@ Nenhum desses requisitos é opcional. O mapeamento completo das normas está em 
 
 ## Como este projeto decide
 
-Toda decisão de arquitetura vira um documento com contexto, consequências assumidas e — obrigatoriamente — as alternativas descartadas e o motivo. Ficam em **[`docs/decisions/`](./docs/decisions/)**, que é sempre a fonte atual do que já está fechado e do que segue em aberto.
+Toda decisão de arquitetura vira um documento com contexto, consequências assumidas e, obrigatoriamente, as alternativas descartadas e o motivo. Ficam em **[`docs/decisions/`](./docs/decisions/)**, que é sempre a fonte atual do que já está fechado e do que segue em aberto.
 
 Três regras valem aqui:
 
@@ -69,7 +69,7 @@ Três regras valem aqui:
 
 **Decisão não se fecha com gente ausente.** Encaminhamento verbal no fim de uma reunião, com participantes fora da sala, não vale como decisão tomada.
 
-Isso quer dizer que aqui se defende ideia por escrito e se aceita ser contrariado em público. Dá mais trabalho que abrir um pull request e sumir — e é de propósito.
+Isso quer dizer que aqui se defende ideia por escrito e se aceita ser contrariado em público. Dá mais trabalho que abrir um pull request e sumir, e é de propósito.
 
 Detalhes em [`GOVERNANCE.md`](./GOVERNANCE.md).
 
@@ -77,11 +77,11 @@ Detalhes em [`GOVERNANCE.md`](./GOVERNANCE.md).
 
 ## Como participar
 
-**A conversa do projeto acontece no [grupo de WhatsApp](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7) — entre.** Se o link estiver expirado, avise por uma [Issue](../../issues).
+**A conversa do projeto acontece no [grupo de WhatsApp](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7). Entre.** Se o link estiver expirado, avise por uma [Issue](../../issues).
 
-Quem chega de fora, ou prefere um canal público e permanente, **abre uma [Issue](../../issues)** — é a porta registrada e pesquisável do projeto, e o time responde por lá.
+Quem chega de fora, ou prefere um canal público e permanente, **abre uma [Issue](../../issues)**, que é a porta registrada e pesquisável do projeto, e o time responde por lá.
 
-A contribuição mais valiosa hoje é **ajudar a fechar as decisões que ainda estão em aberto** — elas estão marcadas como tal no [índice de decisões](./docs/decisions/), e são as mais caras de reverter depois. Traga sua posição ao grupo ou registre-a numa Issue: posição assinada entra no registro da decisão.
+A contribuição mais valiosa hoje é **ajudar a fechar as decisões que ainda estão em aberto**. Elas estão marcadas como tal no [índice de decisões](./docs/decisions/), e são as mais caras de reverter depois. Traga sua posição ao grupo ou registre-a numa Issue: posição assinada entra no registro da decisão.
 
 Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde**, **modelagem de dados clínicos**, **segurança da informação em dado sensível** e **quem já operou um prontuário na prática** e sabe onde dói. Guia completo em [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
@@ -110,7 +110,7 @@ Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde*
 
 Distribuído sob a **[GNU Affero General Public License v3.0](./LICENSE)**.
 
-Qualquer pessoa pode usar, modificar e hospedar o OpenClinic, inclusive comercialmente, desde que mantenha as modificações abertas sob a mesma licença. Existe também a previsão de uma licença comercial alternativa para quem não puder cumprir essa condição — detalhes e limites em [`licensing.md`](./docs/licensing.md).
+Qualquer pessoa pode usar, modificar e hospedar o OpenClinic, inclusive comercialmente, desde que mantenha as modificações abertas sob a mesma licença. Existe também a previsão de uma licença comercial alternativa para quem não puder cumprir essa condição. Detalhes e limites em [`licensing.md`](./docs/licensing.md).
 
 Copyright © 2026 Dr. Daniel Dorta Santiago de Carvalho Duarte, CRM 174209, e colaboradores do OpenClinic.
 
@@ -118,7 +118,7 @@ Copyright © 2026 Dr. Daniel Dorta Santiago de Carvalho Duarte, CRM 174209, e co
 
 ## Idioma
 
-A documentação deste repositório é escrita em português — é onde está a comunidade do projeto, e é brasileira a regulação que o condiciona. Código, identificadores, mensagens de commit e a especificação da API seguem o padrão internacional e são escritos em inglês.
+A documentação deste repositório é escrita em português, que é onde está a comunidade do projeto, e brasileira é a regulação que o condiciona. Código, identificadores, mensagens de commit e a especificação da API seguem o padrão internacional e são escritos em inglês.
 
 <div align="center">
 <br>

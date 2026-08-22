@@ -1,15 +1,13 @@
-# Requisitos de Produto (conceitual, pré-técnico)
+# Requisitos de Produto
 
-*v0.4 — documento vivo.*
+*v0.5 — documento vivo.*
 
 > [!NOTE]
-> Este documento foi escrito **antes** das primeiras reuniões do projeto, como um mapa conceitual dos requisitos.
->
-> Desde então: os requisitos levantados na [reunião de 12/08](./reunioes/2026-08-12-primeira-reuniao.md) foram incorporados, as decisões de stack da [reunião de 19/08](./reunioes/2026-08-19-stack-tecnico.md) estão em [`decisions/`](./decisions/), e a revisão de arquitetura de 21/08 — [`modulos.md`](./modulos.md) e [`cadastros.md`](./cadastros.md) — detalhou e ampliou este mapa muito além do rascunho inicial. Este documento continua respondendo ao **quê** e ao **porquê** de cada pilar; para o **como** — entidades, regras de negócio, campos —, ele aponta para lá.
+> **Este documento acompanha o projeto.** Ele reflete o que está decidido até a revisão indicada acima — inclusive as escolhas de tecnologia já fechadas — e é atualizado a cada nova decisão. Como se chegou a cada uma fica registrado nas atas de [`reunioes/`](./reunioes/) e em [`decisions/`](./decisions/).
 
 ## O que este documento é — e o que não é
 
-Este é um PRD (Product Requirements Document) **conceitual**: descreve o quê o OpenClinic precisa fazer e por quê, não como — arquitetura, banco de dados, linguagem de programação e demais escolhas de stack couberam à reunião técnica com os desenvolvedores da comunidade e estão registradas em [`decisions/`](./decisions/).
+Este é um PRD (Product Requirements Document): descreve o quê o OpenClinic precisa fazer e por quê. As escolhas de tecnologia couberam às reuniões técnicas com os desenvolvedores da comunidade e são debatidas em [`decisions/`](./decisions/) — aqui elas aparecem **em resumo**, porque quem lê o mapa do produto precisa saber sobre que fundação ele se apoia; o porquê de cada uma continua morando no seu registro.
 
 Ele funciona como **mapa do produto**: reúne todos os pilares funcionais em resumo executivo, cada um apontando para onde vive o detalhe real — entidades e regras de negócio em [`modulos.md`](./modulos.md), campos de cadastro em [`cadastros.md`](./cadastros.md). Nada aqui repete o que já está lá; quem precisa de profundidade segue o link. O mapa cobre o produto **por inteiro**, não só a V1 — cada pilar marca o que está na V1 e o que é evolução futura, seguindo a mesma fronteira que [`modulos.md`](./modulos.md#fora-da-v1) já traça.
 
@@ -93,6 +91,34 @@ Derivados do mapeamento em [`compliance.md`](./compliance.md), e vários deles m
 
 O desenho completo de cada um destes — entidades, regras de negócio e a tag do requisito de certificação correspondente — vive em [`modulos.md`](./modulos.md), na camada transversal (Identidade e Acesso, Auditoria e Proveniência).
 
+## Stack técnico e desenho do sistema
+
+O PRD descreve o **quê**; esta seção resume o **como** já escolhido, para que nenhum leitor precise garimpar sete arquivos para saber sobre que fundação o produto é construído. Cada escolha tem seu registro próprio em [`decisions/`](./decisions/), com contexto, consequências assumidas e alternativas descartadas — é lá que mora o porquê.
+
+### O que já está decidido
+
+- **HL7 FHIR (R4) como padrão de dados** ([0001](./decisions/0001-fhir-como-padrao-de-dados.md)) — o dado clínico nasce na forma FHIR, em vez de ser convertido no fim. É o padrão exigido pela RNDS, e adotá-lo depois significaria reescrever o modelo de dados.
+- **PostgreSQL como banco de registro** ([0002](./decisions/0002-postgresql-como-banco-principal.md)) — a fonte da verdade, com garantias transacionais e capacidade de sustentar a guarda de vinte anos. É ele que precisa remontar os *bundles* do FHIR a partir de dados normalizados.
+- **Docker como unidade de implantação** ([0003](./decisions/0003-docker-como-unidade-de-implantacao.md)) — a clínica instala e hospeda onde quiser, sem depender de um provedor específico. Prontuário que só roda num fornecedor contradiz, na infraestrutura, a promessa de não aprisionar ninguém.
+- **API antes da interface** ([0004](./decisions/0004-api-antes-de-interface.md)) — toda interface é cliente da API, nunca o contrário. O contrato **OpenAPI** que descreve os endpoints é escrito **antes do código** ([`roadmap.md`](./roadmap.md), Fase 3), e quem muda a API atualiza o contrato na mesma entrega.
+- **Ambiente de homologação** ([0007](./decisions/0007-ambiente-de-homologacao.md)) — publicação contínua com dados fictícios, que serve também de bancada para comparar as alternativas ainda em aberto.
+
+### O que ainda está em aberto
+
+- **Linguagem e plataforma do backend** ([0005](./decisions/0005-linguagem-do-backend.md)) — é a decisão mais cara de reverter, e a única com teses concorrentes sustentadas por gente com experiência real. Na mesa: **Go**, **Python**, **Node.js**, **Node.js no núcleo com Python nos serviços de inteligência artificial** e **Rust**. O debate não é sobre qual linguagem é melhor em abstrato, e sim sobre qual critério pesa mais: tamanho da base de desenvolvedores, eficiência de recursos, segurança de tipos, afinidade com serviços de IA e custo de transição agora contra complexidade depois. Qualquer que seja a escolha, a implementação deve atender a SOLID, desenho orientado ao domínio, arquitetura limpa e documentação da API suficiente para viabilizar uma reimplementação independente.
+- **Camada de cache e banco de apoio** ([0006](./decisions/0006-camada-de-cache-e-banco-de-apoio.md)) — há consenso de que um banco de apoio entra no projeto e de que ele **não entra no MVP**. Falta decidir qual, e para qual das três necessidades distintas: cache e sessão, leitura analítica ou percepção de tempo real. Na mesa: **Redis**, **MongoDB em paralelo ao PostgreSQL** e uma **arquitetura orientada a eventos sobre o próprio PostgreSQL** — esta última resolvendo a terceira necessidade sem introduzir um segundo banco.
+- **Formato dos endpoints** — API no padrão FHIR puro, ou API própria com os dados clínicos em recursos FHIR e uma fachada FHIR para interoperabilidade. A frente do contrato abre essa decisão ([`roadmap.md`](./roadmap.md), Fase 3), a registrar em [`decisions/`](./decisions/).
+
+### O desenho do sistema
+
+O que a revisão de arquitetura já fechou, e que vale independentemente das decisões acima:
+
+- **Quatro camadas.** Transversal (identidade e acesso, auditoria e proveniência, terminologias) → estrutura (organização, pessoas, catálogo, convênios) → operação (agenda, prontuário) → apoio (estoque, financeiro). Cada camada só depende das anteriores, e é essa ordem que o MVP segue para crescer em incrementos. Diagrama e módulos em [`modulos.md`](./modulos.md).
+- **Três camadas na API, que não se confundem.** A API é **REST** — o estilo de conversa da web, o mesmo do FHIR e do RNDS; o **contrato OpenAPI** a descreve; o **FHIR** dá a forma do dado clínico que ela carrega.
+- **Limites de plataforma.** Limite de requisições por chave e por origem; nenhum canal auxiliar — trilhas, filas, registros técnicos, mensagens de integração — carrega dado clínico ou identificação de paciente, apenas referências opacas; cada serviço acessa o banco com credencial própria e permissões mínimas; cada endpoint devolve o mínimo da sua finalidade, e coleções são paginadas por padrão.
+- **Esquema que evolui por adição.** O modelo de dados nasce compatível com os Estágios 2 e 3 da certificação: as evoluções acrescentam tabelas e colunas, nunca redesenham as existentes. É o que permite mirar o Estágio 1 sem hipotecar o futuro — detalhes em [`cadastros.md`](./cadastros.md).
+- **Fronteira entre núcleo e inteligência artificial.** Nenhum agente de IA decide aquilo que uma função determinística pode calcular. Serviços de IA, quando existirem, ficam fora do caminho crítico do prontuário e não emitem juízo clínico — princípio registrado na [0005](./decisions/0005-linguagem-do-backend.md) e coerente com o núcleo neutro do [`vision.md`](./vision.md).
+
 ## Requisitos a confirmar
 
 Levantados em reunião com justificativa que o mapeamento regulatório do projeto ainda não sustenta. Ficam registrados como **pendentes de verificação**, e não como requisitos firmes — publicar afirmação regulatória incorreta é o tipo de erro que custa credibilidade a um projeto de saúde.
@@ -103,10 +129,9 @@ Levantados em reunião com justificativa que o mapeamento regulatório do projet
 ## Fora de escopo deste documento
 
 - **Detalhamento de regras de negócio, entidades e campos de cada pilar** — vive em [`modulos.md`](./modulos.md) e [`cadastros.md`](./cadastros.md), não aqui.
-- Escolha de linguagem de programação, banco de dados, framework ou infraestrutura de hospedagem.
-- Arquitetura de sistema (monolito, microsserviços, etc.).
+- **O porquê de cada escolha técnica** — contexto, consequências assumidas e alternativas descartadas vivem em [`decisions/`](./decisions/). A seção acima traz apenas o resumo do que foi decidido e do que segue em aberto.
 - Cronograma de desenvolvimento — veja [`roadmap.md`](./roadmap.md) para as fases planejadas.
 - Catálogo definitivo de eventos de webhook.
 - Funcionalidades de especialidades além da médica (odontologia etc.) — veja a filosofia de expansão em [`vision.md`](./vision.md).
 
-Essas escolhas couberam às reuniões técnicas e estão registradas em [`decisions/`](./decisions/), não neste documento.
+O que este documento nunca faz é decidir por conta própria: escolha técnica se fecha em reunião e se registra em [`decisions/`](./decisions/).

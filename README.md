@@ -18,13 +18,6 @@ Um contraponto aos prontuários de mercado que fecham seu ecossistema e não lib
 
 </div>
 
-<br>
-
-> [!WARNING]
-> **Não use em atendimento a pacientes.** O OpenClinic ainda não é um produto. Em que fase ele está, o [`roadmap.md`](./docs/roadmap.md) diz.
-
-<br>
-
 ## Por que este projeto existe
 
 Prontuários eletrônicos comerciais, em geral, fecham seus dados. Sair de um fornecedor ou integrar outro sistema costuma ser difícil, caro ou simplesmente impossível. A clínica gera os dados, mas depende da boa vontade de quem vende o software para acessá-los.

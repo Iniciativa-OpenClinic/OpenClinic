@@ -6,7 +6,7 @@ Obrigado pelo interesse no OpenClinic! O projeto está na fase de **definição 
 
 **Ajudar a fechar bem as [decisões em aberto](./docs/decisions/).** Três estão em disputa neste momento: a linguagem do backend, a camada de cache e banco de apoio, e a ordem entre contrato da API e código. Se você tem experiência que ajude a decidir qualquer uma delas, é a contribuição de maior impacto que existe hoje no projeto.
 
-**Não é preciso programar para contribuir.** Se você é dono ou gestor de clínica, o que você sabe da operação vale tanto quanto código: descrever como um fluxo funciona de verdade, apontar onde a proposta de arquitetura não bate com a rotina, dizer o que está faltando, testar o sistema quando houver ambiente de homologação. Boa parte do desenho registrado em [`modulos.md`](./docs/modulos.md) nasceu exatamente desse tipo de conversa.
+**Não é preciso programar para contribuir.** Se você é dono ou gestor de clínica, o que você sabe da operação vale tanto quanto código: descrever como um fluxo funciona de verdade, apontar onde a proposta de arquitetura não bate com a rotina, dizer o que está faltando, testar o sistema quando houver ambiente de homologação. Boa parte do desenho registrado em [`modulos.md`](./docs/modulos.md) nasceu exatamente desse tipo de conversa. É o trabalho da frente de uso e validação, descrita no [`GOVERNANCE.md`](./GOVERNANCE.md).
 
 Nesta fase, é especialmente valiosa a experiência em:
 - **HL7 FHIR** e interoperabilidade em saúde, em particular sobre a modelagem de *bundles* FHIR sobre banco relacional, o problema técnico central já identificado ([0001](./docs/decisions/0001-fhir-como-padrao-de-dados.md));

@@ -10,13 +10,19 @@ Quando este documento se refere ao "conselho fundador" em outros lugares (como e
 
 ## Frentes de trabalho
 
-O projeto organiza-se em duas frentes:
+O projeto organiza-se em três frentes:
 
 **Frente técnica**: padrão de dados e modelagem, banco de dados, API, infraestrutura e segurança. É quem toma as decisões registradas em [`docs/decisions/`](./docs/decisions/).
 
 **Frente de estratégia, comunicação e parcerias**: posicionamento do projeto, formação de comunidade, relacionamento com instituições e articulação com o setor de saúde.
 
-As frentes não são compartimentos estanques: uma mesma pessoa pode atuar nas duas, e decisões de peso são discutidas em conjunto.
+**Frente de uso e validação (testers)**: usar o sistema em condições reais, relatar o que quebra ou atrapalha, sugerir melhorias e propor expansões de escopo. É a frente que confronta o desenho com a rotina de uma clínica de verdade, e a única capaz de descobrir cedo que uma decisão bonita no papel não sobrevive a uma manhã de recepção cheia. Enquanto não existe software, a validação recai sobre o desenho e a documentação, que é o que já vem acontecendo desde a primeira reunião.
+
+Esta frente é **aberta a qualquer pessoa**. Ela é a casa natural de donos de clínica, gestores e profissionais de saúde, e nada impede que quem programa também participe dela.
+
+Reconhecemos que membros desta frente possam querer **apoiar o projeto financeiramente**. Isso só passa a existir de forma organizada quando houver a entidade jurídica descrita em [Titularidade](#titularidade), e vem com uma regra que vale desde já: **apoio financeiro não compra poder de decisão**. Quem apoia entra no registro do projeto pelas mesmas regras de todo mundo, com argumento assinado e debatido em público.
+
+As frentes não são compartimentos estanques: uma mesma pessoa pode atuar em mais de uma, e decisões de peso são discutidas em conjunto.
 
 **A frente técnica não se subdivide por especialidade.** A proposta inicial de criar subgrupos, como infraestrutura e banco de dados, foi revista já na primeira reunião. O argumento que prevaleceu: segmentar o desenvolvimento em times por área força comunicação entre as partes e leva, na prática, a definir interfaces internas desnecessárias, acabando por segmentar o próprio software por um motivo que é apenas organizacional. O projeto não tem escala que justifique especialização rígida.
 

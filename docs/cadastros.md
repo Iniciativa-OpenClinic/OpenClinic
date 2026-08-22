@@ -80,7 +80,7 @@ Pertence à organização e é compartilhado entre as unidades. A ficha é **exc
 
 ## Profissional de saúde
 
-Quem exerce ato profissional: tem conselho de classe e agenda. Alinhado ao paciente em nome social, sexo, nacionalidade e documento de estrangeiro [`SBIS ECF.02.01`](./conformidade-sbis.md). Anti-duplicidade por CPF e por conselho + número + UF.
+Quem exerce ato profissional: tem conselho de classe e agenda. O conselho define a categoria — medicina, enfermagem, nutrição, fisioterapia, psicologia —, e todas usam este mesmo cadastro. Alinhado ao paciente em nome social, sexo, nacionalidade e documento de estrangeiro [`SBIS ECF.02.01`](./conformidade-sbis.md). Anti-duplicidade por CPF e por conselho + número + UF.
 
 | Campo | Tipo | Obrigatório | Observação |
 | :--- | :--- | :--- | :--- |
@@ -98,7 +98,7 @@ Quem exerce ato profissional: tem conselho de classe e agenda. Alinhado ao pacie
 | Conselho de classe | código (TISS — conselhos) | Sim | |
 | Número no conselho | texto | Sim | |
 | UF do conselho | código (UF) | Sim | |
-| RQE | lista de estruturado | Não | Registro de Qualificação de Especialista: número + especialidade |
+| RQE | lista de estruturado | Não | Registro de Qualificação de Especialista: número + especialidade. Específico da medicina |
 | CBO | código (CBO) | Não | Ocupação |
 | CNS | texto | Não | Dígito validado; identificador para o RNDS |
 | Método de assinatura digital | estruturado | Não | Nuvem (PSC): identificação no provedor. A1: arquivo + senha, cifrados no cofre de segredos. Regras de uso em [`modulos.md`](./modulos.md#prontuário) |

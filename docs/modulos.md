@@ -210,7 +210,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 **Entidades.**
 
 - **Paciente** — pertence à organização e é compartilhado entre unidades. Campos em [`cadastros.md`](./cadastros.md#paciente).
-- **Profissional de saúde** — quem exerce ato profissional: tem conselho de classe e **tem agenda**. Campos em [`cadastros.md`](./cadastros.md#profissional-de-saúde).
+- **Profissional de saúde** — quem exerce ato profissional: tem conselho de classe e **tem agenda**. É o conselho que define a categoria — medicina, enfermagem, nutrição, fisioterapia, psicologia —, e neste documento "profissional" nunca é sinônimo de "médico": o enfermeiro é profissional de saúde como qualquer outro. Campos em [`cadastros.md`](./cadastros.md#profissional-de-saúde).
 - **Funcionário** — quem opera o sistema sem exercer ato profissional: **não tem conselho nem agenda**. Campos em [`cadastros.md`](./cadastros.md#funcionário).
 - **Vínculo profissional–unidade** — em quais unidades o profissional atende e com quais procedimentos habilitados. A disponibilidade de horários pertence à Agenda.
 
@@ -322,7 +322,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 **Entidades.**
 
 - **Atendimento (Encounter)** — vincula paciente, profissional, unidade, agendamento de origem e fonte pagadora; agrega todos os registros feitos naquele evento.
-- **Documentos clínicos** — anamnese (estruturada no modelo SOAP [`SBIS ECF.07.13`](./conformidade-sbis.md)), evolução clínica, receita comum e **de controle especial**, solicitação de exames, encaminhamento, atestado e outros documentos.
+- **Documentos clínicos** — anamnese (estruturada no modelo SOAP [`SBIS ECF.07.13`](./conformidade-sbis.md)), evolução clínica — médica ou de enfermagem —, receita comum e **de controle especial**, solicitação de exames, encaminhamento, atestado e outros documentos.
 - **Modelos por especialidade** — templates de documentos, geridos pela clínica.
 - **Anexos** — arquivos vinculados ao atendimento ou ao paciente [`SBIS ECF.07.38`](./conformidade-sbis.md).
 - **Consentimentos** — TCLE emitido a partir do modelo do Catálogo e consentimentos do paciente sobre o uso dos seus dados, com status (autorizado, não autorizado, revogado) e anexo do termo assinado [`SBIS NGS1.11.05`](./conformidade-sbis.md).
@@ -334,6 +334,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 **Regras de negócio.**
 
 - **Ciclo de vida do documento clínico: aberto → finalizado → assinado.** Documento aberto é visível só ao autor; o profissional vê sua lista de pendências ao entrar no sistema e é avisado ao sair com documento aberto [`SBIS ECF.16.01`](./conformidade-sbis.md). Corrigir documento finalizado gera **nova versão**, só pelo autor, com justificativa [`SBIS NGS1.12.01`](./conformidade-sbis.md); inativar um registro exige justificativa e o mantém visível, tachado [`SBIS NGS1.12.03`](./conformidade-sbis.md). Documentos finalizados e não assinados entram na lista de pendências de assinatura do profissional [`SBIS NGS2.02.06`](./conformidade-sbis.md).
+- **Autoria é multiprofissional.** Todo documento clínico tem um profissional autor e é assinado por ele — médico, enfermeiro ou qualquer categoria com conselho de classe; o prontuário de enfermagem é registro clínico como os demais, e a assinatura digital que ele exige está prevista na Resolução COFEN 754/2024 ([`compliance.md`](./compliance.md)). **Quais tipos de documento cada categoria emite é parametrizado pela clínica**, sobre o modelo de permissão que já nasce granular por operação [`SBIS NGS1.03.04`](./conformidade-sbis.md): o sistema não decide o que a lei de cada profissão permite — ele registra a configuração e a audita. A V1 nasce com o padrão medicina emitindo todos os documentos e enfermagem emitindo evolução, sinais vitais, imunização e execução de procedimento; a clínica ajusta sob responsabilidade dela.
 - **Cabeçalho fixo de identificação do paciente** — incluindo alergias e diagnósticos ativos — em todas as telas do prontuário [`SBIS ECF.03.17`](./conformidade-sbis.md). Só nelas: telas administrativas não exibem dado clínico (princípio 2).
 - Vários prontuários podem estar abertos ao mesmo tempo, mas **só um em edição**; os demais ficam em leitura [`SBIS ECF.03.18`](./conformidade-sbis.md).
 - **Diagnósticos** registram estado (suspeito/confirmado), papel (principal/secundário) e situação (ativo/inativo), codificados em CID-10 — o modelo aceita mais de uma terminologia [`SBIS ECF.07.17`](./conformidade-sbis.md).
@@ -466,7 +467,7 @@ Procedimento realizado no Atendimento → baixa automática do kit, em unidade d
 - **Funil de orçamentos** — abertos, aprovados, expirados; taxa de conversão.
 - **Produção e repasse** — por profissional e período; base do pagamento manual.
 - **Notificação compulsória** — atendimentos com agravos da lista parametrizada [`SBIS ECF.19.02`](./conformidade-sbis.md).
-- **Preparo do dia** — sessões agendadas com procedimento, kit e produtos extras, por unidade e sala. É a visão da equipe de enfermagem: leitura; quem registra o realizado continua sendo o profissional, no Atendimento.
+- **Preparo do dia** — sessões agendadas com procedimento, kit e produtos extras, por unidade e sala. É a visão de preparo da equipe de enfermagem; quem registra o que foi realizado é o profissional que executou o procedimento, no Atendimento.
 
 ## Fora da V1
 

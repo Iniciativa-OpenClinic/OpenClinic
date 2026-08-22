@@ -19,8 +19,8 @@ Para o contexto de missão e princípios, veja [`vision.md`](./vision.md).
 
 ## Personas
 
-- **Médico(a) / profissional de saúde**: usa o prontuário no atendimento — registra, prescreve, monta planos terapêuticos e assina digitalmente; precisa de acesso rápido e confiável ao histórico do paciente e da confiança de que o registro é seguro e íntegro.
-- **Enfermagem**: prepara o dia a partir da agenda — quem vem, com qual procedimento, kit e produtos extras; quem registra o que foi de fato realizado continua sendo o profissional, no atendimento.
+- **Profissional de saúde** — médico(a), enfermeiro(a) e demais categorias com conselho de classe: usa o prontuário no atendimento — registra, prescreve dentro do que sua profissão permite, monta planos terapêuticos e assina digitalmente; precisa de acesso rápido e confiável ao histórico do paciente e da confiança de que o registro é seguro e íntegro.
+- **Enfermagem**: é profissional de saúde como qualquer outra categoria — tem agenda, executa procedimentos, registra evolução de enfermagem e sinais vitais e assina com certificado próprio, como a Resolução COFEN 754/2024 exige. Conta ainda com uma visão de preparo do dia a partir da agenda: quem vem, com qual procedimento, kit e produtos extras.
 - **Recepção / administrativo**: agenda, cadastra e opera as rotinas do dia a dia da clínica, com acesso **sem dado clínico** — é o cadastro de pessoas quem sustenta essa separação, não uma tela filtrada por cima.
 - **Gestor(a) da clínica**: acompanha financeiro, repasse de profissionais e relatórios de produção, e concede permissões — acesso mais amplo que o operacional, e o único que vê dado de repasse.
 - **Paciente**: é o titular dos dados registrados no prontuário; tem direito de acessá-los, entendê-los e levá-los embora.
@@ -30,7 +30,7 @@ Para o contexto de missão e princípios, veja [`vision.md`](./vision.md).
 
 ### Cadastro de pessoas
 
-Três cadastros distintos — não um só com papéis diferentes: **paciente**, que pertence à clínica como organização e é compartilhado entre unidades; **profissional de saúde**, que exige registro em conselho de classe e tem agenda; e **funcionário**, que opera o sistema sem exercer ato profissional e não tem agenda nem conselho. Essa distinção não é burocrática — é ela que sustenta a regra de acesso ao prontuário dos requisitos não-funcionais abaixo. Todos os três aceitam identificadores externos, para integração com outros sistemas da clínica. **Fora da V1:** portal do paciente, onde a própria pessoa acessaria seus dados diretamente. Entidades e regras: [`modulos.md`](./modulos.md#pessoas) · campos: [`cadastros.md`](./cadastros.md#paciente).
+Três cadastros distintos — não um só com papéis diferentes: **paciente**, que pertence à clínica como organização e é compartilhado entre unidades; **profissional de saúde**, que exige registro em conselho de classe e tem agenda — medicina, enfermagem e as demais categorias compartilham esse mesmo cadastro; e **funcionário**, que opera o sistema sem exercer ato profissional e não tem agenda nem conselho. Essa distinção não é burocrática — é ela que sustenta a regra de acesso ao prontuário dos requisitos não-funcionais abaixo. Todos os três aceitam identificadores externos, para integração com outros sistemas da clínica. **Fora da V1:** portal do paciente, onde a própria pessoa acessaria seus dados diretamente. Entidades e regras: [`modulos.md`](./modulos.md#pessoas) · campos: [`cadastros.md`](./cadastros.md#paciente).
 
 ### Catálogo de procedimentos e produtos
 
@@ -42,7 +42,7 @@ O **coração operacional da clínica**, com exigência de usabilidade acima da 
 
 ### Registro de prontuário
 
-O núcleo do sistema: o **Atendimento** é a espinha, e todo documento clínico nasce vinculado a ele — anamnese, evolução, receita comum e de controle especial, solicitação de exames, encaminhamento, atestado, anexos e modelos por especialidade. Mantém também o resumo clínico estruturado do paciente — alergias, diagnósticos, medicações em uso —, sempre sem tomar decisão clínica por conta própria (**núcleo neutro**, [`vision.md`](./vision.md)). Todo documento segue o mesmo ciclo — aberto, finalizado, assinado —, e corrigir um documento finalizado é sempre nova versão, nunca edição silenciosa. **Fora da V1:** apoio à decisão clínica (alertas de alergia e interação, Estágio 2 da certificação) e envio ao RNDS. Entidades e regras: [`modulos.md`](./modulos.md#prontuário) · campos: [`cadastros.md`](./cadastros.md#estruturas-clínicas-do-prontuário).
+O núcleo do sistema: o **Atendimento** é a espinha, e todo documento clínico nasce vinculado a ele — anamnese, evolução, receita comum e de controle especial, solicitação de exames, encaminhamento, atestado, anexos e modelos por especialidade. Mantém também o resumo clínico estruturado do paciente — alergias, diagnósticos, medicações em uso —, sempre sem tomar decisão clínica por conta própria (**núcleo neutro**, [`vision.md`](./vision.md)). Todo documento segue o mesmo ciclo — aberto, finalizado, assinado —, e corrigir um documento finalizado é sempre nova versão, nunca edição silenciosa. O registro é **multiprofissional**: cada documento tem seu autor e sua assinatura, e quais tipos cada categoria emite é configurado pela clínica, não fixado pelo sistema. **Fora da V1:** apoio à decisão clínica (alertas de alergia e interação, Estágio 2 da certificação) e envio ao RNDS. Entidades e regras: [`modulos.md`](./modulos.md#prontuário) · campos: [`cadastros.md`](./cadastros.md#estruturas-clínicas-do-prontuário).
 
 ### Plano terapêutico
 

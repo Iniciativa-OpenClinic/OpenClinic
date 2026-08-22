@@ -1,6 +1,6 @@
 # Visão
 
-*v0.2 — documento vivo, escrito na fase de fundação do projeto.*
+*v0.3, documento vivo, escrito na fase de fundação do projeto.*
 
 ## Missão
 
@@ -26,15 +26,40 @@ O OpenClinic nasce como contraponto a isso: um prontuário cujo código é abert
 
 **Sustentabilidade sem fechar o ecossistema.** O OpenClinic é licenciado sob AGPL-3.0: qualquer pessoa pode usar, modificar e até hospedar o sistema comercialmente, contanto que mantenha essas modificações abertas. É essa obrigação — não uma autorização que os mantenedores concedem ou negam — que impede que alguém feche o que nasceu aberto. Para quem não pode ou não quer manter suas modificações abertas, uma licença comercial alternativa está prevista. Os detalhes desse modelo estão em [`licensing.md`](./licensing.md).
 
+## O que se constrói por cima
+
+O OpenClinic quer ser uma **base sólida**. Não um produto que tenta cobrir sozinho cada nicho, mas o alicerce sobre o qual outras pessoas constroem aquilo que um prontuário, por si só, não resolve.
+
+Hoje quem tem uma boa ideia para uma clínica esbarra num muro. Construir um prontuário do zero é caro, demorado e regulado demais para uma pessoa ou uma equipe pequena. Sobra depender de quem já tem essa infraestrutura, e nem sempre esses fornecedores dão ao desenvolvedor externo a documentação, o suporte ou a abertura de que ele precisa. É esse muro que a API aberta derruba.
+
+Alguns exemplos do que cabe por cima, e que deliberadamente não estão no escopo do OpenClinic:
+
+- **CRM**, hoje uma das ferramentas mais procuradas por clínicas de todas as especialidades, e uma das mais oferecidas por desenvolvedores;
+- **automações** de rotina, do lembrete de retorno ao fluxo interno da equipe;
+- **integrações** com sistemas externos: assinatura digital, comunicação, financeiro, gestão, ferramentas de BI;
+- **apoio à decisão diagnóstica**, que por opção de projeto fica fora do núcleo neutro e, por isso mesmo, é território aberto a quem quiser construí-lo.
+
+Cada uma dessas frentes é uma oportunidade comercial real para quem hoje não consegue bancar sozinho a infraestrutura de um prontuário. O OpenClinic não cobra pedágio por isso nem escolhe quem pode construir, porque a licença não dá esse poder a ninguém (veja [`licensing.md`](./licensing.md)).
+
 ## Escopo inicial e filosofia de expansão
 
 A ideia original — e o escopo desta fase — é um **prontuário médico**. Não há compromisso, nesta v0.1, de cobrir odontologia ou outras especialidades desde o início. O modelo de dados e a arquitetura, no entanto, devem ser pensados para permitir esse tipo de expansão no futuro, inclusive o super-nichamento por especialidade médica.
+
+Nada nos impede, no futuro, de partir para estruturas mais robustas, como um prontuário hospitalar, nem de atender outros idiomas e outros países. Essa possibilidade não é retórica: ela existe porque adotamos o HL7 FHIR como base desde a primeira linha, e porque código, identificadores e a especificação da API são escritos em inglês. O que muda de um país para outro é a camada regulatória, aqui SBIS, RNDS e TISS, lá fora os equivalentes locais, e é justamente por ela estar separada do núcleo clínico que a travessia se torna possível. Queremos ser referência mundial: como prontuário de saúde e como projeto de código aberto.
 
 Cada expansão de escopo — odontologia, outras especialidades, novos módulos — será decidida pelo conselho fundador, conforme a necessidade e a maturidade do projeto (veja [`GOVERNANCE.md`](../GOVERNANCE.md)). Não há prazo definido para essas expansões.
 
 ## Público-alvo inicial
 
 Clínicas e consultórios médicos. O modelo de negócio da oferta oficial do OpenClinic prevê **autohospedagem gratuita para uso próprio de uma única organização (single-tenant)** — isso é uma característica da oferta, não um limite imposto pela licença: a AGPL-3.0 por si só permite usos mais amplos a quem cumprir suas obrigações (veja [`licensing.md`](./licensing.md)).
+
+## Antes de um prontuário, uma comunidade
+
+Queremos, antes de ser um prontuário, ser uma **comunidade unida de desenvolvedores da área da saúde**: gente que se ajuda de verdade e que busca servir à comunidade como um todo.
+
+O coração deste projeto nasceu do interesse genuíno de ajudar e de abrir as portas de um nicho que sempre foi fechado. Por isso o mínimo que esperamos de quem usar esta base, construída com tanto carinho, é que retribua de alguma forma à comunidade de desenvolvedores da saúde. Pode ser código devolvido, uma dúvida respondida, uma documentação melhorada, um conhecimento repassado a quem está começando.
+
+Isto é um pedido, não uma cláusula. A licença não obriga ninguém a retribuir, e não dá aos mantenedores nenhum poder de decidir quem pode ou não construir sobre o OpenClinic (veja [`licensing.md`](./licensing.md)). Quem preferir apenas usar está no seu direito e continua bem-vindo. Mas quem retribuir estará fazendo o projeto ser aquilo que ele se propôs a ser.
 
 ## Idioma
 

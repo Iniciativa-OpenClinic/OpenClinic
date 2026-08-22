@@ -76,6 +76,15 @@ Sistemas externos devem poder ser avisados quando algo relevante acontece no Ope
 
 O **catálogo concreto de eventos** ainda não foi definido — será construído com a comunidade técnica, respeitando as garantias acima.
 
+## O que outros constroem por cima
+
+O OpenClinic é desenhado para servir de **base a outros produtos**, e não apenas como sistema de uso final. A visão por trás disso está no [`vision.md`](./vision.md); aqui ficam os requisitos que o produto precisa cumprir para que ela seja verdade.
+
+- **Tudo o que a interface faz, a API faz.** Nenhuma funcionalidade relevante existe somente na tela. É o que permite a um produto de terceiro operar o sistema por inteiro, e não apenas consultá-lo.
+- **Módulos acoplam-se pela API, sem tocar o núcleo.** Um CRM, uma automação, um apoio à decisão diagnóstica ou um módulo de especialidade se ligam ao sistema sem exigir alteração no que já existe.
+- **A API tem política de versão explícita.** Quem construiu por cima não pode descobrir uma mudança quebrando em produção: mudança incompatível é evento raro, anunciado e versionado. O mecanismo concreto será registrado em [`decisions/`](./decisions/).
+- **O núcleo não presume o Brasil.** O que é regulatório e local, como terminologias, regras de conformidade e integração com a RNDS, vive separado do núcleo clínico, para que atender outro país seja acrescentar uma camada em vez de reescrever o sistema.
+
 ## Requisitos não-funcionais
 
 Derivados do mapeamento em [`compliance.md`](./compliance.md), e vários deles moldados também pela meta de certificação SBIS descrita acima — não são escolhas de tecnologia, são capacidades que o sistema precisa ter, para que uma clínica que o usa consiga cumprir suas próprias obrigações legais:

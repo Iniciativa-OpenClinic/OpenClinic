@@ -91,7 +91,7 @@ Isso é **compatível** com o núcleo neutro descrito no `vision.md` e com o enq
 
 Esta decisão está aberta e o registro acima é público justamente para que o debate continue por escrito.
 
-- **Para assinar sua posição:** comente na Issue vinculada ou abra um Pull Request adicionando seu argumento com seu nome nesta seção. O projeto não atribui argumentos a pessoas a partir de transcrição de reunião.
-- **Para trazer uma tese nova:** abra uma Issue do tipo *Proposta de decisão técnica*.
+- **Para assinar sua posição:** abra um Pull Request adicionando seu argumento com seu nome nesta seção, ou deixe-o escrito numa Issue. Posição debatida no grupo de WhatsApp ou em reunião entra no registro assim — por escrito e assinada: o projeto não atribui argumentos a pessoas a partir de transcrição de reunião.
+- **Para trazer uma tese nova:** leve-a ao grupo de WhatsApp ou abra uma Issue do tipo *Proposta de decisão técnica*.
 
 Quando houver decisão, este documento passa a **Aceita**, com a justificativa registrada. As teses vencidas **permanecem aqui** — elas explicam por que o projeto é como é, e permitem que uma revisão futura saiba o que já foi pesado.

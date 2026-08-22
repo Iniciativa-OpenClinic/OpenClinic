@@ -13,14 +13,14 @@ Nesta fase, é especialmente valiosa a experiência em:
 
 ## Onde a conversa acontece
 
-- **GitHub Issues** é o canal **canônico** do projeto — onde propostas e decisões ficam registradas e pesquisáveis.
-- **GitHub Discussions**, quando estiver habilitado neste repositório, é um espaço complementar para conversas mais abertas.
-- Também existe um **grupo de WhatsApp** da comunidade: <https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7> (o link pode expirar — se não funcionar, abra uma Issue pedindo um novo). O WhatsApp é bom para conversa em tempo real, mas **decisões do projeto são registradas no repositório**, não apenas discutidas por lá.
+- O dia a dia do projeto acontece no **grupo de WhatsApp** da comunidade: <https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7> (o link pode expirar — se não funcionar, abra uma Issue pedindo um novo). É lá que as conversas nascem e que a maior parte das definições é debatida hoje.
+- **GitHub Issues** é a porta pública do projeto: quem chega de fora propõe, reporta e pergunta por ali, sem precisar de convite, e tudo fica registrado e pesquisável. É o caminho que tende a ganhar força conforme o projeto crescer.
+- **O que vira decisão é registrado em [`docs/decisions/`](./docs/decisions/) e nas atas de [`docs/reunioes/`](./docs/reunioes/).** Conversa — em qualquer canal — não é registro.
 
 ## Como participar de uma decisão técnica
 
 1. **Leia o registro da decisão** em [`docs/decisions/`](./docs/decisions/). Ele traz o contexto, os critérios em disputa e as teses já apresentadas — para que você não precise repetir o que já foi dito.
-2. **Comente na Issue vinculada**, ou abra uma Issue do tipo *Proposta de decisão técnica* se sua contribuição for uma tese nova.
+2. **Traga sua posição ao debate** — no grupo de WhatsApp, numa reunião ou numa Issue. Se sua contribuição é uma tese nova, uma Issue do tipo *Proposta de decisão técnica* a deixa pública e pesquisável desde o início.
 3. **Assine sua posição.** Argumentos entram no registro permanente com o nome de quem os defende. O projeto não atribui posições a pessoas por conta própria — nem a partir de transcrição de reunião.
 
 Teses vencidas **permanecem no registro**. Discordar e perder não apaga sua contribuição do histórico do projeto: ela fica lá, explicando o que já foi pesado.
@@ -41,4 +41,4 @@ A documentação do projeto é escrita em **português**. Código, identificador
 
 ## Código de conduta
 
-Toda interação no projeto — Issues, Discussions, WhatsApp — segue o [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
+Toda interação no projeto — no grupo de WhatsApp, em Issues e Pull Requests, nas reuniões — segue o [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).

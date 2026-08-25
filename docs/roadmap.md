@@ -32,6 +32,8 @@ Construção da primeira versão funcional do OpenClinic, publicada continuament
 
 O MVP cresce em incrementos que seguem a ordem das camadas da arquitetura ([`modulos.md`](./modulos.md)): transversal → estrutura → operação → apoio. Versões 0.x são cortadas conforme os incrementos ficam prontos; o fatiamento fino vive nos épicos e milestones do repositório, não aqui. A cada mudança, código e contrato OpenAPI são verificados automaticamente um contra o outro — a ferramenta dessa verificação é escolha do time — e a documentação navegável da API é publicada junto com a homologação.
 
+Com o núcleo do MVP de pé, entra a **integração com o Memed** (grupo Afya, em transição de marca para AfyaRX): módulo **opcional, fora do núcleo**, acoplado pela API como qualquer outro. Ele antecipa para quem usa parte do que o Estágio 2 da certificação pede, com receita estruturada sobre a base de medicamentos da plataforma e alertas de interação e alergia, mas não substitui os requisitos próprios da certificação, que avaliam o sistema em si ([`conformidade-sbis.md`](./conformidade-sbis.md)). Cada clínica liga o módulo com credencial própria, guardada no cofre de segredos, e a receita assinada volta ao prontuário como documento, com a origem registrada: a guarda de vinte anos é do OpenClinic, não da plataforma.
+
 ## Fase 5 (futuro) — Certificação da distribuição oficial
 
 Quando houver um produto maduro, buscar a Certificação de S-RES da SBIS para a distribuição oficial do OpenClinic (veja [`compliance.md`](./compliance.md) e [`licensing.md`](./licensing.md)).

@@ -476,7 +476,7 @@ Registrado para que ninguém procure aqui o que foi adiado de propósito:
 - **Lista de espera.**
 - **Confirmação de agendamento no núcleo** — permanente, não adiamento: é território de parceiros via API.
 - **Etiquetas de paciente (backend)** — o modelo de dados nasce na V1; endpoints e telas, depois.
-- **Receita estruturada e referência clínica de medicamentos (DCB)** — Estágio 2; a receita da V1 é texto livre com textos padrão.
+- **Receita estruturada e referência clínica de medicamentos (DCB)** — Estágio 2; a receita da V1 é texto livre com textos padrão. A integração com o Memed, prevista no [`roadmap.md`](./roadmap.md) para depois do núcleo do MVP, antecipa a receita estruturada para quem usa antes disso.
 - **TCLE gerenciado** — modelos e emissão são Estágio 2; o termo colhido em papel entra como anexo do atendimento.
 - **Textos padrão de evolução e atestado; pedido de exame estruturado** — Estágio 2; na V1, só a receita tem textos padrão, que o Estágio 1 exige.
 - **Apoio à decisão clínica** — Estágio 2 da certificação; ver Questões abertas.

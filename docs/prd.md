@@ -1,6 +1,6 @@
 # Requisitos de Produto
 
-*v0.5, documento vivo.*
+*v0.6, documento vivo.*
 
 > [!NOTE]
 > **Este documento acompanha o projeto.** Ele reflete o que está decidido até a revisão indicada acima, inclusive as escolhas de tecnologia já fechadas, e é atualizado a cada nova decisão. Como se chegou a cada uma fica registrado nas atas de [`reunioes/`](./reunioes/) e em [`decisions/`](./decisions/).
@@ -32,7 +32,7 @@ Três cadastros distintos, e não um só com papéis diferentes: **paciente**, q
 
 ### Catálogo de procedimentos e produtos
 
-Define o que a clínica oferece: o **procedimento**, com duração padrão, profissionais e salas compatíveis, kit de consumo associado e, quando aplicável, modelo de termo de consentimento (TCLE) vinculado. O preço não mora aqui, e sim na tabela de preços do pagador, no módulo Convênios e pagadores; o procedimento apenas a exibe em modo de consulta. O intervalo mínimo entre sessões e as instruções de preparo (jejum e afins) também nascem aqui, e são o dado que um parceiro de agendamento consulta pela API. Entidades e regras: [`modulos.md`](./modulos.md#catálogo) · campos: [`cadastros.md`](./cadastros.md#procedimento).
+Define o que a clínica oferece: o **procedimento**, com duração padrão, profissionais e salas compatíveis e kit de consumo associado. O preço não mora aqui, e sim na tabela de preços do pagador, no módulo Convênios e pagadores; o procedimento apenas a exibe em modo de consulta. O intervalo mínimo entre sessões e as instruções de preparo (jejum e afins) também nascem aqui, e são o dado que um parceiro de agendamento consulta pela API. Entidades e regras: [`modulos.md`](./modulos.md#catálogo) · campos: [`cadastros.md`](./cadastros.md#procedimento).
 
 ### Agenda
 
@@ -40,7 +40,7 @@ O **coração operacional da clínica**, com exigência de usabilidade acima da 
 
 ### Registro de prontuário
 
-O núcleo do sistema: o **Atendimento** é a espinha, e todo documento clínico nasce vinculado a ele: anamnese, evolução, receita comum e de controle especial, solicitação de exames, encaminhamento, atestado, anexos e modelos por especialidade. Mantém também o resumo clínico estruturado do paciente, com alergias, diagnósticos e medicações em uso, sempre sem tomar decisão clínica por conta própria (**núcleo neutro**, [`vision.md`](./vision.md)). Todo documento segue o mesmo ciclo, de aberto a finalizado e assinado, e corrigir um documento finalizado é sempre nova versão, nunca edição silenciosa. O registro é **multiprofissional**: cada documento tem seu autor e sua assinatura, e quais tipos cada categoria emite é configurado pela clínica, não fixado pelo sistema. **Fora da V1:** apoio à decisão clínica (alertas de alergia e interação, Estágio 2 da certificação) e envio ao RNDS. Entidades e regras: [`modulos.md`](./modulos.md#prontuário) · campos: [`cadastros.md`](./cadastros.md#estruturas-clínicas-do-prontuário).
+O núcleo do sistema: o **Atendimento** é a espinha, e todo documento clínico nasce vinculado a ele: anamnese, evolução, receita comum e de controle especial (em texto livre, com textos padrão), solicitação de exames, encaminhamento, atestado e anexos. Mantém também o resumo clínico do paciente, com alergias, diagnósticos e as medicações em uso anotadas, sempre sem tomar decisão clínica por conta própria (**núcleo neutro**, [`vision.md`](./vision.md)). Todo documento segue o mesmo ciclo, de aberto a finalizado e assinado, e corrigir um documento finalizado é sempre nova versão, nunca edição silenciosa. O registro é **multiprofissional**: cada documento tem seu autor e sua assinatura, e quais tipos cada categoria emite é configurado pela clínica, não fixado pelo sistema. **Fora da V1:** receita estruturada e os cadastros de medicamentos, TCLE gerenciado, modelos de evolução e atestado (todos Estágio 2), apoio à decisão clínica (alertas de alergia e interação, Estágio 2 da certificação) e envio ao RNDS. Entidades e regras: [`modulos.md`](./modulos.md#prontuário) · campos: [`cadastros.md`](./cadastros.md#estruturas-clínicas-do-prontuário).
 
 ### Plano terapêutico
 

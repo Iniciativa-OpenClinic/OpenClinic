@@ -149,7 +149,6 @@ O catálogo do que a clínica oferece. O preço não mora aqui — mora na [tabe
 | Salas compatíveis | lista de referência (Sala) | Não | A compatibilidade vem dos equipamentos da sala |
 | Exige alocação de sala | booleano | Sim | Se sim, o agendamento só se completa com sala |
 | Kits de consumo | lista de referência (Kit) | Não | Baixados automaticamente ao registrar a execução |
-| Modelo de TCLE | referência (Modelo de TCLE) | Não | Termo de consentimento vinculado |
 | Instruções de preparo | texto longo | Não | Jejum e afins; exposto na API para os parceiros de confirmação |
 | Retorno previsto | número | Não | Dias; sugere o agendamento de retorno |
 | Intervalo mínimo entre sessões | número | Não | Dias; orienta o agendamento de pacotes |
@@ -225,7 +224,7 @@ Fundação da fonte pagadora — a V1 cadastra, não fatura. O pagador **Particu
 
 ## Produto
 
-O que se compra e consome. **Não confundir com Medicamento** (referência clínica do que se prescreve — ver [Referência clínica de medicamentos](#referência-clínica-de-medicamentos)).
+O que se compra e consome. **Não confundir com o medicamento que se prescreve**: a referência clínica de medicamentos é Estágio 2 e não faz parte do esquema da V1.
 
 | Campo | Tipo | Obrigatório | Observação |
 | :--- | :--- | :--- | :--- |
@@ -385,33 +384,6 @@ Uma entidade única com tipo; os campos condicionais dependem do tipo. Sempre em
 
 ---
 
-## Referência clínica de medicamentos
-
-Mantida pelo módulo Terminologias; é o que o Prontuário prescreve. Distinta do Produto de estoque.
-
-### Princípio ativo
-
-| Campo | Tipo | Obrigatório | Observação |
-| :--- | :--- | :--- | :--- |
-| Código DCB | código (DCB) | Sim | Importado da Denominação Comum Brasileira [`SBIS ECF.04.01`](./conformidade-sbis.md) |
-| Nome | texto | Sim | |
-| Vigência | estruturado | Sim | Acompanha a versão da tabela importada |
-
-### Medicamento
-
-| Campo | Tipo | Obrigatório | Observação |
-| :--- | :--- | :--- | :--- |
-| Nome | texto | Sim | [`SBIS ECF.04.02`](./conformidade-sbis.md) |
-| Princípios ativos | lista de referência (Princípio ativo) | Sim | |
-| Classe | código (tabela do sistema) | Não | |
-| Forma farmacêutica | código (tabela do sistema) | Não | Comprimido, solução… |
-| Concentração | texto | Não | |
-| Vias de administração | lista de código | Não | |
-| Controle especial | código (listas da Portaria 344) | Não | Define o receituário exigido |
-| Ativo | booleano | Sim | |
-
----
-
 ## Estruturas clínicas do Prontuário
 
 Visíveis **somente a perfil clínico** [`SBIS NGS1.03.06`](./conformidade-sbis.md). Não são cadastros da recepção — estão aqui porque o esquema de banco precisa delas. O ciclo de vida (aberto → finalizado → assinado) e as demais regras estão em [`modulos.md`](./modulos.md#prontuário).
@@ -420,8 +392,7 @@ Visíveis **somente a perfil clínico** [`SBIS NGS1.03.06`](./conformidade-sbis.
 
 | Campo | Tipo | Obrigatório | Observação |
 | :--- | :--- | :--- | :--- |
-| Princípio ativo | referência (Princípio ativo) | Condicional | Para alergia medicamentosa; alergias não medicamentosas usam descrição [`SBIS ECF.07.05`](./conformidade-sbis.md) |
-| Descrição | texto | Condicional | Quando não há código aplicável |
+| Substância | texto | Sim | Escrita pelo profissional; a amarração à tabela de princípios ativos é Estágio 2 [`SBIS ECF.07.04`](./conformidade-sbis.md) |
 | Reação | texto | Não | |
 | Gravidade | código (fixo do sistema) | Não | |
 | Situação | código (fixo do sistema) | Sim | Ativa, resolvida, refutada |
@@ -437,18 +408,9 @@ O paciente sem alergias conhecidas tem o registro explícito **"nega alergias"**
 | Papel | código (fixo do sistema) | Não | Principal ou secundário |
 | Situação | código (fixo do sistema) | Sim | Ativo ou inativo |
 
-### Item de receita
+### Receita
 
-| Campo | Tipo | Obrigatório | Observação |
-| :--- | :--- | :--- | :--- |
-| Medicamento | referência (Medicamento) | Sim | Da referência clínica [`SBIS ECF.10.03`](./conformidade-sbis.md) |
-| Dose | texto | Sim | |
-| Frequência | texto | Sim | |
-| Via de administração | código | Sim | |
-| Duração | texto | Condicional | Dispensada quando uso contínuo |
-| Uso contínuo | booleano | Sim | |
-| Data de início | data | Não | |
-| Observações | texto longo | Não | |
+Texto livre com textos padrão [`SBIS ECF.10.01`](./conformidade-sbis.md) [`SBIS ECF.10.02`](./conformidade-sbis.md) — o esquema da V1 não tem item estruturado de receita. A estrutura por campos (medicamento, dose, frequência, via) é Estágio 2, junto com a referência clínica de medicamentos.
 
 ### Demais registros estruturados
 
@@ -456,7 +418,7 @@ O paciente sem alergias conhecidas tem o registro explícito **"nega alergias"**
 | :--- | :--- | :--- |
 | Sinais vitais | Tipo de medida + valor + unidade + data/hora | [`SBIS ECF.07.07`](./conformidade-sbis.md) |
 | Peso e altura | Valor + unidade explícita | [`SBIS ECF.07.08`](./conformidade-sbis.md) |
-| Medicação em uso | Derivada do campo estruturado da anamnese/evolução | Lista viva; sem cadastro paralelo [`SBIS ECF.07.52`](./conformidade-sbis.md) |
+| Medicação em uso | Texto coletado na anamnese/evolução | A lista estruturada por seleção é Estágio 2 |
 | Imunização | Vacina + dose + data | [`SBIS ECF.07.03`](./conformidade-sbis.md) |
 | Resultado de exame trazido | Exame + resultado + data + origem + solicitação vinculada (opcional) | Entrada manual de laudo externo [`SBIS ECF.13.02`](./conformidade-sbis.md); o vínculo com a solicitação prepara o fluxo automático de status do Estágio 2 [`SBIS ECF.13.03`](./conformidade-sbis.md) |
 | Órteses e próteses | Descrição + data | [`SBIS ECF.07.24`](./conformidade-sbis.md) |

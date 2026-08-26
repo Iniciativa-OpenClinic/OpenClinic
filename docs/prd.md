@@ -1,6 +1,6 @@
 # Requisitos de Produto
 
-*v0.6, documento vivo.*
+*v0.7, documento vivo.*
 
 > [!NOTE]
 > **Este documento acompanha o projeto.** Ele reflete o que está decidido até a revisão indicada acima, inclusive as escolhas de tecnologia já fechadas, e é atualizado a cada nova decisão. Como se chegou a cada uma fica registrado nas atas de [`reunioes/`](./reunioes/) e em [`decisions/`](./decisions/).
@@ -111,12 +111,14 @@ O PRD descreve o **quê**; esta seção resume o **como** já escolhido, para qu
 - **Docker como unidade de implantação** ([0003](./decisions/0003-docker-como-unidade-de-implantacao.md)): a clínica instala e hospeda onde quiser, sem depender de um provedor específico. Prontuário que só roda num fornecedor contradiz, na infraestrutura, a promessa de não aprisionar ninguém.
 - **API antes da interface** ([0004](./decisions/0004-api-antes-de-interface.md)): toda interface é cliente da API, nunca o contrário. Um contrato **OpenAPI** descreve os endpoints, e quem muda a API o atualiza na mesma entrega.
 - **Ambiente de homologação** ([0007](./decisions/0007-ambiente-de-homologacao.md)): publicação contínua com dados fictícios, que serve também de bancada para comparar as alternativas ainda em aberto.
+- **Node.js no backend** ([0005](./decisions/0005-linguagem-do-backend.md)): decidido por votação em reunião, pelo critério que atravessa o projeto (base ampla de contribuidores) somado ao modelo de concorrência adequado ao perfil de carga de um prontuário. O framework é escolha do time de backend; as teses vencidas seguem registradas.
+- **React com Vite no front-end** ([0009](./decisions/0009-react-e-vite-no-front-end.md)): interface responsiva e preparada para PWA desde o primeiro dia; o aplicativo nativo do paciente segue fora da V1. A biblioteca de estilos é escolha do time de front.
+- **Contrato da API junto do código** ([0008](./decisions/0008-contrato-antes-ou-depois-do-codigo.md)): o código nasce primeiro, e toda mudança de API entrega o contrato OpenAPI atualizado na mesma mudança, verificado automaticamente e revisado como interface pública.
+- **Monolito modular** ([0010](./decisions/0010-monolito-modular.md)): uma aplicação única, com os módulos como fronteiras internas de código. Quem contribui sobe banco, backend e front na própria máquina com Docker Compose, sem custo nem conta em nuvem.
 
 ### O que ainda está em aberto
 
-- **Linguagem e plataforma do backend** ([0005](./decisions/0005-linguagem-do-backend.md)): é a decisão mais cara de reverter, e a única com teses concorrentes sustentadas por gente com experiência real. Na mesa: **Go**, **Python**, **Node.js**, **Node.js no núcleo com Python nos serviços de inteligência artificial** e **Rust**. O debate não é sobre qual linguagem é melhor em abstrato, e sim sobre qual critério pesa mais: tamanho da base de desenvolvedores, eficiência de recursos, segurança de tipos, afinidade com serviços de IA e custo de transição agora contra complexidade depois. Qualquer que seja a escolha, a implementação deve atender a SOLID, desenho orientado ao domínio, arquitetura limpa e documentação da API suficiente para viabilizar uma reimplementação independente.
 - **Camada de cache e banco de apoio** ([0006](./decisions/0006-camada-de-cache-e-banco-de-apoio.md)): há consenso de que um banco de apoio entra no projeto e de que ele **não entra no MVP**. Falta decidir qual, e para qual das três necessidades distintas: cache e sessão, leitura analítica ou percepção de tempo real. Na mesa: **Redis**, **MongoDB em paralelo ao PostgreSQL** e uma **arquitetura orientada a eventos sobre o próprio PostgreSQL**, esta última resolvendo a terceira necessidade sem introduzir um segundo banco.
-- **Contrato da API antes ou depois do código** [0008](./decisions/0008-contrato-antes-ou-depois-do-codigo.md): o contrato existe nos dois caminhos; a disputa é se ele é escrito primeiro, como projeto que o código cumpre, ou gerado a partir do código pronto. A primeira ordem é a de quem constrói plataforma e padrão de interoperabilidade; a segunda é a prática dominante do mercado. Decisão do conselho fundador, em reunião.
 - **Formato dos endpoints**: API no padrão FHIR puro, ou API própria com os dados clínicos em recursos FHIR e uma fachada FHIR para interoperabilidade. A frente do contrato abre essa decisão ([`roadmap.md`](./roadmap.md), Fase 3), a registrar em [`decisions/`](./decisions/).
 
 ### O desenho do sistema
@@ -124,6 +126,7 @@ O PRD descreve o **quê**; esta seção resume o **como** já escolhido, para qu
 O que a revisão de arquitetura já fechou, e que vale independentemente das decisões acima:
 
 - **Quatro camadas.** Transversal (identidade e acesso, auditoria e proveniência, terminologias) → estrutura (organização, pessoas, catálogo, convênios) → operação (agenda, prontuário) → apoio (estoque, financeiro). Cada camada só depende das anteriores, e é essa ordem que o MVP segue para crescer em incrementos. Diagrama e módulos em [`modulos.md`](./modulos.md).
+- **Monolito modular.** Uma aplicação de backend única, com os módulos como fronteiras internas de código, nunca de rede ([0010](./decisions/0010-monolito-modular.md)). Front e back continuam aplicações separadas, conversando apenas pelo contrato da API.
 - **Três camadas na API, que não se confundem.** A API é **REST**, o estilo de conversa da web, o mesmo do FHIR e do RNDS; o **contrato OpenAPI** a descreve; o **FHIR** dá a forma do dado clínico que ela carrega.
 - **Limites de plataforma.** Limite de requisições por chave e por origem; nenhum canal auxiliar, seja trilha, fila, registro técnico ou mensagem de integração, carrega dado clínico ou identificação de paciente, apenas referências opacas; cada serviço acessa o banco com credencial própria e permissões mínimas; cada endpoint devolve o mínimo da sua finalidade, e coleções são paginadas por padrão.
 - **Esquema que evolui por adição.** O modelo de dados nasce compatível com os Estágios 2 e 3 da certificação: as evoluções acrescentam tabelas e colunas, nunca redesenham as existentes. É o que permite mirar o Estágio 1 sem hipotecar o futuro. Detalhes em [`cadastros.md`](./cadastros.md).

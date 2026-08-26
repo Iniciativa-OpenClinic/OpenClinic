@@ -1,10 +1,12 @@
 # Como contribuir
 
-Obrigado pelo interesse no OpenClinic! O projeto está na fase de **definição do stack técnico** e ainda não existe código. É exatamente por isso que discussão técnica é a contribuição mais valiosa agora: as decisões que estão sendo tomadas neste momento são as mais caras de reverter depois.
+Obrigado pelo interesse no OpenClinic! O stack técnico está definido (Node.js no backend, React com Vite no front, PostgreSQL, Docker, monolito modular) e a **fase de código começou**: os primeiros protótipos e o esquema de banco estão em construção. É a melhor hora de chegar: o desenho está fresco, as fundações estão sendo lançadas agora, e quem entra cedo molda o projeto.
 
 ## O que mais precisamos agora
 
-**Ajudar a fechar bem as [decisões em aberto](./docs/decisions/).** Três estão em disputa neste momento: a linguagem do backend, a camada de cache e banco de apoio, e a ordem entre contrato da API e código. Se você tem experiência que ajude a decidir qualquer uma delas, é a contribuição de maior impacto que existe hoje no projeto.
+**Construir os primeiros incrementos.** A ordem é a das camadas da arquitetura: autenticação e identidade primeiro, depois cadastros, agenda e prontuário. As tarefas vivem nas issues-épico do repositório, e as regras de contribuição de código estão logo abaixo.
+
+**Ajudar a fechar as [decisões ainda em aberto](./docs/decisions/):** a camada de cache e banco de apoio, e o formato dos endpoints da API. Se você tem experiência que ajude a decidir qualquer uma delas, é contribuição de alto impacto.
 
 **Não é preciso programar para contribuir.** Se você é dono ou gestor de clínica, o que você sabe da operação vale tanto quanto código: descrever como um fluxo funciona de verdade, apontar onde a proposta de arquitetura não bate com a rotina, dizer o que está faltando, testar o sistema quando houver ambiente de homologação. Boa parte do desenho registrado em [`modulos.md`](./docs/modulos.md) nasceu exatamente desse tipo de conversa. É o trabalho da frente de uso e validação, descrita no [`GOVERNANCE.md`](./GOVERNANCE.md).
 
@@ -33,11 +35,19 @@ Teses vencidas **permanecem no registro**. Discordar e perder não apaga sua con
 
 Quando o projeto entrar em fase de código, um **CLA (Contributor License Agreement)** será exigido de todo contribuidor externo, e o texto desse CLA será publicado para comentário público antes de passar a ser exigido, não imposto de surpresa.
 
-## Quando a fase de código começar
+## Como contribuir com código
 
-Os requisitos de engenharia já acordados para o backend, qualquer que seja a linguagem escolhida: conformidade com **SOLID**, desenho orientado ao domínio (**DDD**), **arquitetura limpa** e documentação técnica da API suficiente para viabilizar uma reimplementação independente.
+Os requisitos de engenharia acordados para o backend: conformidade com **SOLID**, desenho orientado ao domínio (**DDD**), **arquitetura limpa** e documentação técnica da API suficiente para viabilizar uma reimplementação independente.
 
-**Quem muda a API atualiza o contrato no mesmo Pull Request.** Se o contrato OpenAPI é escrito antes do código ou gerado a partir dele é decisão em aberto ([0008](./docs/decisions/0008-contrato-antes-ou-depois-do-codigo.md)), mas a regra vale nos dois caminhos: endpoint sem contrato não existe, e a verificação automática rejeita código que divirja dele. Documentar não é etapa posterior. É parte da mudança.
+**Quem muda a API entrega o contrato OpenAPI atualizado no mesmo Pull Request.** O código nasce primeiro e o contrato nasce com ele ([0008](./docs/decisions/0008-contrato-antes-ou-depois-do-codigo.md)): endpoint sem contrato não existe, a verificação automática rejeita divergência, e mudança de API passa por revisão explícita antes de virar compromisso com terceiros. Documentar não é etapa posterior. É parte da mudança.
+
+As regras de contribuição, acordadas em [reunião](./docs/reunioes/2026-08-26-fechamento-do-stack.md):
+
+- **Tarefas pequenas.** Uma contribuição deve caber em poucas horas de trabalho, não em dias. Se a tarefa é maior que isso, quebre antes de começar.
+- **Commit atômico.** Cada commit tem um objetivo e uma razão, e a mensagem explica o porquê. IA pode ajudar a redigir; a revisão final e a responsabilidade são de quem assina.
+- **Pull request que se explica.** Descreva o que fez e como testou. O revisor pode devolver uma mudança confusa pedindo que ela volte explicada, e pode exigir teste automatizado junto.
+- **IA é ferramenta, não substituta.** Use à vontade para escrever código, desde que você entenda e responda pelo que está submetendo. Mudança espalhada em muitos lugares ao mesmo tempo, sem razão clara por commit, não entra.
+- **Cada módulo tem um validador**, que revisa e autoriza a incorporação no seu módulo (veja o [`GOVERNANCE.md`](./GOVERNANCE.md)).
 
 A documentação do projeto é escrita em **português**. Código, identificadores, mensagens de commit e a especificação da API são escritos em **inglês**.
 

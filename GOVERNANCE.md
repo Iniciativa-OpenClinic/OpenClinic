@@ -1,12 +1,14 @@
 # Governança
 
-*v0.2, documento vivo.*
+*v0.3, documento vivo.*
 
 ## Modelo atual: liderança do fundador
 
 O OpenClinic está, nesta fase, sob liderança do seu fundador, **Dr. Daniel Dorta Santiago de Carvalho Duarte, CRM 174209**. Ele é hoje o responsável final pelas decisões de visão, escopo e rumo do projeto.
 
 Quando este documento se refere ao "conselho fundador" em outros lugares (como em [`vision.md`](./docs/vision.md) e no [`roadmap.md`](./docs/roadmap.md)), isso significa, na prática atual, **o fundador e as pessoas que ele vier a nomear para compor esse conselho**. Não é, hoje, um órgão colegiado formal com processo de entrada definido. Decisões de expansão de escopo (por exemplo, adicionar odontologia ou outras especialidades) cabem a essa instância.
+
+**O status de fundador tem janela.** Integra o grupo fundador quem colaborar de verdade com o projeto nos seus primeiros meses; fechada essa janela, quem chega depois participa pelas mesmas regras de todo mundo, sem o status. O critério é contribuição registrada (código, revisão, documentação, validação), aferida pelo conselho, e não presença em reunião. É desse grupo que saem as nomeações para os papéis de liderança.
 
 ## Frentes de trabalho
 
@@ -27,6 +29,8 @@ As frentes não são compartimentos estanques: uma mesma pessoa pode atuar em ma
 **A frente técnica não se subdivide por especialidade.** A proposta inicial de criar subgrupos, como infraestrutura e banco de dados, foi revista já na primeira reunião. O argumento que prevaleceu: segmentar o desenvolvimento em times por área força comunicação entre as partes e leva, na prática, a definir interfaces internas desnecessárias, acabando por segmentar o próprio software por um motivo que é apenas organizacional. O projeto não tem escala que justifique especialização rígida.
 
 Se a subdivisão vier, virá de forma natural conforme o trabalho exigir, não por desenho antecipado.
+
+**Cada módulo do sistema tem um validador**, nomeado pelo conselho fundador: a pessoa que revisa as contribuições daquele módulo e autoriza a incorporação. Isso não recria a subdivisão descartada acima. O time continua um só; o validador é um portão de qualidade, não uma equipe separada. A composição segue a regra deste documento: não é publicada aqui, e cada validador aparece no registro assinando as próprias revisões.
 
 **Este repositório não publica a composição nominal das frentes.** Duas razões: a equipe está em formação e uma lista desatualizada informa mal; e ninguém tem seu nome publicado num repositório público sem ter dito que quer. Quem participa e deseja aparecer no registro do projeto o faz assinando suas próprias contribuições, em Issues, Pull Requests e no registro de decisões.
 

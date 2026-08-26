@@ -157,20 +157,18 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 - **Sistema de codificação** — a fonte: TUSS tabela 22, CID-10, CBO…
 - **Código** — um item de um sistema, gravado com sistema, versão, idioma, código e termo original [`SBIS ECF.17.10`](./conformidade-sbis.md), mais vigência.
-- **Princípio ativo** — a Denominação Comum Brasileira (DCB), importada como base da referência clínica de medicamentos [`SBIS ECF.04.01`](./conformidade-sbis.md).
-- **Medicamento** — referência clínica gerenciável pela clínica: princípios ativos, classe, forma farmacêutica, concentração, vias de administração e marcação de controle especial (Portaria 344) [`SBIS ECF.04.02`](./conformidade-sbis.md). **Não confundir com Produto do Estoque**: Medicamento é o que se prescreve; Produto é o que se compra e consome.
 
 **Regras de negócio.**
 
 - Três famílias de terminologia entram na V1 com **seed inicial + importador re-executável** (rodar de novo atualiza a versão sem apagar a anterior):
   - **Faturamento:** TUSS tabela 22 (procedimentos), TUSS tabelas 19 e 20 (materiais e medicamentos) e operadoras registradas na ANS.
-  - **Clínica:** CID-10, CIAP-2 [`SBIS ECF.07.14`](./conformidade-sbis.md) e DCB.
+  - **Clínica:** CID-10 e CIAP-2 [`SBIS ECF.07.14`](./conformidade-sbis.md).
   - **Administrativa:** CBO, conselhos profissionais e as tabelas de domínio do Ministério da Saúde usadas nos cadastros (sexo, raça/cor, estado civil…).
 - O mecanismo suporta as ~60 tabelas de guia TISS, mas elas **não entram na V1** — entram quando o faturamento de convênio entrar.
 - **Brasíndice e SIMPRO:** o campo de código existe no Produto, mas o dado é licenciado e **jamais é distribuído** com o OpenClinic. Cada clínica que possuir licença importa o seu.
 - SIGTAP (tabela do SUS) está fora do escopo.
 
-**O que fica fora.** Tabelas de guia TISS (V1); SIGTAP; distribuição de dados licenciados.
+**O que fica fora.** A referência clínica de medicamentos — princípios ativos (DCB) e medicamentos — é Estágio 2 e entra junto com a receita estruturada que a consome; tabelas de guia TISS (V1); SIGTAP; distribuição de dados licenciados.
 
 **Mapeamento FHIR.** Sistema e Código correspondem a [`CodeSystem`](https://hl7.org/fhir/R4/codesystem.html)/[`ValueSet`](https://hl7.org/fhir/R4/valueset.html); nos registros, todo código viaja como [`CodeableConcept`](https://hl7.org/fhir/R4/datatypes.html#CodeableConcept) (sistema + código + versão + texto).
 
@@ -243,8 +241,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Entidades.**
 
-- **Procedimento** — a definição: nome, categoria, código TUSS 22 opcional, duração padrão, profissionais habilitados, salas compatíveis (e se exige alocação de sala), kits de consumo, modelo de TCLE, instruções de preparo, retorno previsto e intervalo mínimo entre sessões. Campos em [`cadastros.md`](./cadastros.md#procedimento).
-- **Modelo de TCLE** — termo de consentimento vinculável a procedimento.
+- **Procedimento** — a definição: nome, categoria, código TUSS 22 opcional, duração padrão, profissionais habilitados, salas compatíveis (e se exige alocação de sala), kits de consumo, instruções de preparo, retorno previsto e intervalo mínimo entre sessões. Campos em [`cadastros.md`](./cadastros.md#procedimento).
 
 **Regras de negócio.**
 
@@ -254,7 +251,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 - O **intervalo mínimo entre sessões** orienta o agendamento de pacotes.
 - A tela do procedimento também exibe, em modo de consulta, **quem recebe quanto** de repasse por ele — a edição de repasse vive no Financeiro.
 
-**O que fica fora.** Preço (Convênios e pagadores); execução (Prontuário); consumo de materiais (Estoque, via kit).
+**O que fica fora.** Preço (Convênios e pagadores); execução (Prontuário); consumo de materiais (Estoque, via kit); modelos de TCLE vinculados a procedimento (Estágio 2).
 
 **Mapeamento FHIR.** [`HealthcareService`](https://hl7.org/fhir/R4/healthcareservice.html) / [`ActivityDefinition`](https://hl7.org/fhir/R4/activitydefinition.html).
 
@@ -323,12 +320,12 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 - **Atendimento (Encounter)** — vincula paciente, profissional, unidade, agendamento de origem e fonte pagadora; agrega todos os registros feitos naquele evento.
 - **Documentos clínicos** — anamnese (estruturada no modelo SOAP [`SBIS ECF.07.13`](./conformidade-sbis.md)), evolução clínica — médica ou de enfermagem —, receita comum e **de controle especial**, solicitação de exames, encaminhamento, atestado e outros documentos.
-- **Modelos por especialidade** — templates de documentos, geridos pela clínica.
+- **Textos padrão de receita** — modelos de texto nomeados, editáveis ao usar, geridos pela clínica [`SBIS ECF.10.02`](./conformidade-sbis.md). Textos padrão para os demais documentos ficam para o Estágio 2.
 - **Anexos** — arquivos vinculados ao atendimento ou ao paciente [`SBIS ECF.07.38`](./conformidade-sbis.md).
-- **Consentimentos** — TCLE emitido a partir do modelo do Catálogo e consentimentos do paciente sobre o uso dos seus dados, com status (autorizado, não autorizado, revogado) e anexo do termo assinado [`SBIS NGS1.11.05`](./conformidade-sbis.md).
+- **Consentimentos** — consentimentos do paciente sobre o uso dos seus dados, com propósito, status (autorizado, não autorizado, revogado) e anexo do termo assinado [`SBIS NGS1.11.05`](./conformidade-sbis.md). A emissão de TCLE de procedimento a partir de modelo é Estágio 2: na V1, o termo colhido em papel entra como Anexo.
 - **Plano terapêutico** — prescrição de procedimentos com cronograma: itens (procedimento, número de sessões, início, intervalo) e produtos extras por sessão. É documento clínico como os demais — ciclo de vida e assinatura incluídos. Estrutura em [`cadastros.md`](./cadastros.md#plano-terapêutico). Não confundir com a receita, que prescreve medicamentos.
 - **Modelo de plano (protocolo)** — plano sem paciente, reutilizável; a clínica mantém os seus e cada profissional os próprios.
-- **Resumo clínico** — listas estruturadas do paciente, mantidas a partir dos atendimentos: **alergias** (com o registro explícito "nega alergias") [`SBIS ECF.07.05`](./conformidade-sbis.md), **diagnósticos** [`SBIS ECF.07.15`](./conformidade-sbis.md) e **medicações em uso** [`SBIS ECF.07.52`](./conformidade-sbis.md) — esta última é **derivada**: coletada como campo estruturado na anamnese e na evolução, vira lista viva sem cadastro paralelo.
+- **Resumo clínico** — listas do paciente, mantidas a partir dos atendimentos: **alergias** em campo próprio (substância, reação, gravidade, com o registro explícito "nega alergias") [`SBIS ECF.07.04`](./conformidade-sbis.md) [`SBIS ECF.07.06`](./conformidade-sbis.md), **diagnósticos** [`SBIS ECF.07.15`](./conformidade-sbis.md) e **medicações em uso** anotadas como texto na anamnese e na evolução. A alergia amarrada à tabela de princípios ativos e a lista de medicações por seleção são Estágio 2.
 - **Registros clínicos estruturados** — sinais vitais [`SBIS ECF.07.07`](./conformidade-sbis.md), peso e altura com unidade [`SBIS ECF.07.08`](./conformidade-sbis.md), imunizações [`SBIS ECF.07.03`](./conformidade-sbis.md), resultados de exames trazidos pelo paciente [`SBIS ECF.13.02`](./conformidade-sbis.md), órteses e próteses [`SBIS ECF.07.24`](./conformidade-sbis.md), contexto socioeconômico [`SBIS ECF.07.02`](./conformidade-sbis.md), queixas codificadas em CIAP-2 [`SBIS ECF.07.14`](./conformidade-sbis.md) e registro clínico de óbito [`SBIS ECF.07.32`](./conformidade-sbis.md). Estruturas em [`cadastros.md`](./cadastros.md#estruturas-clínicas-do-prontuário).
 
 **Regras de negócio.**
@@ -338,7 +335,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 - **Cabeçalho fixo de identificação do paciente** — incluindo alergias e diagnósticos ativos — em todas as telas do prontuário [`SBIS ECF.03.17`](./conformidade-sbis.md). Só nelas: telas administrativas não exibem dado clínico (princípio 2).
 - Vários prontuários podem estar abertos ao mesmo tempo, mas **só um em edição**; os demais ficam em leitura [`SBIS ECF.03.18`](./conformidade-sbis.md).
 - **Diagnósticos** registram estado (suspeito/confirmado), papel (principal/secundário) e situação (ativo/inativo), codificados em CID-10 — o modelo aceita mais de uma terminologia [`SBIS ECF.07.17`](./conformidade-sbis.md).
-- **Receita estruturada**: cada item tem medicamento (da referência clínica), dose, frequência, via, duração, uso contínuo, data de início e observações [`SBIS ECF.10.03`](./conformidade-sbis.md). A impressão sai com CNES, endereço e telefone da unidade [`SBIS ECF.10.04`](./conformidade-sbis.md); receita de controle especial inclui o endereço do paciente; prescrição de antimicrobiano registra idade e sexo.
+- **Receita em texto livre, com textos padrão** [`SBIS ECF.10.01`](./conformidade-sbis.md) [`SBIS ECF.10.02`](./conformidade-sbis.md). A impressão sai com CNES, endereço e telefone da unidade [`SBIS ECF.10.04`](./conformidade-sbis.md); receita de controle especial inclui o endereço do paciente e segue o layout da Portaria 344; prescrição de antimicrobiano registra idade e sexo. A receita estruturada por campos — medicamento da referência clínica, dose, frequência, via — é Estágio 2.
 - **CID em atestado somente com autorização expressa do paciente**, registrada (Resolução CFM 1.658/2002).
 - **Plano terapêutico**: o profissional monta a partir de um protocolo ou em branco e assina. O documento **não carrega preço** — ao finalizar, o sistema gera o orçamento correspondente no Financeiro, e preço e desconto vivem só lá. Aprovado o orçamento, as sessões entram na fila "a marcar" da Agenda. Remarcar data é ato da recepção e não altera o plano; mudar conteúdo clínico (sessões, intervalos, produtos) é **nova versão do documento** — só o autor, com justificativa, como qualquer documento clínico. A situação do plano (proposto, contratado, em andamento, concluído, não contratado, substituído, interrompido) é **derivada dos fatos** — orçamento e sessões —, nunca editada à mão. O paciente sai com as duas impressões: o plano assinado, com o cronograma, e o orçamento.
 - **Agravos de notificação compulsória**: a lista de agravos é parametrizada e o sistema produz o relatório de apoio à notificação [`SBIS ECF.19.01`](./conformidade-sbis.md).
@@ -351,9 +348,9 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 - **Impressão do prontuário**: comando único imprime o prontuário completo ou por período, com páginas numeradas X de Y, anexos incluídos e campos vazios sinalizados [`SBIS ECF.18.04`](./conformidade-sbis.md); a entrega ao paciente gera **recibo** com solicitante, finalidade e registro da entrega [`SBIS ECF.18.05`](./conformidade-sbis.md) — é a portabilidade prometida no [`vision.md`](./vision.md) em forma de função.
 - O procedimento realizado no atendimento **consome**: baixa o kit no Estoque, consome sessão do pacote e gera produção para repasse no Financeiro.
 
-**O que fica fora.** Apoio à decisão clínica (alertas de alergia e interação — Estágio 2 da certificação; ver [Questões abertas](#questões-abertas)); telemedicina; envio ao RNDS [`SBIS ECF.20.02`](./conformidade-sbis.md) (Estágio 2 — os identificadores CNS e CNES já nascem nos cadastros).
+**O que fica fora.** Receita estruturada e a referência clínica de medicamentos; TCLE gerenciado (modelos e emissão); textos padrão de evolução e atestado; pedido de exame estruturado a partir do catálogo — tudo Estágio 2, registrado na [matriz](./conformidade-sbis.md). Também: apoio à decisão clínica (alertas de alergia e interação — Estágio 2 da certificação; ver [Questões abertas](#questões-abertas)); telemedicina; envio ao RNDS [`SBIS ECF.20.02`](./conformidade-sbis.md) (Estágio 2 — os identificadores CNS e CNES já nascem nos cadastros).
 
-**Mapeamento FHIR.** [`Encounter`](https://hl7.org/fhir/R4/encounter.html) (atendimento), [`Composition`](https://hl7.org/fhir/R4/composition.html) (documentos), [`CarePlan`](https://hl7.org/fhir/R4/careplan.html) (plano terapêutico), [`Observation`](https://hl7.org/fhir/R4/observation.html) (sinais vitais, peso/altura, contexto socioeconômico), [`AllergyIntolerance`](https://hl7.org/fhir/R4/allergyintolerance.html) (alergias), [`Condition`](https://hl7.org/fhir/R4/condition.html) (diagnósticos), [`MedicationStatement`](https://hl7.org/fhir/R4/medicationstatement.html) (medicações em uso), [`MedicationRequest`](https://hl7.org/fhir/R4/medicationrequest.html) (receita), [`ServiceRequest`](https://hl7.org/fhir/R4/servicerequest.html) (solicitação, encaminhamento e itens do plano — o cronograma é o [`Timing`](https://hl7.org/fhir/R4/datatypes.html#Timing)), [`Immunization`](https://hl7.org/fhir/R4/immunization.html) (vacinas), [`DocumentReference`](https://hl7.org/fhir/R4/documentreference.html) (anexos e PDFs assinados), [`QuestionnaireResponse`](https://hl7.org/fhir/R4/questionnaireresponse.html) (modelos estruturados), [`Signature`](https://hl7.org/fhir/R4/datatypes.html#Signature) + [`Provenance`](https://hl7.org/fhir/R4/provenance.html) (assinatura e autoria).
+**Mapeamento FHIR.** [`Encounter`](https://hl7.org/fhir/R4/encounter.html) (atendimento), [`Composition`](https://hl7.org/fhir/R4/composition.html) (documentos), [`CarePlan`](https://hl7.org/fhir/R4/careplan.html) (plano terapêutico), [`Observation`](https://hl7.org/fhir/R4/observation.html) (sinais vitais, peso/altura, contexto socioeconômico), [`AllergyIntolerance`](https://hl7.org/fhir/R4/allergyintolerance.html) (alergias), [`Condition`](https://hl7.org/fhir/R4/condition.html) (diagnósticos), [`MedicationRequest`](https://hl7.org/fhir/R4/medicationrequest.html) (receita), [`ServiceRequest`](https://hl7.org/fhir/R4/servicerequest.html) (solicitação, encaminhamento e itens do plano — o cronograma é o [`Timing`](https://hl7.org/fhir/R4/datatypes.html#Timing)), [`Immunization`](https://hl7.org/fhir/R4/immunization.html) (vacinas), [`DocumentReference`](https://hl7.org/fhir/R4/documentreference.html) (anexos e PDFs assinados), [`QuestionnaireResponse`](https://hl7.org/fhir/R4/questionnaireresponse.html) (modelos estruturados), [`Signature`](https://hl7.org/fhir/R4/datatypes.html#Signature) + [`Provenance`](https://hl7.org/fhir/R4/provenance.html) (assinatura e autoria).
 
 **Dependências.** Todos os módulos de estrutura, Agenda, Terminologias, Identidade e Acesso, Auditoria e Proveniência.
 
@@ -479,6 +476,9 @@ Registrado para que ninguém procure aqui o que foi adiado de propósito:
 - **Lista de espera.**
 - **Confirmação de agendamento no núcleo** — permanente, não adiamento: é território de parceiros via API.
 - **Etiquetas de paciente (backend)** — o modelo de dados nasce na V1; endpoints e telas, depois.
+- **Receita estruturada e referência clínica de medicamentos (DCB)** — Estágio 2; a receita da V1 é texto livre com textos padrão. A integração com o Memed, prevista no [`roadmap.md`](./roadmap.md) para depois do núcleo do MVP, antecipa a receita estruturada para quem usa antes disso.
+- **TCLE gerenciado** — modelos e emissão são Estágio 2; o termo colhido em papel entra como anexo do atendimento.
+- **Textos padrão de evolução e atestado; pedido de exame estruturado** — Estágio 2; na V1, só a receita tem textos padrão, que o Estágio 1 exige.
 - **Apoio à decisão clínica** — Estágio 2 da certificação; ver Questões abertas.
 - **Envio ao RNDS** — Estágio 2; CNS e CNES já nascem nos cadastros.
 - **Anonimização e pseudonimização de bases** — estágios posteriores da certificação.

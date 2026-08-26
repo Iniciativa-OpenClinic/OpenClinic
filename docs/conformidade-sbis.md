@@ -23,7 +23,7 @@ Matriz de rastreabilidade entre os requisitos da certificação **SBIS S-RES v5.
   - `N/A` — a condição do requisito não se aplica ao OpenClinic (o motivo está na descrição).
 - O conjunto **RIS** (radiologia e diagnóstico por imagem) existe na planilha oficial, mas está fora do escopo do OpenClinic e não aparece aqui.
 
-**Números:** 256 requisitos se aplicam à categoria Clínica/Ambulatório. Os 131 de Estágio 1 com condição aplicável estão todos contemplados no desenho da V1; 24 de estágios posteriores já vêm antecipados; 9 não se aplicam por condição; os 92 restantes ficam para os Estágios 2 e 3.
+**Números:** 256 requisitos se aplicam à categoria Clínica/Ambulatório. Os 131 de Estágio 1 com condição aplicável estão todos contemplados no desenho da V1; 14 de estágios posteriores já vêm antecipados; 9 não se aplicam por condição; os 102 restantes ficam para os Estágios 2 e 3.
 
 | Conjunto | Requisitos | E1 | E2 | E3 |
 | :--- | ---: | ---: | ---: | ---: |
@@ -60,8 +60,8 @@ Os requisitos ECF.14 (apoio à decisão clínica) são todos de Estágio 2 ou 3 
 | ECF.03.15 | Usabilidade da lista de pacientes para seleção de prontuários | E2 | Linhas da lista de seleção visualmente distintas e destacáveis | Pessoas | E2 |
 | ECF.03.17 | Cabeçalho de identificação do paciente | E1 | Cabeçalho fixo de identificação em todas as telas do prontuário | Prontuário | V1 |
 | ECF.03.18 | Abertura de mais de um prontuário na mesma sessão de usuário | E1 | Com vários prontuários abertos, só o primeiro edita; os demais ficam sinalizados como somente leitura | Prontuário | V1 |
-| ECF.04.01 | Cadastro de princípios ativos | E2 | Cadastro de princípios ativos com classes terapêuticas | Terminologias | V1 (antecipa E2) |
-| ECF.04.02 | Cadastro de medicamentos | E2 | Cadastro de medicamentos com princípios ativos, forma, concentração e vias | Terminologias | V1 (antecipa E2) |
+| ECF.04.01 | Cadastro de princípios ativos | E2 | Cadastro de princípios ativos com classes terapêuticas | Terminologias | E2 |
+| ECF.04.02 | Cadastro de medicamentos | E2 | Cadastro de medicamentos com princípios ativos, forma, concentração e vias | Terminologias | E2 |
 | ECF.04.04 | Distinção entre drogas com nomes semelhantes | E3 | Tall Man Lettering para distinguir nomes de drogas parecidos | Terminologias | E3 |
 | ECF.04.06 | Cadastro de exames e procedimentos | E2 | Cadastro de exames e procedimentos com grupo, subgrupo e nome | Catálogo | V1 (antecipa E2) |
 | ECF.05.01 | Parametrização de agendas de consultas | E2 | Agendas configuráveis por profissional e especialidade (dias e horários) | Agenda | V1 (antecipa E2) |
@@ -74,7 +74,7 @@ Os requisitos ECF.14 (apoio à decisão clínica) são todos de Estágio 2 ou 3 
 | ECF.07.02 | Registro do contexto socioeconômico do paciente | E1 | Contexto socioeconômico: raça/cor, escolaridade, ocupação e afins | Prontuário | V1 |
 | ECF.07.03 | Registro de imunização | E1 | Imunizações, inclusive as anteriores ao atendimento atual | Prontuário | V1 |
 | ECF.07.04 | Registro de alergias e intolerâncias | E1 | Registro e lista de alergias e intolerâncias em campo próprio | Prontuário | V1 |
-| ECF.07.05 | Registro estruturado de alergias e intolerâncias | E2 | Alergia estruturada: origem da informação, classificação e gravidade | Prontuário | V1 (antecipa E2) |
+| ECF.07.05 | Registro estruturado de alergias e intolerâncias | E2 | Alergia estruturada: origem da informação, classificação e gravidade | Prontuário | E2 |
 | ECF.07.06 | Indicação da ausência de alergias e intolerâncias | E2 | Registro explícito de "nega alergias", reversível se uma alergia surgir depois | Prontuário | V1 (antecipa E2) |
 | ECF.07.07 | Registro de sinais vitais | E1 | Sinais vitais mínimos: PA, temperatura, FC, FR, saturação, glicemia, dor | Prontuário | V1 |
 | ECF.07.08 | Registro de medidas antropométricas | E1 | Peso, altura e circunferências, com IMC e superfície corpórea calculados | Prontuário | V1 |
@@ -90,25 +90,25 @@ Os requisitos ECF.14 (apoio à decisão clínica) são todos de Estágio 2 ou 3 
 | ECF.07.20 | Inserção automática de alergias e intolerâncias na lista de problemas | E3 | Alergias entrando automaticamente na lista de problemas | Prontuário | E3 |
 | ECF.07.21 | Lista personalizada de problemas | E3 | Lista de problemas própria da clínica, manual ou importada | Prontuário | E3 |
 | ECF.07.22 | Evolução médica | E1 | Registro de evolução médica | Prontuário | V1 |
-| ECF.07.23 | Texto padrão para evoluções médicas | E2 | Textos padrão nomeados como base para evoluções | Prontuário | V1 (antecipa E2) |
+| ECF.07.23 | Texto padrão para evoluções médicas | E2 | Textos padrão nomeados como base para evoluções | Prontuário | E2 |
 | ECF.07.24 | Registro de órteses e próteses | E1 | Registro de órteses e próteses do paciente | Prontuário | V1 |
 | ECF.07.25 | Registro de atestado | E1 | Emissão de atestados | Prontuário | V1 |
-| ECF.07.26 | Atestado baseado em modelos | E2 | Atestado por modelo, com paciente, instituição e profissional preenchidos automaticamente | Prontuário | V1 (antecipa E2) |
+| ECF.07.26 | Atestado baseado em modelos | E2 | Atestado por modelo, com paciente, instituição e profissional preenchidos automaticamente | Prontuário | E2 |
 | ECF.07.27 | Solicitação de encaminhamentos | E1 | Encaminhamento com especialidade, motivo e profissional | Prontuário | V1 |
 | ECF.07.30 | Aprovação de registros por preceptoria | E3 | Registros de estudantes validados pelo preceptor responsável | Prontuário | E3 |
 | ECF.07.32 | Registro de óbito | E1 | Óbito com data, causa (CID) e número da declaração | Prontuário | V1 |
 | ECF.07.35 | Criação de formulários personalizados | E3 | Formulários clínicos dinâmicos criados pela clínica | Prontuário | E3 |
 | ECF.07.36 | Campos calculáveis em formulários personalizados | E3 | Campos calculados (escores) em formulários personalizados | Prontuário | E3 |
 | ECF.07.38 | Anexos de documentos ao prontuário | E2 | Anexos ao prontuário (PDF, TIFF, JPG) com indicação do tipo de documento | Prontuário | V1 (antecipa E2) |
-| ECF.07.52 | Registro de medicamentos em uso | E2 | Medicamentos em uso registrados a partir de lista de seleção | Prontuário | V1 (antecipa E2) |
+| ECF.07.52 | Registro de medicamentos em uso | E2 | Medicamentos em uso registrados a partir de lista de seleção | Prontuário | E2 |
 | ECF.10.01 | Emissão de receita não estruturada | E1 | Receita em texto livre | Prontuário | V1 |
 | ECF.10.02 | Texto padrão para receita | E1 | Textos padrão nomeados como base para receitas, editáveis ao usar | Prontuário | V1 |
-| ECF.10.03 | Emissão de receita estruturada | E2 | Receita estruturada com busca de princípios ativos e medicamentos cadastrados | Prontuário | V1 (antecipa E2) |
+| ECF.10.03 | Emissão de receita estruturada | E2 | Receita estruturada com busca de princípios ativos e medicamentos cadastrados | Prontuário | E2 |
 | ECF.10.04 | Impressão de receita | E1 | Receita impressa com paciente, prescritor, conselho, CNES, endereço e telefone da instituição | Prontuário | V1 |
 | ECF.10.07 | Usabilidade da lista de seleção de medicamentos | E2 | Linhas da lista de medicamentos visualmente distintas e destacáveis | Prontuário | E2 |
 | ECF.10.10 | Medicamentos favoritos | E3 | Lista de medicamentos favoritos por profissional | Prontuário | E3 |
 | ECF.10.19 | Solicitação de exames e procedimentos | E1 | Pedido de exames e procedimentos, minimamente em texto livre | Prontuário | V1 |
-| ECF.10.20 | Solicitação estruturada de exames e procedimentos | E2 | Pedido estruturado a partir do catálogo de exames e procedimentos | Prontuário | V1 (antecipa E2) |
+| ECF.10.20 | Solicitação estruturada de exames e procedimentos | E2 | Pedido estruturado a partir do catálogo de exames e procedimentos | Prontuário | E2 |
 | ECF.10.21 | Usabilidade da lista de seleção de exames e procedimentos | E2 | Linhas da lista de exames visualmente distintas e destacáveis | Prontuário | E2 |
 | ECF.13.01 | Consulta de exames e procedimentos solicitados | E2 | Consulta das solicitações com filtro por status (pendente, realizado) | Prontuário | E2 |
 | ECF.13.02 | Entrada de resultados de exames não vinculados à uma solicitação no sistema | E1 | Registro de resultado de exame trazido pelo paciente, sem solicitação prévia no sistema | Prontuário | V1 |
@@ -160,8 +160,8 @@ Os requisitos ECF.14 (apoio à decisão clínica) são todos de Estágio 2 ou 3 
 | ECF.17.17 | Compatibilidade retroativa | E1 | Compatibilidade com versão certificada anterior — não há versão anterior do OpenClinic | Processo | N/A |
 | ECF.17.18 | Idioma do S-RES | E1 | Toda a interface em português do Brasil | Plataforma | V1 |
 | ECF.17.19 | Mensagens do sistema | E1 | Mensagens ao usuário em linguagem não técnica, em português | Plataforma | V1 |
-| ECF.18.01 | Modelos para consentimento livre e esclarecido | E2 | Modelos de TCLE com tipos e títulos | Catálogo | V1 (antecipa E2) |
-| ECF.18.02 | Gerenciamento de termos de consentimento livre e esclarecido | E2 | Emissão de TCLE, anexo do termo assinado e status (autorizado, não autorizado, revogado) | Prontuário | V1 (antecipa E2) |
+| ECF.18.01 | Modelos para consentimento livre e esclarecido | E2 | Modelos de TCLE com tipos e títulos | Catálogo | E2 |
+| ECF.18.02 | Gerenciamento de termos de consentimento livre e esclarecido | E2 | Emissão de TCLE, anexo do termo assinado e status (autorizado, não autorizado, revogado) | Prontuário | E2 |
 | ECF.18.04 | Impressão do prontuário do paciente | E1 | Prontuário impresso num único comando, com identificação e numeração em todas as páginas | Prontuário | V1 |
 | ECF.18.05 | Recibo para impressão do prontuário do paciente | E1 | Recibo de entrega do prontuário, com solicitante e finalidade, parte do próprio prontuário | Prontuário | V1 |
 | ECF.19.01 | Parametrização de agravos de notificação compulsória | E1 | Lista parametrizável de agravos de notificação compulsória, conforme a portaria vigente | Prontuário | V1 |

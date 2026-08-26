@@ -30,7 +30,35 @@ As frentes não são compartimentos estanques: uma mesma pessoa pode atuar em ma
 
 Se a subdivisão vier, virá de forma natural conforme o trabalho exigir, não por desenho antecipado.
 
-**Cada módulo do sistema tem um validador**, nomeado pelo conselho fundador: a pessoa que revisa as contribuições daquele módulo e autoriza a incorporação. Isso não recria a subdivisão descartada acima. O time continua um só; o validador é um portão de qualidade, não uma equipe separada. A composição segue a regra deste documento: não é publicada aqui, e cada validador aparece no registro assinando as próprias revisões.
+### Como a frente técnica se organiza
+
+```mermaid
+flowchart TD
+    CF["🏛️ Conselho fundador<br/>visão, escopo e decisões finais"] --> LP["🛡️ Líderes de projeto<br/>o anel de fora:<br/>únicos que mesclam na main"]
+    CF --> FE["📣 Frente de estratégia,<br/>comunicação e parcerias"]
+    CF --> FU["🩺 Frente de uso e<br/>validação (testers)"]
+    LP --> T1["⚔️ Equipe 1<br/>líder + devs multidisciplinares<br/>módulos designados no quadro"]
+    LP --> T2["⚔️ Equipe 2<br/>líder + devs multidisciplinares"]
+    LP --> TN["⚔️ Equipe N…"]
+    G["🎓 Guildas de habilidade<br/>Frontend · Backend · Banco · Segurança<br/>(sem permissão; catálogo da comunidade)"] -. recrutamento .-> T1
+    G -. recrutamento .-> T2
+    EXT["🌍 Colaboradores externos"] -- "fork + pull request detalhado" --> LP
+```
+
+**Equipes de Desenvolvimento (Time 1, Time 2…).** O motor do projeto: times multidisciplinares, com gente de front, back, banco e segurança no mesmo time. Cada time é dono das issues e dos módulos designados a ele no quadro público de acompanhamento, e é o nome do time que aparece por lá. **O líder do time é o validador dos módulos sob responsabilidade dele**: aprova os pull requests que os tocam e responde pela qualidade do que entra. Isso não recria a subdivisão por especialidade descartada acima; o time é multidisciplinar por desenho, e o validador é um portão de qualidade, não uma equipe separada.
+
+**Líderes de projeto.** O anel de fora: as únicas pessoas que mesclam na branch principal. Todo pull request, de time ou de fora, termina nas mãos de um líder de projeto. São nomeados pelo conselho fundador entre quem tem mais experiência em conduzir desenvolvimento.
+
+**Guildas de habilidade** (Frontend, Backend, Banco de dados, Segurança). O catálogo da comunidade: registram quem é bom em quê, sem nenhum poder de decisão ou permissão, e é delas que os líderes recrutam para os times. A entrada é aberta, por Issue, como descreve o [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+**A trilha de crescimento.** Todo degrau se sobe por contribuição registrada, nunca por presença em reunião: quem chega de fora contribui via fork, entra numa guilda ou direto numa Equipe, e a liderança vem de nomeação do conselho sobre trabalho demonstrado. Quem colaborar de verdade nos primeiros meses entra no grupo fundador, pela regra da janela descrita acima.
+
+```mermaid
+flowchart LR
+    A["🌍 Externo"] --> B["🎓 Guilda"] --> C["⚔️ Equipe"] --> D["🥋 Líder de Equipe"] --> E["🛡️ Líder de projeto"] --> F["🏛️ Conselho"]
+```
+
+A composição nominal de times e guildas segue a regra deste documento: não é publicada aqui, e cada pessoa aparece no registro assinando as próprias contribuições e revisões.
 
 **Este repositório não publica a composição nominal das frentes.** Duas razões: a equipe está em formação e uma lista desatualizada informa mal; e ninguém tem seu nome publicado num repositório público sem ter dito que quer. Quem participa e deseja aparecer no registro do projeto o faz assinando suas próprias contribuições, em Issues, Pull Requests e no registro de decisões.
 

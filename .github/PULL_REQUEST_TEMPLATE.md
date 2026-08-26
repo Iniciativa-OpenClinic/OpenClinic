@@ -1,12 +1,16 @@
 ## O que muda
 
-<!-- Descreva o que este Pull Request faz. -->
+<!-- Descreva o que este Pull Request faz. Liste arquivo por arquivo o que mudou e por quê — quem revisa não deve precisar adivinhar. -->
 
 ## Por quê
 
 <!-- Qual problema resolve, ou a que Issue/decisão responde. -->
 
 Relacionado a: <!-- #número da Issue, ou docs/decisions/NNNN-... -->
+
+## Como testei
+
+<!-- Para mudança de código: o que você rodou para provar que funciona (testes automatizados, passos manuais). Para documentação: como conferiu links e consistência. -->
 
 ## Checklist
 

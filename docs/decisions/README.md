@@ -12,10 +12,12 @@ A ideia é simples: quem chega ao projeto seis meses depois consegue entender **
 | [0002](./0002-postgresql-como-banco-principal.md) | PostgreSQL como banco principal | Aceita |
 | [0003](./0003-docker-como-unidade-de-implantacao.md) | Docker como unidade de implantação | Aceita |
 | [0004](./0004-api-antes-de-interface.md) | API antes de interface | Aceita |
-| [0005](./0005-linguagem-do-backend.md) | Linguagem e plataforma do backend | **Em aberto** |
+| [0005](./0005-linguagem-do-backend.md) | Linguagem e plataforma do backend | Aceita — Node.js |
 | [0006](./0006-camada-de-cache-e-banco-de-apoio.md) | Camada de cache e banco de apoio | **Em aberto** |
 | [0007](./0007-ambiente-de-homologacao.md) | Ambiente de homologação | Aceita |
-| [0008](./0008-contrato-antes-ou-depois-do-codigo.md) | Contrato da API antes ou depois do código | **Em aberto** |
+| [0008](./0008-contrato-antes-ou-depois-do-codigo.md) | Contrato da API antes ou depois do código | Aceita — código primeiro |
+| [0009](./0009-react-e-vite-no-front-end.md) | React com Vite no front-end | Aceita |
+| [0010](./0010-monolito-modular.md) | Monolito modular | Aceita |
 
 Esta tabela é o único lugar que declara a situação de cada decisão — o resto da documentação aponta para cá em vez de repetir.
 

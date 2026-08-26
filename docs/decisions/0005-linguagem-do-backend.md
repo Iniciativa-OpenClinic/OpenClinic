@@ -1,7 +1,7 @@
 # 0005 — Linguagem e plataforma do backend
 
-**Situação:** **Em aberto** — decisão prevista para a reunião de 26/08/2026
-**Data de abertura:** 2026-08-19
+**Situação:** **Aceita** — **Node.js**, por votação na [reunião de 26/08/2026](../reunioes/2026-08-26-fechamento-do-stack.md)
+**Data de abertura:** 2026-08-19 · **Data da decisão:** 2026-08-26
 **Origem:** [Reunião de stack técnico, 19/08/2026](../reunioes/2026-08-19-stack-tecnico.md)
 
 ## Contexto
@@ -11,6 +11,23 @@ Definidos o padrão de dados ([0001](./0001-fhir-como-padrao-de-dados.md)), o ba
 Esta decisão é diferente das anteriores. As outras foram consenso rápido. Esta tem **teses concorrentes, sustentadas por pessoas com experiência real e argumentos legítimos** — e é a decisão mais cara de reverter depois.
 
 Como insumo desta decisão, a proposta de arquitetura de módulos da V1 ([`modulos.md`](../modulos.md)) e o dicionário de dados ([`cadastros.md`](../cadastros.md)) dimensionam o que a linguagem escolhida vai construir.
+
+## Decisão
+
+**Node.js é a linguagem e plataforma do backend.** Decidida por votação na reunião de 26/08/2026 — e o placar virou ao longo do próprio debate: a conversa começou favorável a Python e terminou em Node.js. Pesaram:
+
+- **Concorrência de requisições.** O modelo de I/O assíncrono do Node (*event loop*) atende bem o perfil real de carga de um prontuário — muita leitura e escrita concorrente de registros, trilha de auditoria e chamadas de API — sem o custo de um processo separado por núcleo.
+- **Base de contribuidores** (critério 1): linguagem de mercado, com ecossistema maduro para API e aderência ao próprio HL7 — o mesmo critério que eliminou Go pesa a favor do Node.
+- **Hospedagem e testes simples** para quem for rodar o projeto.
+- **Experiência prática relatada em reunião** com aplicação Node de grande porte, madura e estável há anos — contraposta a um relato, também em reunião, de dificuldades de escala e concorrência com Python num sistema equivalente. A adequação do Python ao porte do projeto foi defendida até o fim; a divergência está registrada na tese B, que permanece abaixo.
+
+**O que a decisão não inclui:**
+
+- **Duas stacks no backend.** A combinação de Node no núcleo com Python nos serviços de IA (tese D) foi debatida de novo e **não** adotada: duas tecnologias são duas manutenções e duas equipes. Serviços de IA, quando existirem, conversam com o núcleo por API — e a tecnologia deles será decidida quando eles existirem.
+- **IA embutida no núcleo.** Adiada também por razão regulatória: software com finalidade de apoio a diagnóstico entra em enquadramento próprio, separado da certificação de prontuário (ver [`compliance.md`](../compliance.md)). A fronteira registrada mais abaixo segue valendo.
+- **O framework** (Fastify, NestJS e afins): escolha do time de backend, deliberadamente deixada para depois da formação das equipes. O front não depende dela — a conversa entre os dois é só pelo contrato da API.
+
+As teses vencidas permanecem registradas abaixo, como a governança promete: são elas que explicam o que já foi pesado.
 
 ## Situação do debate
 
@@ -87,11 +104,8 @@ Sob esse princípio, o papel do Python não é "colocar IA no prontuário": é f
 
 Isso é **compatível** com o núcleo neutro descrito no `vision.md` e com o enquadramento regulatório de [`compliance.md`](../compliance.md), desde que a fronteira seja respeitada: o serviço de IA fica fora do caminho crítico do prontuário e não emite juízo clínico. Se em algum momento o projeto quiser cruzar essa fronteira, isso exige ADR próprio e avaliação regulatória específica — não é decorrência desta decisão.
 
-## Como participar desta decisão
+## Como esta decisão foi tomada
 
-Esta decisão está aberta e o registro acima é público justamente para que o debate continue por escrito.
+Por **votação entre os presentes** na reunião de 26/08/2026, depois de duas reuniões de debate e uma semana de amadurecimento das teses — exatamente o processo que a reunião anterior exigiu ao recusar um encaminhamento verbal como decisão. O placar começou favorável a Python e virou com argumentos técnicos apresentados na própria reunião; as mudanças de voto foram explícitas e voluntárias. O registro não atribui votos nominalmente, pela regra do projeto.
 
-- **Para assinar sua posição:** abra um Pull Request adicionando seu argumento com seu nome nesta seção, ou deixe-o escrito numa Issue. Posição debatida no grupo de WhatsApp ou em reunião entra no registro assim — por escrito e assinada: o projeto não atribui argumentos a pessoas a partir de transcrição de reunião.
-- **Para trazer uma tese nova:** leve-a ao grupo de WhatsApp ou abra uma Issue do tipo *Proposta de decisão técnica*.
-
-Quando houver decisão, este documento passa a **Aceita**, com a justificativa registrada. As teses vencidas **permanecem aqui** — elas explicam por que o projeto é como é, e permitem que uma revisão futura saiba o que já foi pesado.
+As teses vencidas **permanecem neste documento**. Elas explicam por que o projeto é como é, e permitem que uma revisão futura saiba o que já foi pesado.

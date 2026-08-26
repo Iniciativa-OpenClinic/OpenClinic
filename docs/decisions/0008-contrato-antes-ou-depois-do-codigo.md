@@ -1,7 +1,7 @@
 # 0008 — Contrato da API antes ou depois do código
 
-**Situação:** **Em aberto** — decisão do conselho fundador, em reunião
-**Data de abertura:** 2026-08-22
+**Situação:** **Aceita** — código primeiro, com o contrato entregue na mesma mudança (ratificada em 26/08/2026)
+**Data de abertura:** 2026-08-22 · **Data da decisão:** 2026-08-26
 **Origem:** revisão da documentação de arquitetura de 21–22/08/2026, com a consulta a desenvolvedores de fora do projeto
 
 ## Contexto
@@ -54,13 +54,10 @@ Estes pontos não dependem da ordem escolhida, e seguem valendo enquanto a decis
 4. **Custo de reverter.** Abandonar o contrato-primeiro é barato; refazer uma API pública que já tem consumidores, não.
 5. **Velocidade até a primeira versão demonstrável**, que num projeto voluntário sustenta o engajamento.
 
-## Próximo passo
+## Decisão
 
-Decisão do **conselho fundador**, em reunião (veja [`GOVERNANCE.md`](../../GOVERNANCE.md)). Até lá, nenhum documento do projeto afirma qual das duas ordens o OpenClinic segue: o [`roadmap.md`](../roadmap.md) descreve a frente do contrato sem fixar a ordem, e o que vale nos dois caminhos continua escrito no [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
+**O código nasce primeiro, e o contrato nasce com ele: toda mudança de API entrega o contrato OpenAPI atualizado no mesmo pull request.** É a tese A, com as quatro garantias da seção "O que vale em qualquer das duas" transformadas em regra permanente — em especial a **revisão explícita da API como interface pública**, que é o que impede o risco central da tese A: a API virar espelho da estrutura interna do código.
 
-## Como participar desta decisão
+Transparência sobre a forma: a [reunião de 26/08/2026](../reunioes/2026-08-26-fechamento-do-stack.md) não debateu as duas teses em pauta própria. Ela adotou, na prática, o fluxo da tese A — protótipos começando de imediato, com a documentação da API exigida em toda entrega de backend — e o **fundador ratificou essa prática como decisão**, no papel que o [`GOVERNANCE.md`](../../GOVERNANCE.md) lhe dá hoje. A tese B permanece registrada acima; se a prática confirmar os problemas que ela previu, reabrir esta decisão custa um documento novo que a substitua, nunca a reescrita deste.
 
-- **Para assinar sua posição:** abra um Pull Request adicionando seu argumento com seu nome nesta seção, ou deixe-o escrito numa Issue. Posição debatida no grupo de WhatsApp ou em reunião entra no registro assim — por escrito e assinada.
-- **Para trazer uma tese nova:** leve-a ao grupo de WhatsApp ou abra uma Issue do tipo *Proposta de decisão técnica*.
-
-Experiência prática com qualquer um dos dois caminhos — inclusive relato de onde deu errado — é a contribuição mais útil aqui.
+Consequência nos documentos: o [`roadmap.md`](../roadmap.md) e o [`CONTRIBUTING.md`](../../CONTRIBUTING.md) passam a afirmar a ordem; as garantias comuns continuam onde estavam.

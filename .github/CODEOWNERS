@@ -1,0 +1,26 @@
+# CODEOWNERS — quem valida o quê
+#
+# Cada linha liga um caminho do repositório à equipe cujo líder valida
+# mudanças naquele caminho. Com a regra "exigir revisão de code owner"
+# ligada na branch main, um pull request que toque um caminho listado
+# aqui só pode ser mesclado depois da aprovação do dono daquele caminho.
+#
+# Convenção do projeto: cada Equipe de Desenvolvimento (Time 1, Time 2...)
+# tem um par de equipes na organização:
+#   @Iniciativa-OpenClinic/time-N          -> todos os membros do time
+#   @Iniciativa-OpenClinic/time-N-lideres  -> apenas a lideranca do time
+# É a equipe "-lideres" que entra aqui, porque a aprovação que conta é a
+# do líder (o validador dos módulos sob responsabilidade do time).
+#
+# As entradas são ativadas conforme os times assumem módulos (épicos).
+# Exemplos do formato, a descomentar quando o código nascer:
+#
+# /backend/src/modules/identity/   @Iniciativa-OpenClinic/time-1-lideres
+# /backend/src/modules/scheduling/ @Iniciativa-OpenClinic/time-2-lideres
+# /frontend/                       @Iniciativa-OpenClinic/time-3-lideres
+#
+# Regras deste arquivo: a última linha que casar com o caminho vence;
+# mudanças neste próprio arquivo são validadas pelos líderes de projeto
+# quando a linha abaixo for descomentada.
+#
+# /.github/CODEOWNERS  @Iniciativa-OpenClinic/lideres-de-projeto

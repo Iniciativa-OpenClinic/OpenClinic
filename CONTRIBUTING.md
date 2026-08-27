@@ -47,7 +47,91 @@ As regras de contribuição, acordadas em [reunião](./docs/reunioes/2026-08-26-
 - **Commit atômico.** Cada commit tem um objetivo e uma razão, e a mensagem explica o porquê. IA pode ajudar a redigir; a revisão final e a responsabilidade são de quem assina.
 - **Pull request que se explica.** Descreva o que fez e como testou. O revisor pode devolver uma mudança confusa pedindo que ela volte explicada, e pode exigir teste automatizado junto.
 - **IA é ferramenta, não substituta.** Use à vontade para escrever código, desde que você entenda e responda pelo que está submetendo. Mudança espalhada em muitos lugares ao mesmo tempo, sem razão clara por commit, não entra.
-- **Cada módulo tem um validador**, que revisa e autoriza a incorporação no seu módulo (veja o [`GOVERNANCE.md`](./GOVERNANCE.md)).
+- **Cada módulo tem um validador**: o líder do time responsável por ele, que aprova todo pull request que o toca (veja o [`GOVERNANCE.md`](./GOVERNANCE.md)).
+
+## O fluxo de uma contribuição
+
+**Quem é de uma Equipe de Desenvolvimento** (os times numerados do [`GOVERNANCE.md`](./GOVERNANCE.md)): pegue uma issue designada ao seu time, crie uma branch curta a partir da `main` com o prefixo do time (por exemplo, `equipe-1/login-por-email`), trabalhe e abra o Pull Request para a `main`. O líder do seu time aprova o que toca os módulos do time; um líder de projeto faz o merge. A branch é curta de propósito: nasce de uma tarefa de poucas horas e morre no merge.
+
+**Quem chega de fora** (ainda sem equipe): faça um *fork* (a sua cópia do repositório, no seu perfil), trabalhe nele e abra o Pull Request do fork para a `main` daqui. Um líder de projeto revisa. Esse é o caminho natural para entrar numa equipe: contribuição externa bem feita é como os times recrutam.
+
+O caminho completo, no desenho:
+
+```mermaid
+flowchart TD
+    A["💡 Ideia"] --> B{"Muda o desenho<br/>do sistema?"}
+    B -- "sim" --> C["🗣️ Debate<br/>na comunidade"]
+    C --> D["📜 Decisão<br/>registrada em<br/>docs/decisions/"]
+    D --> E["📋 Issue no<br/>quadro público"]
+    B -- "não, é código<br/>dentro do desenho" --> E
+    E --> F{"Quem faz?"}
+    F -- "membro de equipe" --> G["🌿 Branch curta<br/>equipe-1/tarefa"]
+    F -- "externo" --> H["🍴 Fork"]
+    G --> I["✏️ Commits<br/>atômicos"]
+    H --> I
+    I --> J["📬 PR em rascunho<br/>descrição no molde<br/>+ contrato da API"]
+    J --> K{"Descrição<br/>completa?"}
+    K -- "não" --> L["↩️ Devolvido<br/>sem revisão"]
+    L --> J
+    K -- "sim, PR de equipe" --> M["🥋 Revisão técnica<br/>do líder da equipe"]
+    M -- "pede ajustes" --> I
+    M -- "recusa" --> X["❌ Fechado com<br/>observações"]
+    M -- "aprova" --> O["🛡️ Líder de projeto<br/>revisa o encaixe<br/>no todo"]
+    K -- "sim, PR externo" --> O
+    O -- "reprova" --> X
+    O -- "aprova" --> P["✅ Merge na main"]
+    P --> Q["🧹 Branch apagada<br/>📊 épico atualizado"]
+    classDef decisao fill:#F8EEDA,stroke:#DB9B2D,color:#33240B
+    classDef equipe fill:#E8EEF7,stroke:#3B6FB0,color:#16292F
+    classDef projeto fill:#E4EFF4,stroke:#2E7D9A,color:#16292F
+    classDef recusado fill:#F9E9E7,stroke:#C0604F,color:#42150D
+    class B,C,D decisao
+    class M equipe
+    class O,P projeto
+    class X recusado
+```
+
+### Os portões, um a um
+
+| # | Portão | Quem segura a chave | O que é checado |
+| :-- | :-- | :-- | :-- |
+| 1 | **Decisão antes de código** | Conselho fundador | Mudança de arquitetura, escopo ou stack não entra por PR direto: nasce como registro em [`docs/decisions/`](./docs/decisions/) |
+| 2 | **Descrição completa** | Quem revisa | O que muda (arquivo por arquivo), por quê, como testou. Sem isso, devolvido sem revisão de código |
+| 3 | **Revisão técnica** | Líder da Equipe responsável (PR externo: um líder de projeto) | Correção, padrão de código, encaixe no módulo. É a aprovação obrigatória (CODEOWNERS), e termina de um de três jeitos: aprova, pede ajustes ou recusa com observações. É esse filtro que poupa o líder de projeto |
+| 4 | **Revisão de integração** | Líder de projeto | Só chegam aqui PRs já aprovados pelo líder da equipe, ou vindos de colaborador externo. Contrato da API atualizado no mesmo PR, efeito nos módulos vizinhos, superfície de segurança |
+| 5 | **O merge em si** | Líder de projeto | Só quem está nesse grupo consegue completar o merge na main, por regra do repositório |
+
+### O que cada papel pode fazer
+
+| Ação | Externo | Membro de Equipe | Líder de Equipe | Líder de projeto |
+| :-- | :--: | :--: | :--: | :--: |
+| Abrir Issue e discutir | ✅ | ✅ | ✅ | ✅ |
+| Abrir pull request | ✅ (via fork) | ✅ | ✅ | ✅ |
+| Criar branch no repositório | ❌ | ✅ | ✅ | ✅ |
+| Aprovação que conta para o merge | ❌ | ❌ | ✅ (nos módulos do seu time) | ✅ |
+| Completar o merge na main | ❌ | ❌ | ❌ | ✅ |
+
+### Pull request de colaborador externo
+
+Revisar contribuição de quem ainda não conhecemos custa caro, então a regra é dura de propósito: **pull request externo sem descrição completa é devolvido sem revisão de código**. O modelo do repositório já traz os campos; o padrão esperado é este, preenchido:
+
+> **O que muda**
+> Adiciona validação de dígito verificador ao campo CPF do cadastro de paciente.
+> - `backend/src/modules/people/validators/cpf.js`: função nova `isValidCpf`, com o algoritmo dos dois dígitos verificadores e rejeição de sequências repetidas.
+> - `backend/src/modules/people/patient.service.js`: criação e edição de paciente passam a chamar a validação e devolvem o erro `INVALID_CPF`.
+> - `backend/test/people/cpf.spec.js`: doze casos de teste, entre CPFs válidos, dígitos errados e sequências repetidas.
+>
+> **Por quê**
+> O requisito `ECF.17.16` da matriz de conformidade exige validação de dígito verificador, e a issue #NN pede exatamente isso. Sem a validação, um erro de digitação da recepção cria um cadastro que a busca por CPF nunca mais encontra.
+>
+> **Como testei**
+> `npm test` no módulo, com os doze casos passando. Subi o sistema com `docker compose up` e testei pela interface: CPF inválido é recusado com a mensagem certa, CPF válido segue o fluxo normal.
+
+Uma mudança por pull request: se você mexeu em duas coisas sem relação, são dois pull requests. E cada commit segue as regras da seção anterior, atômico e com a razão escrita.
+
+### Quero entrar numa equipe
+
+As **guildas** (Frontend, Backend, Banco de dados, Segurança) são o catálogo de habilidades da comunidade: não têm poder nenhum, e servem para os líderes saberem quem é bom em quê na hora de montar e reforçar os times. Para entrar numa guilda ou se candidatar a um time, abra uma [Issue](../../issues) se apresentando: o que você sabe fazer, quanto tempo tem por semana, e em que parte do projeto quer mexer.
 
 A documentação do projeto é escrita em **português**. Código, identificadores, mensagens de commit e a especificação da API são escritos em **inglês**.
 

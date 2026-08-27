@@ -34,18 +34,26 @@ Se a subdivisão vier, virá de forma natural conforme o trabalho exigir, não p
 
 ```mermaid
 flowchart TD
-    CF["🏛️ Conselho fundador<br/>visão, escopo e decisões finais"] --> LP["🛡️ Líderes de projeto<br/>o anel de fora:<br/>únicos que mesclam na main"]
-    CF --> FE["📣 Frente de estratégia,<br/>comunicação e parcerias"]
-    CF --> FU["🩺 Frente de uso e<br/>validação (testers)"]
-    LP --> T1["⚔️ Equipe 1<br/>líder + devs multidisciplinares<br/>módulos designados no quadro"]
-    LP --> T2["⚔️ Equipe 2<br/>líder + devs multidisciplinares"]
+    CF["🏛️ Conselho<br/>fundador<br/>visão, escopo e<br/>decisões finais"] --> LP["🛡️ Líderes<br/>de projeto<br/>só eles mesclam<br/>na main"]
+    CF --> FE["📣 Frente de<br/>estratégia,<br/>comunicação<br/>e parcerias"]
+    CF --> FU["🩺 Frente de uso<br/>e validação<br/>(testers)"]
+    LP --> T1["⚔️ Equipe 1<br/>multidisciplinar<br/>🥋 líder único<br/>aprova os PRs<br/>do time"]
+    LP --> T2["⚔️ Equipe 2<br/>🥋 líder único"]
     LP --> TN["⚔️ Equipe N…"]
-    G["🎓 Guildas de habilidade<br/>Frontend · Backend · Banco · Segurança<br/>(sem permissão; catálogo da comunidade)"] -. recrutamento .-> T1
-    G -. recrutamento .-> T2
-    EXT["🌍 Colaboradores externos"] -- "fork + pull request detalhado" --> LP
+    G["🎓 Guildas<br/>catálogo de<br/>habilidades,<br/>sem poder"] -. recrutamento .-> T2
+    G -. recrutamento .-> TN
+    EXT["🌍 Externos"] -- "fork + PR<br/>detalhado" --> LP
+    classDef conselho fill:#F8EEDA,stroke:#DB9B2D,color:#33240B
+    classDef projeto fill:#E4EFF4,stroke:#2E7D9A,color:#16292F
+    classDef equipe fill:#E8EEF7,stroke:#3B6FB0,color:#16292F
+    classDef aberto fill:#ECF1F4,stroke:#647984,color:#16292F,stroke-dasharray:5 4
+    class CF conselho
+    class LP projeto
+    class T1,T2,TN equipe
+    class G aberto
 ```
 
-**Equipes de Desenvolvimento (Time 1, Time 2…).** O motor do projeto: times multidisciplinares, com gente de front, back, banco e segurança no mesmo time. Cada time é dono das issues e dos módulos designados a ele no quadro público de acompanhamento, e é o nome do time que aparece por lá. **O líder do time é o validador dos módulos sob responsabilidade dele**: aprova os pull requests que os tocam e responde pela qualidade do que entra. Isso não recria a subdivisão por especialidade descartada acima; o time é multidisciplinar por desenho, e o validador é um portão de qualidade, não uma equipe separada.
+**Equipes de Desenvolvimento (Equipe 1, Equipe 2…).** O motor do projeto: times multidisciplinares, com gente de front, back, banco e segurança no mesmo time. Cada time é dono das issues e dos módulos designados a ele no quadro público de acompanhamento, e é o nome do time que aparece por lá. **Cada equipe tem um único líder, e é ele o validador dos módulos sob responsabilidade do time**: aprova os pull requests que os tocam antes de chegarem ao líder de projeto, e responde pela qualidade do que entra. É esse filtro que mantém leve a revisão final. Isso não recria a subdivisão por especialidade descartada acima; o time é multidisciplinar por desenho, e o validador é um portão de qualidade, não uma equipe separada.
 
 **Líderes de projeto.** O anel de fora: as únicas pessoas que mesclam na branch principal. Todo pull request, de time ou de fora, termina nas mãos de um líder de projeto. São nomeados pelo conselho fundador entre quem tem mais experiência em conduzir desenvolvimento.
 
@@ -56,6 +64,12 @@ flowchart TD
 ```mermaid
 flowchart LR
     A["🌍 Externo"] --> B["🎓 Guilda"] --> C["⚔️ Equipe"] --> D["🥋 Líder de Equipe"] --> E["🛡️ Líder de projeto"] --> F["🏛️ Conselho"]
+    classDef equipe fill:#E8EEF7,stroke:#3B6FB0,color:#16292F
+    classDef projeto fill:#E4EFF4,stroke:#2E7D9A,color:#16292F
+    classDef conselho fill:#F8EEDA,stroke:#DB9B2D,color:#33240B
+    class C,D equipe
+    class E projeto
+    class F conselho
 ```
 
 A composição nominal de times e guildas segue a regra deste documento: não é publicada aqui, e cada pessoa aparece no registro assinando as próprias contribuições e revisões.

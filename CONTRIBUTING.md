@@ -51,7 +51,7 @@ As regras de contribuição, acordadas em [reunião](./docs/reunioes/2026-08-26-
 
 ## O fluxo de uma contribuição
 
-**Quem é de uma Equipe de Desenvolvimento** (os times numerados do [`GOVERNANCE.md`](./GOVERNANCE.md)): pegue uma issue designada ao seu time, crie uma branch curta a partir da `main` com o prefixo do time (por exemplo, `time-1/login-por-email`), trabalhe e abra o Pull Request para a `main`. O líder do seu time aprova o que toca os módulos do time; um líder de projeto faz o merge. A branch é curta de propósito: nasce de uma tarefa de poucas horas e morre no merge.
+**Quem é de uma Equipe de Desenvolvimento** (os times numerados do [`GOVERNANCE.md`](./GOVERNANCE.md)): pegue uma issue designada ao seu time, crie uma branch curta a partir da `main` com o prefixo do time (por exemplo, `equipe-1/login-por-email`), trabalhe e abra o Pull Request para a `main`. O líder do seu time aprova o que toca os módulos do time; um líder de projeto faz o merge. A branch é curta de propósito: nasce de uma tarefa de poucas horas e morre no merge.
 
 **Quem chega de fora** (ainda sem equipe): faça um *fork* (a sua cópia do repositório, no seu perfil), trabalhe nele e abra o Pull Request do fork para a `main` daqui. Um líder de projeto revisa. Esse é o caminho natural para entrar numa equipe: contribuição externa bem feita é como os times recrutam.
 
@@ -59,31 +59,36 @@ O caminho completo, no desenho:
 
 ```mermaid
 flowchart TD
-    A["💡 Ideia, necessidade ou problema"] --> B{"Muda o desenho do sistema?<br/>(arquitetura, escopo, stack)"}
-
-    B -- "Sim" --> C["🗣️ Debate no grupo de WhatsApp,<br/>em reunião ou numa Issue"]
-    C --> D["📜 Registro de decisão<br/>em docs/decisions/"]
-    D --> E["📋 Issue de implementação<br/>no quadro público"]
-    B -- "Não, é código dentro do desenho" --> E
-
-    E --> F{"Quem vai fazer?"}
-    F -- "Membro de uma Equipe" --> G["🌿 Branch curta a partir da main<br/>equipe-1/nome-da-tarefa"]
-    F -- "Colaborador externo" --> H["🍴 Fork<br/>(sua cópia do repositório)"]
-
-    G --> I["✏️ Commits atômicos<br/>um objetivo e uma razão por commit"]
+    A["💡 Ideia"] --> B{"Muda o desenho<br/>do sistema?"}
+    B -- "sim" --> C["🗣️ Debate<br/>na comunidade"]
+    C --> D["📜 Decisão<br/>registrada em<br/>docs/decisions/"]
+    D --> E["📋 Issue no<br/>quadro público"]
+    B -- "não, é código<br/>dentro do desenho" --> E
+    E --> F{"Quem faz?"}
+    F -- "membro de equipe" --> G["🌿 Branch curta<br/>equipe-1/tarefa"]
+    F -- "externo" --> H["🍴 Fork"]
+    G --> I["✏️ Commits<br/>atômicos"]
     H --> I
-    I --> J["📬 Pull request para a main<br/>aberto como rascunho até ficar pronto"]
-
-    J --> K{"Descrição completa?<br/>o que muda · por quê · como testou"}
-    K -- "Não" --> L["↩️ Devolvido<br/>sem revisão de código"]
+    I --> J["📬 PR em rascunho<br/>descrição no molde<br/>+ contrato da API"]
+    J --> K{"Descrição<br/>completa?"}
+    K -- "não" --> L["↩️ Devolvido<br/>sem revisão"]
     L --> J
-    K -- "Sim" --> M["🥋 Revisão técnica<br/>líder da Equipe dona dos módulos<br/>(PR externo: um líder de projeto)"]
-
-    M --> N{"Aprovado?"}
-    N -- "Precisa ajustar" --> I
-    N -- "Sim" --> O["🛡️ Líder de projeto<br/>revisa a integração"]
-    O --> P["✅ Merge na main<br/>só líder de projeto completa"]
-    P --> Q["🧹 Branch apagada<br/>📊 caixinha do épico marcada"]
+    K -- "sim, PR de equipe" --> M["🥋 Revisão técnica<br/>do líder da equipe"]
+    M -- "pede ajustes" --> I
+    M -- "recusa" --> X["❌ Fechado com<br/>observações"]
+    M -- "aprova" --> O["🛡️ Líder de projeto<br/>revisa o encaixe<br/>no todo"]
+    K -- "sim, PR externo" --> O
+    O -- "reprova" --> X
+    O -- "aprova" --> P["✅ Merge na main"]
+    P --> Q["🧹 Branch apagada<br/>📊 épico atualizado"]
+    classDef decisao fill:#F8EEDA,stroke:#DB9B2D,color:#33240B
+    classDef equipe fill:#E8EEF7,stroke:#3B6FB0,color:#16292F
+    classDef projeto fill:#E4EFF4,stroke:#2E7D9A,color:#16292F
+    classDef recusado fill:#F9E9E7,stroke:#C0604F,color:#42150D
+    class B,C,D decisao
+    class M equipe
+    class O,P projeto
+    class X recusado
 ```
 
 ### Os portões, um a um
@@ -92,8 +97,8 @@ flowchart TD
 | :-- | :-- | :-- | :-- |
 | 1 | **Decisão antes de código** | Conselho fundador | Mudança de arquitetura, escopo ou stack não entra por PR direto: nasce como registro em [`docs/decisions/`](./docs/decisions/) |
 | 2 | **Descrição completa** | Quem revisa | O que muda (arquivo por arquivo), por quê, como testou. Sem isso, devolvido sem revisão de código |
-| 3 | **Revisão técnica** | Líder da Equipe responsável | Correção, padrão de código, encaixe no módulo. É a aprovação obrigatória (CODEOWNERS) |
-| 4 | **Revisão de integração** | Líder de projeto | Contrato da API atualizado no mesmo PR, efeito nos módulos vizinhos, superfície de segurança |
+| 3 | **Revisão técnica** | Líder da Equipe responsável (PR externo: um líder de projeto) | Correção, padrão de código, encaixe no módulo. É a aprovação obrigatória (CODEOWNERS), e termina de um de três jeitos: aprova, pede ajustes ou recusa com observações. É esse filtro que poupa o líder de projeto |
+| 4 | **Revisão de integração** | Líder de projeto | Só chegam aqui PRs já aprovados pelo líder da equipe, ou vindos de colaborador externo. Contrato da API atualizado no mesmo PR, efeito nos módulos vizinhos, superfície de segurança |
 | 5 | **O merge em si** | Líder de projeto | Só quem está nesse grupo consegue completar o merge na main, por regra do repositório |
 
 ### O que cada papel pode fazer

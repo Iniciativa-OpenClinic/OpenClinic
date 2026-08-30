@@ -104,6 +104,16 @@ Dois ritmos, medidos para o turno de trabalho: **100ms** para micro-interações
 
 `prefers-reduced-motion` zera todas as durações: animação dispara vertigem real em quem tem disfunção vestibular.
 
+## O símbolo
+
+Um redemoinho que conflui no símbolo do open source. Significado registrado pelo fundador em 30/08/2026.
+
+As faixas do logo giram em vórtice: o verde e o azul entram em rotação, se sobrepõem e são puxados para o mesmo centro. Esse centro, desenhado em negativo, é o símbolo do open source.
+
+É a imagem da comunidade que o projeto quer reunir: a energia de muitas pessoas desenvolvedoras, cada uma vindo de um ponto, confluindo numa missão em comum. Criar algo aberto, que pertence a todos.
+
+O sistema visual inteiro nasce desse gesto: o gradiente que costura a interface percorre as cores das faixas (ver "Ponto de partida"), e o teal primário assina o ponto exato onde o verde encontra o azul. Quando o logo aparece em cerimônia (capa de material, login, espécimen), a leitura preferida é sobre a moldura escura, onde o vórtice tem mais presença.
+
 ## Logo em uso
 
 O canônico segue sendo `docs/assets/logo.png` (2000×2000, fundo transparente; vetor permanece pendente).

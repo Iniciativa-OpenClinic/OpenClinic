@@ -1,0 +1,260 @@
+/**
+ * OpenClinic design tokens — generated from tokens.json (source of truth).
+ * Do not edit values here; edit tokens.json and regenerate.
+ *
+ * Themes: bare :root = light. Dark applies via prefers-color-scheme
+ * (guarded so an explicit data-theme="light" wins) and via data-theme="dark".
+ * Reduced motion: durations collapse to 0 for users who disable animation.
+ */
+
+:root {
+  /* ---- Primitives: color ---- */
+  --oc-neutral-0: #FFFFFF;
+  --oc-neutral-50: #F6FAFA;   /* calm paper — never pure white */
+  --oc-neutral-100: #E9F2F3;
+  --oc-neutral-150: #E4EDF0;
+  --oc-neutral-200: #D6E2E4;
+  --oc-neutral-300: #B9CCD1;
+  --oc-neutral-400: #93A8AF;
+  --oc-neutral-500: #52646B;
+  --oc-neutral-700: #263A42;
+  --oc-neutral-800: #1B2E35;
+  --oc-neutral-850: #16292F;  /* ink */
+  --oc-neutral-900: #16262C;
+  --oc-neutral-950: #0F1D22;  /* dark ground — never pure black */
+
+  --oc-teal-300: #7FBFD6;
+  --oc-teal-400: #55A5C2;
+  --oc-teal-600: #23768A;     /* brand primary */
+  --oc-teal-700: #1B5D6E;
+
+  --oc-blue-100: #E8EEF7;
+  --oc-blue-400: #7AA3D8;
+  --oc-blue-500: #185795;     /* logo blue — canonical (pixel-extracted) */
+  --oc-blue-600: #2C5F9E;     /* support */
+  --oc-blue-900: #1E2C40;
+
+  --oc-green-100: #E5F2EC;
+  --oc-green-300: #8FD0AE;
+  --oc-green-400: #5DC289;    /* logo green — canonical (pixel-extracted), decorative only */
+  --oc-green-600: #1E7A56;
+  --oc-green-900: #17352A;
+
+  --oc-amber-100: #FAF0DC;
+  --oc-amber-300: #E8C27A;
+  --oc-amber-700: #8F5F00;
+  --oc-amber-900: #3A2F1B;
+
+  --oc-red-100: #F9E9E7;
+  --oc-red-300: #E2A2A2;
+  --oc-red-600: #B42318;      /* the ONLY red in the system */
+  --oc-red-900: #3A2222;
+
+  --oc-terracotta-100: #F5D3C8;
+  --oc-terracotta-300: #E8907A;
+  --oc-terracotta-500: #DE6A4E; /* warm accent — never small text on light */
+  --oc-terracotta-900: #3A2A26;
+
+  /* ---- Semantic: color (light) ---- */
+  --oc-surface-bg: var(--oc-neutral-50);
+  --oc-surface-card: var(--oc-neutral-0);
+  --oc-surface-sunken: var(--oc-neutral-100);
+  --oc-surface-rail: var(--oc-neutral-950);        /* sidebar: dark in BOTH themes */
+  --oc-surface-on-rail: var(--oc-neutral-150);
+  --oc-surface-on-rail-muted: var(--oc-neutral-400);
+
+  --oc-border-default: var(--oc-neutral-200);
+  --oc-border-strong: var(--oc-neutral-300);
+
+  --oc-text-primary: var(--oc-neutral-850);        /* continuous reading — AAA */
+  --oc-text-muted: var(--oc-neutral-500);
+  --oc-text-accent: var(--oc-teal-600);
+  --oc-text-link: var(--oc-blue-600);
+
+  --oc-action-primary: var(--oc-teal-600);
+  --oc-action-primary-hover: var(--oc-teal-700);
+  --oc-action-on-primary: var(--oc-neutral-0);
+
+  --oc-warm-accent: var(--oc-terracotta-500);
+  --oc-warm-tint: var(--oc-terracotta-100);
+
+  --oc-feedback-success: var(--oc-green-600);
+  --oc-feedback-success-tint: var(--oc-green-100);
+  --oc-feedback-warning: var(--oc-amber-700);
+  --oc-feedback-warning-tint: var(--oc-amber-100);
+  --oc-feedback-danger: var(--oc-red-600);
+  --oc-feedback-danger-tint: var(--oc-red-100);
+  --oc-feedback-info: var(--oc-blue-600);
+  --oc-feedback-info-tint: var(--oc-blue-100);
+
+  --oc-gradient-brand: linear-gradient(120deg, var(--oc-green-400), var(--oc-teal-600), var(--oc-blue-500));
+
+  /* ---- Typography ---- */
+  --oc-font-sans: "Lexend", system-ui, sans-serif;
+  --oc-font-mono: "Atkinson Hyperlegible Mono", ui-monospace, Consolas, monospace;
+
+  --oc-font-size-2xs: 11px;
+  --oc-font-size-xs: 12px;
+  --oc-font-size-sm: 13px;
+  --oc-font-size-md: 14px;    /* UI default — dense product */
+  --oc-font-size-lg: 16px;    /* continuous reading */
+  --oc-font-size-xl: 18px;
+  --oc-font-size-2xl: 22px;
+  --oc-font-size-3xl: 28px;
+  --oc-font-size-4xl: 36px;
+
+  --oc-font-weight-regular: 400;
+  --oc-font-weight-medium: 500;
+  --oc-font-weight-semibold: 600;
+  --oc-font-weight-bold: 700;
+
+  --oc-line-height-tight: 1.2;
+  --oc-line-height-snug: 1.4;
+  --oc-line-height-normal: 1.55;
+  --oc-line-height-relaxed: 1.65;
+
+  --oc-letter-spacing-caps: 0.08em;
+
+  /* ---- Spacing (4px base) ---- */
+  --oc-space-0: 0px;
+  --oc-space-1: 4px;
+  --oc-space-2: 8px;
+  --oc-space-3: 12px;
+  --oc-space-4: 16px;
+  --oc-space-5: 20px;
+  --oc-space-6: 24px;
+  --oc-space-8: 32px;
+  --oc-space-10: 40px;
+  --oc-space-12: 48px;
+  --oc-space-16: 64px;
+
+  /* ---- Radius (controls 8 / cards 12 / chips pill) ---- */
+  --oc-radius-xs: 4px;
+  --oc-radius-sm: 6px;
+  --oc-radius-md: 8px;
+  --oc-radius-lg: 12px;
+  --oc-radius-xl: 16px;
+  --oc-radius-full: 999px;
+
+  /* ---- Shadow (elevation = surface contrast + border; shadow only floats) ---- */
+  --oc-shadow-none: none;
+  --oc-shadow-raised: 0 1px 2px rgba(22, 41, 47, 0.06);
+  --oc-shadow-overlay: 0 8px 24px rgba(22, 41, 47, 0.16);
+
+  /* ---- Motion ---- */
+  --oc-duration-fast: 100ms;
+  --oc-duration-base: 160ms;
+  --oc-duration-slow: 220ms;
+  --oc-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --oc-easing-linear: linear;
+}
+
+/* Dark theme via OS preference (explicit light choice wins) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --oc-surface-bg: var(--oc-neutral-950);
+    --oc-surface-card: var(--oc-neutral-900);
+    --oc-surface-sunken: var(--oc-neutral-800);
+
+    --oc-border-default: var(--oc-neutral-700);
+    --oc-border-strong: var(--oc-neutral-500);
+
+    --oc-text-primary: var(--oc-neutral-150);
+    --oc-text-muted: var(--oc-neutral-400);
+    --oc-text-accent: var(--oc-teal-400);
+    --oc-text-link: var(--oc-blue-400);
+
+    --oc-warm-accent: var(--oc-terracotta-300);
+    --oc-warm-tint: var(--oc-terracotta-900);
+
+    --oc-feedback-success: var(--oc-green-300);
+    --oc-feedback-success-tint: var(--oc-green-900);
+    --oc-feedback-warning: var(--oc-amber-300);
+    --oc-feedback-warning-tint: var(--oc-amber-900);
+    --oc-feedback-danger: var(--oc-red-300);
+    --oc-feedback-danger-tint: var(--oc-red-900);
+    --oc-feedback-info: var(--oc-blue-400);
+    --oc-feedback-info-tint: var(--oc-blue-900);
+
+    --oc-shadow-raised: none; /* dark elevation is surface-only */
+  }
+}
+
+/* Dark theme via explicit choice */
+:root[data-theme="dark"] {
+  --oc-surface-bg: var(--oc-neutral-950);
+  --oc-surface-card: var(--oc-neutral-900);
+  --oc-surface-sunken: var(--oc-neutral-800);
+
+  --oc-border-default: var(--oc-neutral-700);
+  --oc-border-strong: var(--oc-neutral-500);
+
+  --oc-text-primary: var(--oc-neutral-150);
+  --oc-text-muted: var(--oc-neutral-400);
+  --oc-text-accent: var(--oc-teal-400);
+  --oc-text-link: var(--oc-blue-400);
+
+  --oc-warm-accent: var(--oc-terracotta-300);
+  --oc-warm-tint: var(--oc-terracotta-900);
+
+  --oc-feedback-success: var(--oc-green-300);
+  --oc-feedback-success-tint: var(--oc-green-900);
+  --oc-feedback-warning: var(--oc-amber-300);
+  --oc-feedback-warning-tint: var(--oc-amber-900);
+  --oc-feedback-danger: var(--oc-red-300);
+  --oc-feedback-danger-tint: var(--oc-red-900);
+  --oc-feedback-info: var(--oc-blue-400);
+  --oc-feedback-info-tint: var(--oc-blue-900);
+
+  --oc-shadow-raised: none;
+}
+
+/* Accessibility: users who disable animation get none */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --oc-duration-fast: 0ms;
+    --oc-duration-base: 0ms;
+    --oc-duration-slow: 0ms;
+  }
+}
+
+/* ---- Component layer — canonical MVP values (form direction A, sealed 2026-08-30) ---- */
+:root {
+  --oc-btn-pad-y: 9px;          --oc-btn-pad-x: 15px;
+  --oc-btn-radius: var(--oc-radius-md);
+  --oc-btn-font-size: 13px;     --oc-btn-min-height: 36px;   /* 44px on touch viewports */
+  --oc-btn-sm-pad-y: 6px;       --oc-btn-sm-pad-x: 11px;
+  --oc-btn-sm-font-size: 12.5px; --oc-btn-sm-min-height: 30px;
+
+  --oc-field-label-size: 12px;  --oc-field-label-gap: 5px;
+  --oc-field-pad-y: 9px;        --oc-field-pad-x: 12px;
+  --oc-field-font-size: 13.5px; --oc-field-radius: var(--oc-radius-md);
+  --oc-field-border: var(--oc-border-strong);
+  --oc-field-border-focus: var(--oc-teal-400);
+  --oc-field-hint-size: 11.5px;
+
+  --oc-pill-font-size: 11px;    --oc-pill-pad: 2px 10px;
+  --oc-pill-radius: var(--oc-radius-full);
+
+  --oc-card-padding: 18px 20px; --oc-card-radius: var(--oc-radius-lg);
+  --oc-card-gap-below: 14px;
+
+  --oc-table-head-size: 11px;   --oc-table-head-tracking: 0.07em;
+  --oc-table-cell-pad: 9px 10px;
+
+  --oc-tabs-pad: 6px 14px;      --oc-tabs-font-size: 12.5px;
+  --oc-tabs-radius: var(--oc-radius-md);
+
+  --oc-toast-pad: 11px 16px;    --oc-toast-radius: var(--oc-radius-lg);
+  --oc-toast-max-width: 340px;
+
+  --oc-appt-pad: 5px 8px;       --oc-appt-radius: var(--oc-radius-sm);
+  --oc-appt-accent-bar: 3px;    --oc-appt-font-size: 11.5px;
+
+  --oc-modal-padding: 22px 24px; --oc-modal-radius: var(--oc-radius-xl);
+  --oc-modal-max-width: 480px;
+  --oc-modal-scrim: rgba(15, 29, 34, 0.45);
+
+  --oc-rail-width: 216px;       --oc-rail-width-collapsed: 64px;
+  --oc-rail-brand-logo: 36px;   --oc-rail-seam: var(--oc-neutral-800);
+}

@@ -26,3 +26,42 @@ Thumbs.db
 
 # Entradas específicas de linguagem e framework serão adicionadas quando a
 # decisão docs/decisions/0005-linguagem-do-backend.md for fechada.
+
+
+# ── Regras do Monorepo OpenClinic (feature/auth) ──
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+*.tsbuildinfo
+.turbo/
+.cache/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+coverage/
+**/coverage/
+.nyc_output/
+.vscode/*
+*.sublime-project
+*.sublime-workspace
+.system_generated/
+scratch/
+.temp/
+**/.temp/
+.temp*
+backups/

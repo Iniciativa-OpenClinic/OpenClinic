@@ -1,0 +1,39 @@
+{
+  "name": "openclinic",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/core",
+    "packages/backend-api",
+    "packages/backend-cli",
+    "packages/frontend-webapp"
+  ],
+  "scripts": {
+    "cli": "tsx packages/backend-cli/src/index.ts",
+    "dev:api": "npm run dev -w packages/backend-api",
+    "dev:webapp": "npm run dev -w packages/frontend-webapp",
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run build -w packages/core && tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/backend-api/tsconfig.json && tsc --noEmit -p packages/backend-cli/tsconfig.json && tsc --noEmit -p packages/frontend-webapp/tsconfig.json",
+    "export:openapi": "npm run export:openapi -w @openclinic/backend-api",
+    "db:setup": "npm run cli -- db:setup",
+    "db:status": "npm run cli -- db:status",
+    "db:baseline": "npm run cli -- db:baseline",
+    "db:generate": "npm run db:generate -w packages/backend-api",
+    "db:verify": "tsx infra/database/verify-migrations.ts",
+    "test:migrations": "tsx --test infra/database/tests/*.test.ts",
+    "db:init": "npm run cli -- db:init",
+    "db:migrate": "npm run cli -- db:migrate",
+    "db:seed": "npm run cli -- db:seed",
+    "db:backup": "npm run cli -- db:backup",
+    "db:restore": "npm run cli -- db:restore",
+    "db:sync-remote": "npm run cli -- db:sync-remote",
+    "auth:check": "npm run cli -- auth:check",
+    "user:create-admin": "npm run cli -- user:create-admin",
+    "user:reset-password": "npm run cli -- user:reset-password",
+    "user:purge": "npm run cli -- user:purge"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

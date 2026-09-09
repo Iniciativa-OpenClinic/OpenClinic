@@ -1,0 +1,107 @@
+# ============================================================
+# OpenClinic - Production Docker Stack
+# ============================================================
+# Serviços:
+#   - db: PostgreSQL 17 Alpine com esquemas e roles iniciais
+#   - api: Backend REST Fastify (Clean Architecture)
+#   - webapp: Frontend SPA Vite/React servido via Nginx Alpine
+# ============================================================
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: openclinic-postgres
+    environment:
+      POSTGRES_USER: openclinic_owner
+      POSTGRES_PASSWORD: temp1234
+      POSTGRES_DB: openclinic
+    ports:
+      - "5432:5432"
+    volumes:
+      - openclinic_data:/var/lib/postgresql/data
+      - ./docker/init-db/000-roles.sql:/docker-entrypoint-initdb.d/000-roles.sql
+    networks:
+      - openclinic_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openclinic_owner -d openclinic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    image: openclinic-api:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: openclinic-api
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://openclinic_app:temp1234@openclinic-postgres:5432/openclinic
+      - JWT_SECRET_KEY=openclinic-change-me-in-production-at-least-32-chars
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=15
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - APP_HOST=0.0.0.0
+      - APP_PORT=3000
+      - LOG_LEVEL=info
+    networks:
+      - openclinic_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/database/Dockerfile
+    command: ["npm", "run", "db:setup"]
+    environment:
+      DATABASE_OWNER_URL: postgresql://openclinic_owner:temp1234@db:5432/openclinic
+      DATABASE_URL: postgresql://openclinic_owner:temp1234@db:5432/openclinic
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - openclinic_network
+    restart: "no"
+
+  webapp:
+    image: openclinic-webapp:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.webapp
+    container_name: openclinic-webapp
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - openclinic_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  openclinic_network:
+    name: openclinic_network
+    driver: bridge
+
+volumes:
+  openclinic_data:
+    name: openclinic_data

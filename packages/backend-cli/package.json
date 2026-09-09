@@ -1,0 +1,27 @@
+{
+  "name": "@openclinic/backend-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "openclinic": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@openclinic/core": "*",
+    "commander": "^13.0.0",
+    "drizzle-orm": "^0.38.3",
+    "postgres": "^3.4.5",
+    "dotenv": "^16.4.7",
+    "inquirer": "^12.3.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.0"
+  }
+}

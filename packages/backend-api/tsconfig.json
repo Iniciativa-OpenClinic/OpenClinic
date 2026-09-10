@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@openclinic/core": ["../core/src"],
+      "@openclinic/core/*": ["../core/src/*"]
+    }
+  },
+  "include": ["src"]
+}

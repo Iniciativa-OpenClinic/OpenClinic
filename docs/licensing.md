@@ -38,6 +38,7 @@ A licença cobre o código. Ela **não** dá a ninguém o direito de:
 Quando o projeto tiver um produto maduro, pretendemos buscar a **Certificação de S-RES da SBIS** (Sociedade Brasileira de Informática em Saúde) para a **distribuição oficial** do OpenClinic — é a certificação técnica de referência para prontuários eletrônicos no Brasil, embora seja voluntária (detalhes em [`compliance.md`](./compliance.md)).
 
 Um ponto importante e honesto: a certificação é emitida para uma **versão específica e auditada** do software.
+
 - Quem roda a distribuição oficial, sem modificações, está rodando o software certificado.
 - **Um fork modificado por outra pessoa não herda automaticamente o selo** — quem modifica e redistribui precisa buscar sua própria certificação se quiser o mesmo selo.
 

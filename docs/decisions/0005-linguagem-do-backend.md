@@ -21,7 +21,7 @@ Como insumo desta decisão, a proposta de arquitetura de módulos da V1 ([`modul
 - **Hospedagem e testes simples** para quem for rodar o projeto.
 - **Experiência prática relatada em reunião** com aplicação Node de grande porte, madura e estável há anos — contraposta a um relato, também em reunião, de dificuldades de escala e concorrência com Python num sistema equivalente. A adequação do Python ao porte do projeto foi defendida até o fim; a divergência está registrada na tese B, que permanece abaixo.
 
-**O que a decisão não inclui:**
+### O que a decisão não inclui
 
 - **Duas stacks no backend.** A combinação de Node no núcleo com Python nos serviços de IA (tese D) foi debatida de novo e **não** adotada: duas tecnologias são duas manutenções e duas equipes. Serviços de IA, quando existirem, conversam com o núcleo por API — e a tecnologia deles será decidida quando eles existirem.
 - **IA embutida no núcleo.** Adiada também por razão regulatória: software com finalidade de apoio a diagnóstico entra em enquadramento próprio, separado da certificação de prontuário (ver [`compliance.md`](../compliance.md)). A fronteira registrada mais abaixo segue valendo.

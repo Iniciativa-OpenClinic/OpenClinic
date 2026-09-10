@@ -1,0 +1,147 @@
+# 🚀 @openclinic/backend-api
+
+> Servidor HTTP e API REST do **OpenClinic**, construído com Fastify 5.x, TypeScript, Drizzle ORM e Clean Architecture.
+
+---
+
+## 🏛 Arquitetura de Software (Clean Architecture)
+
+A API segue os princípios de separação de responsabilidades e desacoplamento:
+
+```text
+packages/backend-api/src/
+├── arch/
+│   ├── application/
+│   │   └── use-cases/      # Regras de negócio puras (Login, Register, Users, Passwords)
+│   ├── domain/             # Entidades e contratos de repositórios (IAMUnitOfWork)
+│   ├── infrastructure/
+│   │   └── database/       # Drizzle ORM Schema e repositórios concretos (PostgreSQL)
+│   └── presentation/
+│       ├── middlewares/    # authenticateJwt, requireRole (RBAC)
+│       ├── auth.router.ts  # Endpoints REST e injeção de dependências
+│       ├── auth.schemas.ts # Validação de contratos com Zod
+│       └── error-handler.ts# Handler global RFC 7807 (Problem Details)
+├── shared/                 # Enums de domínio, classes base de repositório e interfaces
+├── config/                 # Carregamento e validação de variáveis de ambiente
+└── server.ts               # Ponto de entrada do servidor Fastify
+```
+
+---
+
+## 🔑 Controle de Acesso Baseado em Papéis (RBAC)
+
+O sistema implementa uma hierarquia de papéis restrita:
+
+| Papel (`role`) | Nível | Descrição de Acesso |
+| :--- | :---: | :--- |
+| **`USER`** | 1 | Operador / Profissional de saúde. Acesso ao próprio perfil, alteração da própria senha e suporte. |
+| **`ADMIN`** | 2 | Administrador da Unidade. Inclui menus de USER + Gerenciamento de Usuários, criação de contas (`USER`/`ADMIN`), alteração de senhas e desbloqueio de contas. |
+| **`OWNER`** | 3 | Proprietário / Governança do Sistema. Acesso total + Gestão de Tenants e Configurações Globais. |
+
+---
+
+## 📡 Catálogo de Endpoints da API
+
+### 1. Autenticação & Sessão (`/api/v1/auth`)
+
+#### `POST /api/v1/auth/login`
+
+Realiza autenticação por **Nome de Usuário ou E-mail** com proteção contra força bruta.
+
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"identifier": "admin.santos", "password": "temp1234"}'
+```
+
+#### `POST /api/v1/auth/refresh`
+
+Renovação atômica de tokens de sessão.
+
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token": "seu-refresh-token-aqui"}'
+```
+
+#### `GET /api/v1/auth/menu` *(Requer Bearer Token)*
+
+Retorna a lista dinâmica de menus permitidos para o papel do usuário conectado.
+
+#### `POST /api/v1/auth/change-password` *(Requer Bearer Token)*
+
+Permite ao usuário alterar sua própria senha mediante confirmação da senha atual.
+
+#### `POST /api/v1/auth/forgot-password`
+
+Gera token de recuperação com validade de 30 minutos (simulação de envio de e-mail).
+
+#### `POST /api/v1/auth/reset-password`
+
+Redefine a senha do usuário utilizando o token de recuperação.
+
+---
+
+### 2. Gestão de Usuários & IAM (`/api/v1/iam`) *(Requer Role ADMIN ou OWNER)*
+
+#### `GET /api/v1/iam/users`
+
+Lista todos os usuários com dados de perfil, papel, status e último acesso.
+
+#### `POST /api/v1/iam/users`
+
+Cadastra um novo usuário no sistema.
+
+```bash
+curl -X POST http://localhost:3000/api/v1/iam/users \
+  -H "Authorization: Bearer <TOKEN_ADMIN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "full_name": "Dra. Juliana Mendes",
+    "email": "juliana@openclinic.local",
+    "username": "juliana.mendes",
+    "password": "temp1234",
+    "role": "USER"
+  }'
+```
+
+#### `POST /api/v1/iam/users/:id/reset-password`
+
+Permite ao Administrador/Owner definir imediatamente uma nova senha para o usuário selecionado.
+
+#### `POST /api/v1/iam/users/:id/unlock`
+
+Desativa o bloqueio de segurança decorrente de excesso de tentativas falhas de login.
+
+#### `PATCH /api/v1/iam/users/:id/status`
+
+Alterna o status do usuário entre **Ativo** e **Inativo**.
+
+---
+
+## ⚙ Configuração do Ambiente (.env)
+
+Crie o arquivo `.env` na raiz ou em `packages/backend-api/.env`:
+
+```env
+PORT=3000
+HOST=0.0.0.0
+NODE_ENV=development
+DATABASE_URL=postgresql://openclinic_app:temp1234@localhost:5432/openclinic
+DATABASE_OWNER_URL=postgresql://openclinic_owner:temp1234@localhost:5432/openclinic
+JWT_SECRET_KEY=openclinic_super_secret_jwt_key_2026_dev_environment_key_32chars!
+JWT_ISSUER=openclinic.local
+JWT_AUDIENCE=openclinic-clients
+```
+
+---
+
+## 🚀 Execução
+
+```bash
+# Executar em modo desenvolvimento (com live reload tsx)
+npm run dev:api
+
+# Compilar para produção
+npm run build -w packages/backend-api
+```

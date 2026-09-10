@@ -104,7 +104,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** Autenticar quem usa o sistema, definir o que cada perfil pode fazer e guardar as credenciais das integrações — nas duas direções: quem acessa o OpenClinic e o que o OpenClinic acessa fora.
 
-**Entidades.**
+#### Entidades
 
 - **Usuário** — a conta de acesso de um profissional ou funcionário.
 - **Papel e permissões** — permissões granulares por domínio (clínico, administrativo, financeiro, gestão), agrupadas em papéis. O modelo de dados da permissão nasce granular por operação — consultar, incluir, alterar, excluir —, ainda que a V1 exponha papéis compostos [`SBIS NGS1.03.04`](./conformidade-sbis.md).
@@ -112,7 +112,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 - **Segredo** — credencial que o OpenClinic usa para acessar um serviço externo, guardada no cofre de segredos.
 - **Termo de uso** — versão vigente dos termos e o aceite de cada usuário.
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - O CPF é o identificador único de usuário, e um usuário que já operou o sistema jamais é removido [`SBIS NGS1.03.09`](./conformidade-sbis.md).
 - Senha com no mínimo 8 caracteres, contendo letras e números [`SBIS NGS1.02.03`](./conformidade-sbis.md), armazenada como hash com SALT [`SBIS NGS1.02.02`](./conformidade-sbis.md), troca obrigatória no primeiro acesso [`SBIS NGS1.02.06`](./conformidade-sbis.md), bloqueio após no máximo 10 tentativas [`SBIS NGS1.02.13`](./conformidade-sbis.md), bloqueio de sessão por inatividade [`SBIS NGS1.02.20`](./conformidade-sbis.md), recuperação de senha pelo canal registrado no cadastro [`SBIS NGS1.02.12`](./conformidade-sbis.md) e mensagem de erro de login que não revela qual dado está errado [`SBIS NGS1.02.16`](./conformidade-sbis.md).
@@ -131,12 +131,12 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** Registrar, em trilha imutável, quem fez o quê e quando; e carregar em cada dado a sua origem — quem o registrou e de onde veio — como parte do modelo, não como log de aplicação.
 
-**Entidades.**
+#### Entidades
 
 - **Evento de auditoria** — ação registrada: login, leitura, criação, alteração, exclusão lógica, impressão, exportação, assinatura, uso de chave de API ou do cofre [`SBIS NGS1.07.03`](./conformidade-sbis.md).
 - **Proveniência** — em cada registro do sistema: autor, data/hora, origem (digitação, importação, API — e qual integração).
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - A trilha não pode ser editada nem removida, por ninguém — nem pelo administrador.
 - A trilha **não contém dado clínico nem identificação de paciente**: referencia registros por identificador opaco [`SBIS NGS1.07.06`](./conformidade-sbis.md).
@@ -153,12 +153,12 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** Manter todos os códigos oficiais como dado em banco — com sistema de origem, versão, idioma, termo original e vigência — e fornecer o mecanismo de importação. Nenhuma tabela oficial vive em código-fonte [`SBIS ECF.17.12`](./conformidade-sbis.md).
 
-**Entidades.**
+#### Entidades
 
 - **Sistema de codificação** — a fonte: TUSS tabela 22, CID-10, CBO…
 - **Código** — um item de um sistema, gravado com sistema, versão, idioma, código e termo original [`SBIS ECF.17.10`](./conformidade-sbis.md), mais vigência.
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - Três famílias de terminologia entram na V1 com **seed inicial + importador re-executável** (rodar de novo atualiza a versão sem apagar a anterior):
   - **Faturamento:** TUSS tabela 22 (procedimentos), TUSS tabelas 19 e 20 (materiais e medicamentos) e operadoras registradas na ANS.
@@ -182,13 +182,13 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** Representar a clínica como entidade jurídica e física: a organização, suas unidades de atendimento e as salas de cada unidade.
 
-**Entidades.**
+#### Entidades
 
 - **Organização** — a instalação do sistema; a fronteira absoluta de isolamento de dados.
 - **Unidade de atendimento** — endereço físico com CNPJ e CNES próprios, tipo de estabelecimento e **responsável técnico** [`SBIS ECF.01.01`](./conformidade-sbis.md), identidade documental (logo, cabeçalho e rodapé de receitas, atestados e orçamentos), horários de funcionamento, feriados e **fuso horário** [`SBIS NGS1.09.06`](./conformidade-sbis.md).
 - **Sala** — espaço agendável ou não, com os equipamentos que oferece.
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - Multiunidade desde a V1. Toda operação (agenda, estoque, caixa) referencia uma unidade.
 - CNES e CNPJ têm dígito verificador validado e bloqueiam cadastro duplicado de unidade [`SBIS ECF.17.16`](./conformidade-sbis.md).
@@ -205,14 +205,14 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** Os três cadastros de pessoas — paciente, profissional de saúde e funcionário — e as regras que os distinguem.
 
-**Entidades.**
+#### Entidades
 
 - **Paciente** — pertence à organização e é compartilhado entre unidades. Campos em [`cadastros.md`](./cadastros.md#paciente).
 - **Profissional de saúde** — quem exerce ato profissional: tem conselho de classe e **tem agenda**. É o conselho que define a categoria — medicina, enfermagem, nutrição, fisioterapia, psicologia —, e neste documento "profissional" nunca é sinônimo de "médico": o enfermeiro é profissional de saúde como qualquer outro. Campos em [`cadastros.md`](./cadastros.md#profissional-de-saúde).
 - **Funcionário** — quem opera o sistema sem exercer ato profissional: **não tem conselho nem agenda**. Campos em [`cadastros.md`](./cadastros.md#funcionário).
 - **Vínculo profissional–unidade** — em quais unidades o profissional atende e com quais procedimentos habilitados. A disponibilidade de horários pertence à Agenda.
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - **Paciente:**
   - Recebe **número de prontuário automático e imutável** ao ser cadastrado [`SBIS ECF.03.02`](./conformidade-sbis.md).
@@ -239,11 +239,11 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** Definir o que a clínica oferece: cada procedimento, suas regras de execução e seus vínculos com profissionais, salas, kits e preparo.
 
-**Entidades.**
+#### Entidades
 
 - **Procedimento** — a definição: nome, categoria, código TUSS 22 opcional, duração padrão, profissionais habilitados, salas compatíveis (e se exige alocação de sala), kits de consumo, instruções de preparo, retorno previsto e intervalo mínimo entre sessões. Campos em [`cadastros.md`](./cadastros.md#procedimento).
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - Procedimento é definição; execução é fato do Atendimento (princípio 3).
 - O preço não mora aqui: mora na tabela de preços do pagador (módulo Convênios e pagadores). A tela do procedimento exibe os preços em modo de consulta.
@@ -261,7 +261,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** Estruturar quem paga: operadoras, planos, o vínculo do paciente com o plano e as tabelas de preços. É a fundação completa da fonte pagadora — ainda que a V1 só fature Particular.
 
-**Entidades.**
+#### Entidades
 
 - **Operadora** — nome, registro ANS, CNPJ, contatos.
 - **Plano** — produto da operadora, com registro ANS do produto.
@@ -269,7 +269,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 - **Tabela de preços** — preços por pagador, com vigência; opcionalmente por unidade. Itens de procedimento **ou de produto** — produto entra para os extras cobráveis do plano terapêutico.
 - **Particular** — pagador padrão do sistema, existente em toda instalação.
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - Orçamento, agendamento e atendimento carregam fonte pagadora **desde a V1** — na V1, sempre Particular.
 - Faturamento de convênio (TISS) fica fora da V1 por decisão de escopo; quando entrar, encontra a fundação pronta: pagador em todo registro, planos cadastrados, carteirinhas vinculadas e o mecanismo de Terminologias capaz de importar as tabelas de guia.
@@ -288,7 +288,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** O coração operacional da clínica: disponibilidade de profissionais e salas, marcação, encaixe, bloqueios e o ciclo de vida de cada agendamento — com a usabilidade como requisito de primeira ordem, conforme o [`prd.md`](./prd.md).
 
-**Entidades.**
+#### Entidades
 
 - **Recurso agendável** — a face agendável de um profissional (por unidade) ou de uma sala.
 - **Disponibilidade** — janelas padrão de atendimento do recurso (dias, horários, duração de slot), **com vigência**: mudar o horário de um profissional cria um período novo e preserva a história.
@@ -296,7 +296,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 - **Agendamento** — paciente + procedimento + profissional + unidade + data/hora (+ sala, quando o procedimento exige), com status, pagador e canal de origem. Campos em [`cadastros.md`](./cadastros.md#agendamento).
 - **Sessão planejada (fila "a marcar")** — sessão de plano terapêutico contratado e ainda sem horário: uma pendência com data-alvo, que o setor de agendamento converte em agendamento real. Estrutura em [`cadastros.md`](./cadastros.md#sessão-planejada).
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - Ciclo de status: **agendado → confirmado → chegou/aguardando → em atendimento → finalizado**, com desvios **faltou** e **cancelado**. O painel de espera do dia é uma visão por status, não outra estrutura.
 - **Encaixe** existe como marcação explícita: agendamento fora das janelas de disponibilidade, permitido e visível como tal.
@@ -316,7 +316,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** O registro clínico do paciente: o Atendimento como espinha, os documentos clínicos que nascem dele, o resumo clínico estruturado e a assinatura digital que dá validade jurídica a tudo.
 
-**Entidades.**
+#### Entidades
 
 - **Atendimento (Encounter)** — vincula paciente, profissional, unidade, agendamento de origem e fonte pagadora; agrega todos os registros feitos naquele evento.
 - **Documentos clínicos** — anamnese (estruturada no modelo SOAP [`SBIS ECF.07.13`](./conformidade-sbis.md)), evolução clínica — médica ou de enfermagem —, receita comum e **de controle especial**, solicitação de exames, encaminhamento, atestado e outros documentos.
@@ -328,7 +328,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 - **Resumo clínico** — listas do paciente, mantidas a partir dos atendimentos: **alergias** em campo próprio (substância, reação, gravidade, com o registro explícito "nega alergias") [`SBIS ECF.07.04`](./conformidade-sbis.md) [`SBIS ECF.07.06`](./conformidade-sbis.md), **diagnósticos** [`SBIS ECF.07.15`](./conformidade-sbis.md) e **medicações em uso** anotadas como texto na anamnese e na evolução. A alergia amarrada à tabela de princípios ativos e a lista de medicações por seleção são Estágio 2.
 - **Registros clínicos estruturados** — sinais vitais [`SBIS ECF.07.07`](./conformidade-sbis.md), peso e altura com unidade [`SBIS ECF.07.08`](./conformidade-sbis.md), imunizações [`SBIS ECF.07.03`](./conformidade-sbis.md), resultados de exames trazidos pelo paciente [`SBIS ECF.13.02`](./conformidade-sbis.md), órteses e próteses [`SBIS ECF.07.24`](./conformidade-sbis.md), contexto socioeconômico [`SBIS ECF.07.02`](./conformidade-sbis.md), queixas codificadas em CIAP-2 [`SBIS ECF.07.14`](./conformidade-sbis.md) e registro clínico de óbito [`SBIS ECF.07.32`](./conformidade-sbis.md). Estruturas em [`cadastros.md`](./cadastros.md#estruturas-clínicas-do-prontuário).
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - **Ciclo de vida do documento clínico: aberto → finalizado → assinado.** Documento aberto é visível só ao autor; o profissional vê sua lista de pendências ao entrar no sistema e é avisado ao sair com documento aberto [`SBIS ECF.16.01`](./conformidade-sbis.md). Corrigir documento finalizado gera **nova versão**, só pelo autor, com justificativa [`SBIS NGS1.12.01`](./conformidade-sbis.md); inativar um registro exige justificativa e o mantém visível, tachado [`SBIS NGS1.12.03`](./conformidade-sbis.md). Documentos finalizados e não assinados entram na lista de pendências de assinatura do profissional [`SBIS NGS2.02.06`](./conformidade-sbis.md).
 - **Autoria é multiprofissional.** Todo documento clínico tem um profissional autor e é assinado por ele — médico, enfermeiro ou qualquer categoria com conselho de classe; o prontuário de enfermagem é registro clínico como os demais, e a assinatura digital que ele exige está prevista na Resolução COFEN 754/2024 ([`compliance.md`](./compliance.md)). **Quais tipos de documento cada categoria emite é parametrizado pela clínica**, sobre o modelo de permissão que já nasce granular por operação [`SBIS NGS1.03.04`](./conformidade-sbis.md): o sistema não decide o que a lei de cada profissão permite — ele registra a configuração e a audita. A V1 nasce com o padrão medicina emitindo todos os documentos e enfermagem emitindo evolução, sinais vitais, imunização e execução de procedimento; a clínica ajusta sob responsabilidade dela.
@@ -362,14 +362,14 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** Produtos, kits de consumo e toda a movimentação de estoque, por unidade de atendimento.
 
-**Entidades.**
+#### Entidades
 
 - **Produto** — o que se compra e consome, com **unidade de compra, unidade de consumo e fator de conversão** (um frasco de 100U vira 100 aplicações de 1U). Campos em [`cadastros.md`](./cadastros.md#produto).
 - **Kit** — lista de produtos e quantidades (em unidade de consumo) que um procedimento consome.
 - **Fornecedor** — referenciado pela entrada de compra e pelo contas a pagar.
 - **Movimentação** — entrada por compra, saída manual, **baixa automática por kit**, ajuste de inventário, transferência entre unidades e perda/vencimento. Campos em [`cadastros.md`](./cadastros.md#movimentação-de-estoque).
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - Todo saldo e toda movimentação são **por unidade de atendimento** e **em unidade de consumo**.
 - Registrar procedimento realizado baixa automaticamente o(s) kit(s) associado(s) — e, quando a sessão pertence a um plano terapêutico, também os produtos extras daquela sessão.
@@ -387,7 +387,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 
 **Responsabilidade.** O ciclo do dinheiro: orçamento, contas a receber com baixa parcial, pacotes com saldo, contas a pagar, caixa diário e o repasse dos profissionais.
 
-**Entidades.**
+#### Entidades
 
 - **Orçamento** — itens com quantidade, validade, desconto e fonte pagadora. Nasce na recepção ou gerado por um plano terapêutico — já preenchido com procedimentos, sessões e extras cobráveis. Orçamento aprovado gera contas a receber e, quando há itens com múltiplas sessões, pacotes com saldo.
 - **Conta a receber / parcela** — o que há para receber, de quem, quando.
@@ -399,7 +399,7 @@ Três obrigações de fronteira completam a lista. A API pública aplica **limit
 - **Produção** — o fato gerador do repasse: procedimento realizado × regra vigente na data.
 - **Cadastros de apoio** — formas de pagamento, bandeiras de cartão com taxas por parcela, caixas, centros de custo. Campos em [`cadastros.md`](./cadastros.md#financeiro--cadastros-de-apoio).
 
-**Regras de negócio.**
+##### Regras de negócio
 
 - **Baixa parcial é cidadã de primeira classe**: recebe-se qualquer valor contra uma parcela ou contra o total, e o saldo remanescente permanece visível.
 - Desconto em orçamento respeita **alçada por perfil** — quanto cada papel pode conceder é permissão, não campo livre.

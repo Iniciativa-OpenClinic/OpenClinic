@@ -20,13 +20,13 @@ O escopo do MVP não é implementar o FHIR inteiro: implementa-se o subconjunto 
 
 ## Consequências
 
-**Assumidas de bom grado:**
+### Assumidas de bom grado
 
 - Interoperabilidade com qualquer sistema que também siga o padrão, sem trabalho adicional de integração.
 - O caminho para a RNDS fica aberto por construção.
 - A especificação responde antecipadamente muitas perguntas de modelagem que o projeto teria que debater do zero.
 
-**Custos reais:**
+#### Custos reais
 
 - Curva de aprendizado: contribuir com o projeto exige entender o padrão, não só a linguagem de programação.
 - **Descasamento entre o formato de intercâmbio e o formato de armazenamento.** O FHIR organiza informação em *bundles* — conjuntos que fazem sentido para o usuário, desnormalizados. Um banco relacional tende ao oposto: normalização em tabelas separadas. Modelar o banco sem considerar como esses bundles serão remontados na consulta pode gerar um esquema onde as consultas necessárias ficam ineficientes ou inviáveis.

@@ -30,7 +30,7 @@ A auditoria 360° no branch `feature/auth` confirma que o módulo de Governança
 | **03** | 🟢 **BAIXA** *(Mitigado)* | **OpenAPI / Swagger** | Idioma dos Metadados da API | Tags e resumos em português violavam o padrão Clean Code de APIs públicas. | ✅ **Resolvido:** OpenAPI 100% padronizado em inglês técnico em `src/config/swagger.ts` e roteadores. |
 | **04** | 🟢 **BAIXA** *(Mitigado)* | **Higiene de Código** | Scripts SQL obsoletos | `schema.sql` e `002-seed.sql` soltos geravam divergência de fontes de verdade. | ✅ **Resolvido:** Arquivos removidos da árvore; histórico DDL unificado em `infra/database/migrations/`. |
 | **05** | 🟢 **BAIXA** *(Mitigado)* | **DX / Testes** | Variável `TEST_DATABASE_ADMIN_URL` | `npm run test:migrations` requer conexão descartável e não constava documentada. | ✅ **Resolvido:** Adicionada com comentários detalhados no `.env.example` apontando para PostgreSQL descartável. |
-| **06** | 🟢 **BAIXA** *(Mitigado)* | **Isolamento Open Source** | Namespace de Imagens Docker | Workflows e stacks possuíam menções corporativas externas. | ✅ **Resolvido:** CI/CD parametrizado com `${{ vars.DOCKERHUB_USERNAME || 'openclinic' }}` e labels OCI da `Iniciativa OpenClinic`. |
+| **06** | 🟢 **BAIXA** *(Mitigado)* | **Isolamento Open Source** | Namespace de Imagens Docker | Workflows e stacks possuíam menções corporativas externas. | ✅ **Resolvido:** CI/CD parametrizado com `${{ vars.DOCKERHUB_USERNAME \|\| 'openclinic' }}` e labels OCI da `Iniciativa OpenClinic`. |
 
 ---
 

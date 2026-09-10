@@ -1,6 +1,6 @@
 # Roadmap
 
-*v0.3 — visão de fases em alto nível, sem datas fixas (exceto onde indicado).*
+## v0.3 — visão de fases em alto nível, sem datas fixas (exceto onde indicado)
 
 ## Fase 0 — Visão e estrutura do repositório ✅
 

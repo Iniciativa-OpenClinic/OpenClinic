@@ -90,19 +90,19 @@ cd openclinic
 
 O projeto já inclui um arquivo de ambiente padrão pronto para uso (`.env.example`). Crie sua cópia local `.env`:
 
-**Linux / macOS:**
+### Linux / macOS
 
 ```bash
 cp .env.example .env
 ```
 
-**Windows (PowerShell):**
+#### Windows (PowerShell)
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-**Windows (CMD):**
+##### Windows (CMD)
 
 ```cmd
 copy .env.example .env

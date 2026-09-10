@@ -1,10 +1,8 @@
-<div align="center">
-
-<img src="docs/assets/logo.png" alt="OpenClinic" width="180">
-
 # OpenClinic
 
-**Prontuário eletrônico médico open source, com API aberta desde a concepção.**
+![OpenClinic](docs/assets/logo.png)
+
+## Prontuário eletrônico médico open source, com API aberta desde a concepção
 
 Um contraponto aos prontuários de mercado que fecham seu ecossistema e não liberam suas APIs.
 
@@ -18,9 +16,7 @@ Um contraponto aos prontuários de mercado que fecham seu ecossistema e não lib
 
 [![Entrar no grupo de WhatsApp](https://img.shields.io/badge/ENTRAR%20NO%20GRUPO%20DE%20WHATSAPP-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7)
 
-*É no grupo que a conversa do projeto acontece.*
-
-</div>
+### É no grupo que a conversa do projeto acontece
 
 ## 📑 Sumário
 
@@ -47,8 +43,6 @@ O OpenClinic nasce como contraponto: um prontuário cujo código é aberto e cuj
 
 Missão, princípios e escopo completos em [`vision.md`](./docs/vision.md).
 
-<br>
-
 ## O que torna isto difícil
 
 Um prontuário parece um CRUD. Não é.
@@ -67,9 +61,7 @@ Some-se o que a regulação exige de um prontuário, e que molda o modelo de dad
 
 Nenhum desses requisitos é opcional. O mapeamento completo das normas está em [`compliance.md`](./docs/compliance.md); os requisitos de produto, em [`prd.md`](./docs/prd.md).
 
-**Se isso te parece um problema interessante em vez de um aborrecimento, você é o tipo de pessoa que este projeto procura.**
-
-<br>
+### Se isso te parece um problema interessante em vez de um aborrecimento, você é o tipo de pessoa que este projeto procura
 
 ---
 
@@ -98,18 +90,18 @@ openclinic/
 | **`@openclinic/backend-cli`** | [`packages/backend-cli`](./packages/backend-cli) | CLI multiplataforma para provisionamento de roles, migrations DDL e seed do banco. |
 | **`@openclinic/frontend-webapp`** | [`packages/frontend-webapp`](./packages/frontend-webapp) | SPA em React 19 + Vite 6 com autenticação em memória, menus adaptativos, i18n bilíngue e gestão clínica. |
 
-<br>
-
 ---
 
 ## ⚡ Inicialização Rápida (Onboarding)
 
 ### 1. Pré-requisitos
+
 - **Node.js:** `>= 20.0.0` (recomendado Node 22+)
 - **NPM:** `>= 10.0.0`
 - **Docker & Docker Compose:** Para banco de dados PostgreSQL 17
 
 ### 2. Instalação de Dependências
+
 ```bash
 git clone https://github.com/Iniciativa-OpenClinic/OpenClinic.git openclinic
 cd openclinic
@@ -117,21 +109,28 @@ npm install
 ```
 
 ### 3. Subir o Banco de Dados Local
+
 Suba o container do PostgreSQL isoladamente:
+
 ```bash
 docker compose up -d db
 ```
 
 ### 4. Provisionamento e Migrations DDL
+
 Configure seu arquivo local `.env` (baseado em [`.env.example`](./.env.example)) e aplique as migrations versionadas:
+
 ```bash
 npm run build -w packages/core
 npm run db:setup
 ```
+
 > O comando `npm run db:setup` aplica a baseline de 13 tabelas, insere o catálogo de recursos do sistema e provisiona o Superadministrador padrão.
 
 ### 5. Executar em Modo de Desenvolvimento
+
 Abra dois terminais na raiz do projeto:
+
 ```bash
 # Terminal 1: Backend API Fastify (porta 3000)
 npm run dev:api
@@ -143,8 +142,6 @@ npm run dev:webapp
 - **Frontend Webapp:** [`http://localhost:5173`](http://localhost:5173)
 - **API Swagger UI:** [`http://localhost:3000/docs`](http://localhost:3000/docs)
 - **Health Check:** [`http://localhost:3000/health`](http://localhost:3000/health)
-
-<br>
 
 ---
 
@@ -164,13 +161,12 @@ docker compose up --build -d
 
 > 📖 Para instruções aprofundadas sobre variáveis, volumes e deploy em produção, veja o [Manual de Instalação via Docker](./docs/docker-installation-guide.md).
 
-<br>
-
 ---
 
 ## 🔑 Credenciais de Teste Padrão
 
 ### 1. Superadministrador Inicial (Instalação Automática)
+
 Provisionado automaticamente no `npm run db:setup` ou ao subir a stack Docker:
 
 | Papel (RBAC) | Usuário (Username) | E-mail de Acesso | Senha Padrão | Perfil de Acesso |
@@ -178,13 +174,14 @@ Provisionado automaticamente no `npm run db:setup` ou ao subir a stack Docker:
 | **`OWNER`** | `superadmin` | `superadmin@openclinic.local` | **`temp1234`** | Acesso irrestrito a governança, tenants, configurações e gestão de usuários |
 
 ### 2. Base de Demonstração (Opcional)
+
 Para popular o banco local com perfis de atendimento (recepcionista, enfermeira, médico cardiologista e administrador), execute:
+
 ```bash
 npm run db:seed -- --demo
 ```
-*(Todas as contas de demonstração utilizam a senha padrão `temp1234`).*
 
-<br>
+#### (Todas as contas de demonstração utilizam a senha padrão `temp1234`)
 
 ---
 
@@ -199,8 +196,6 @@ npm run db:seed -- --demo
   - **Zero JWT em LocalStorage:** Tokens de acesso JWT residem estritamente em memória volátil, com refresh tokens seguros em cookies HttpOnly.
   - Formato de erro padronizado conforme a especificação RFC 7807 (*Problem Details*).
 - **English Everywhere:** Código, tipos TypeScript, variáveis, commits, tabelas SQL e contratos de API são estritamente em **Inglês**. Mensagens de interface em Português residem em dicionários i18n centralizados.
-
-<br>
 
 ---
 
@@ -220,8 +215,6 @@ npm run build
 npm run export:openapi
 ```
 
-<br>
-
 ---
 
 ## Como este projeto decide
@@ -238,8 +231,6 @@ Três regras valem aqui:
 
 Isso quer dizer que aqui se defende ideia por escrito e se aceita ser contrariado em público. Dá mais trabalho que abrir um pull request e sumir, e é de propósito. Detalhes em [`GOVERNANCE.md`](./GOVERNANCE.md).
 
-<br>
-
 ## Como participar
 
 **A conversa do projeto acontece no [grupo de WhatsApp](https://chat.whatsapp.com/LPxRX9ivXUm6VF4atVKYW7). Entre.** Se o link estiver expirado, avise por uma [Issue](../../issues).
@@ -249,8 +240,6 @@ Quem chega de fora, ou prefere um canal público e permanente, **abre uma [Issue
 A contribuição mais valiosa hoje é **ajudar a fechar as decisões que ainda estão em aberto**. Elas estão marcadas como tal no [índice de decisões](./docs/decisions/), e são as mais caras de reverter depois. Traga sua posição ao grupo ou registre-a numa Issue: posição assinada entra no registro da decisão.
 
 Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde**, **modelagem de dados clínicos**, **segurança da informação em dado sensível** e **quem já operou um prontuário na prática** e sabe onde dói. **Não é preciso programar para contribuir**: donos e gestores de clínica são parte da comunidade que este projeto quer formar, e o que eles sabem da operação orienta o desenho tanto quanto o código. Guia completo em [`CONTRIBUTING.md`](./CONTRIBUTING.md).
-
-<br>
 
 ## Documentação
 
@@ -277,8 +266,6 @@ Experiência especialmente bem-vinda: **HL7 FHIR e interoperabilidade em saúde*
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Guia de contribuição e fluxo de Pull Requests |
 | [`SECURITY.md`](./SECURITY.md) | Como reportar vulnerabilidades de segurança |
 
-<br>
-
 ## Licença
 
 Distribuído sob a **[GNU Affero General Public License v3.0](./LICENSE)**.
@@ -287,13 +274,10 @@ Qualquer pessoa pode usar, modificar e hospedar o OpenClinic, inclusive comercia
 
 Copyright © 2026 Dr. Daniel Dorta Santiago de Carvalho Duarte, CRM 174209, e colaboradores do OpenClinic.
 
-<br>
-
 ## Idioma
 
 A documentação deste repositório é escrita em português, que é onde está a comunidade do projeto, e brasileira é a regulação que o condiciona. Código, identificadores, tipos, mensagens de commit e a especificação da API seguem o padrão internacional e são escritos em inglês.
 
-<div align="center">
-<br>
-<sub>Iniciativa OpenClinic</sub>
-</div>
+---
+
+### Iniciativa OpenClinic

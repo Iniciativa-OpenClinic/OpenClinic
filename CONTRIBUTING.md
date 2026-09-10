@@ -11,6 +11,7 @@ Obrigado pelo interesse no OpenClinic! O stack técnico está definido (Node.js 
 **Não é preciso programar para contribuir.** Se você é dono ou gestor de clínica, o que você sabe da operação vale tanto quanto código: descrever como um fluxo funciona de verdade, apontar onde a proposta de arquitetura não bate com a rotina, dizer o que está faltando, testar o sistema quando houver ambiente de homologação. Boa parte do desenho registrado em [`modulos.md`](./docs/modulos.md) nasceu exatamente desse tipo de conversa. É o trabalho da frente de uso e validação, descrita no [`GOVERNANCE.md`](./GOVERNANCE.md).
 
 Nesta fase, é especialmente valiosa a experiência em:
+
 - **HL7 FHIR** e interoperabilidade em saúde, em particular sobre a modelagem de *bundles* FHIR sobre banco relacional, o problema técnico central já identificado ([0001](./docs/decisions/0001-fhir-como-padrao-de-dados.md));
 - **saúde digital**, com quem já trabalhou com prontuário eletrônico e sabe onde estão as dores reais;
 - **segurança da informação**, especialmente em contexto de dados sensíveis.
@@ -117,6 +118,7 @@ Revisar contribuição de quem ainda não conhecemos custa caro, então a regra 
 
 > **O que muda**
 > Adiciona validação de dígito verificador ao campo CPF do cadastro de paciente.
+>
 > - `backend/src/modules/people/validators/cpf.js`: função nova `isValidCpf`, com o algoritmo dos dois dígitos verificadores e rejeição de sequências repetidas.
 > - `backend/src/modules/people/patient.service.js`: criação e edição de paciente passam a chamar a validação e devolvem o erro `INVALID_CPF`.
 > - `backend/test/people/cpf.spec.js`: doze casos de teste, entre CPFs válidos, dígitos errados e sequências repetidas.

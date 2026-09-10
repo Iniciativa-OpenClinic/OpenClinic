@@ -17,7 +17,7 @@
 2. [Estrutura do Monorepo](#-estrutura-do-monorepo)
 3. [Guia de Inicialização Rápida (Onboarding)](#-guia-de-inicialização-rápida-onboarding)
 4. [Execução com Docker & Compose](#-execução-com-docker--compose)
-5. [Credenciais de Teste Padrão](#-credenciais-de-teste-padrão)
+5. [Credenciais de Acesso e Contas Padrão](#-credenciais-de-acesso-e-contas-padrão)
 6. [Separação Canônica: ARCH vs BUSINESS](#-separação-canônica-arch-vs-business)
 7. [Internacionalização (i18n) & Dicionários](#-internacionalização-i18n--dicionários)
 8. [Padrões de Segurança & Boas Práticas (P0)](#-padrões-de-segurança--boas-práticas-p0)

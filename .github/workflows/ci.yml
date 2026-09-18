@@ -1,0 +1,44 @@
+name: OpenClinic CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    name: Typecheck & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Core Types
+        run: npm run build -w packages/core
+
+      - name: Run Strict Typecheck
+        run: npm run typecheck
+
+      - name: Validate Compliance Catalog
+        run: npm run compliance:catalog
+
+      - name: Test Compliance Runner
+        run: npm run compliance:test
+
+      - name: Run Test Suite
+        run: npm test
+
+  migrations:
+    uses: ./.github/workflows/migrations.yml

@@ -1,0 +1,93 @@
+# ============================================================
+# OpenClinic - Application Docker Stack (Scenario 1)
+# ============================================================
+# Services:
+#   - api: REST Fastify Backend (Clean Architecture)
+#   - webapp: Vite/React SPA Frontend served via Nginx Alpine
+#   - migrate: Database Migration & Setup Task
+# Note: PostgreSQL runs in an independent service/stack,
+#       accessible via postgres_network.
+# ============================================================
+
+services:
+  api:
+    image: openclinic-api:latest
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile
+    container_name: openclinic-api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - ./secrets:/app/secrets:ro
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - SECRETS_PROVIDER=${SECRETS_PROVIDER:-file}
+      - DB_APP_SECRET_NAME=${DB_APP_SECRET_NAME:-database-secret-app}
+      - JWT_SECRET_NAME=${JWT_SECRET_NAME:-jwt-secret}
+      - DB_HOST=${DB_HOST:-postgres_postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-openclinic}
+      - APP_HOST=0.0.0.0
+      - APP_PORT=3000
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    networks:
+      - openclinic_network
+      - postgres_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/database/Dockerfile
+    command: ["npm", "run", "db:setup"]
+    volumes:
+      - ./secrets:/app/secrets:ro
+    environment:
+      - SECRETS_PROVIDER=${SECRETS_PROVIDER:-file}
+      - DB_APP_SECRET_NAME=${DB_APP_SECRET_NAME:-database-secret-app}
+      - DB_OWNER_SECRET_NAME=${DB_OWNER_SECRET_NAME:-database-secret-owner}
+      - DB_HOST=${DB_HOST:-postgres_postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-openclinic}
+    networks:
+      - postgres_network
+    restart: "no"
+
+  webapp:
+    image: openclinic-webapp:latest
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.webapp
+    container_name: openclinic-webapp
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - openclinic_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  openclinic_network:
+    name: openclinic_network
+    driver: bridge
+
+  postgres_network:
+    external: true

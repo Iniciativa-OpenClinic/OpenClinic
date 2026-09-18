@@ -1,28 +1,105 @@
-# Sistema operacional
-.DS_Store
-Thumbs.db
+# ==============================================================================
+# Monorepo Workspace - Git Ignore Rules
+# ==============================================================================
 
-# Editores e IDEs
-.vscode/
-.idea/
-*.swp
+# ── 1. Dependencies (Root and Subpackages / Monorepo) ──
+node_modules/
+**/node_modules/
+node_modules
+**/node_modules
+.pnp
+.pnp.*
+.pnpm-store/
+**/.pnpm-store/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
-# Segredos e configuração local
-# Nunca versione credenciais. Arquivos de exemplo (.env.example) são versionados; os reais, não.
+# ── 2. Builds and Compilation Output ──
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+*.tsbuildinfo
+**/*.tsbuildinfo
+.turbo/
+**/.turbo/
+.cache/
+**/.cache/
+.parcel-cache/
+**/.parcel-cache/
+
+# ── 3. Environment Variables & Secrets ──
 .env
 .env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+**/*.env
+**/.env
+**/.env.*
 !.env.example
-*.pem
-*.key
+!*.env.example
+!**/.env.example
+!**/*.env.example
+secrets/*.json
+!secrets/*.example.json
 
-# Logs
+# ── 4. Logs and Diagnostics ──
+logs/
+**/logs/
 *.log
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Dados locais de desenvolvimento
-# O projeto trabalha exclusivamente com dados fictícios (ver docs/decisions/0007).
-# Ainda assim, dumps de banco não pertencem ao repositório.
-*.sql.gz
+# ── 5. Tests and Coverage ──
+coverage/
+**/coverage/
+.nyc_output/
+**/.nyc_output/
+.vitest/
+**/.vitest/
+
+# ── 6. Operating System & IDE Temporary Files ──
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
+.idea/
+**/.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.sublime-project
+*.sublime-workspace
+
+# ── 7. Scratch & Temporary AI / IDE Files ──
+.system_generated/
+**/.system_generated/
+scratch/
+**/scratch/
+.temp/
+**/.temp/
+.temp*
+**/.temp*
+
+# ── 8. Database Backups ──
+backups/
+**/backups/
 *.dump
+**/*.dump
+*.sql.gz
+**/*.sql.gz
 
-# Entradas específicas de linguagem e framework serão adicionadas quando a
-# decisão docs/decisions/0005-linguagem-do-backend.md for fechada.
+# ── 9. Compliance Reports (Generated Outputs) ──
+infra/compliance/reports/*
+!infra/compliance/reports/README.md

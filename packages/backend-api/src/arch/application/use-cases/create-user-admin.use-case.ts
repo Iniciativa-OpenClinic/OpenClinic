@@ -1,7 +1,23 @@
-import { hashPassword, ValidationError, EntityAlreadyExistsError, AccessDeniedError, ErrorCode, SuccessCode, getSuccessMessage, logger, SupportedLocales, Cpf } from '@openclinic/core';
+import {
+  hashPassword,
+  ValidationError,
+  EntityAlreadyExistsError,
+  AccessDeniedError,
+  ErrorCode,
+  SuccessCode,
+  getSuccessMessage,
+  logger,
+  SupportedLocales,
+  Cpf,
+  IpAddress,
+  AUTH_SECURITY_DEFAULTS,
+  UserRole,
+  AuditStatus,
+  AuditAction,
+  AuditResource,
+} from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO } from '../../domain/dtos.js';
-import { UserRole, AuditStatus } from '../../../shared/domain/enums.js';
 
 export interface CreateUserInputDTO {
   email: string;
@@ -13,6 +29,7 @@ export interface CreateUserInputDTO {
   password: string;
   role: UserRole;
   is_active?: boolean;
+  tenant_id?: string | null;
 }
 
 export interface CreatedUserDataDTO {
@@ -30,12 +47,16 @@ export interface CreatedUserDataDTO {
 export class CreateUserAdminUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(creatorRole: UserRole, input: CreateUserInputDTO, ipAddress?: string): Promise<ActionResponseDTO<CreatedUserDataDTO>> {
+  async execute(creatorRole: UserRole, input: CreateUserInputDTO, ipAddress?: string | IpAddress, creatorTenantId?: string): Promise<ActionResponseDTO<CreatedUserDataDTO>> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     if (creatorRole !== UserRole.OWNER && input.role === UserRole.OWNER) {
       throw new AccessDeniedError(ErrorCode.CANNOT_PROMOTE_TO_OWNER);
     }
 
-    if (input.password.length < 8) {
+    const defaultApp = await this.uow.applications?.getDefaultApplication?.();
+    const minPasswordLength = defaultApp?.defaultMinPasswordLength ?? AUTH_SECURITY_DEFAULTS.PASSWORD_MIN_LENGTH;
+
+    if (input.password.length < minPasswordLength) {
       throw new ValidationError('password', ErrorCode.PASSWORD_TOO_SHORT);
     }
 
@@ -68,7 +89,9 @@ export class CreateUserAdminUseCase {
     const hashedPassword = await hashPassword(input.password);
 
     const defaultTenant = await this.uow.tenants?.getDefaultTenant();
-    const tenantId = (input as any).tenant_id ?? defaultTenant?.id ?? null;
+    const tenantId = creatorRole === UserRole.OWNER
+      ? (input.tenant_id ?? defaultTenant?.id ?? null)
+      : (creatorTenantId ?? defaultTenant?.id ?? null);
 
     const newUser = await this.uow.users.create({
       email: input.email.trim().toLowerCase(),
@@ -84,7 +107,7 @@ export class CreateUserAdminUseCase {
       is_tenant_owner: input.role === UserRole.OWNER,
     });
 
-    // Auto-vincular obrigatoriamente ao grupo padrão (is_default = true)
+    // Automatically bind to the default system group (is_default = true)
     try {
       const defaultGroup = await this.uow.groups.getDefaultGroup(tenantId ?? undefined);
       if (defaultGroup) {
@@ -97,10 +120,11 @@ export class CreateUserAdminUseCase {
     await this.uow.auditLogs.create({
       user_id: newUser.id,
       username: newUser.username,
-      action: 'USER_CREATE_ADMIN',
-      resource: 'iam_users',
+      action: AuditAction.USER_CREATED_BY_ADMIN,
+      resource: AuditResource.IAM_USERS,
       status: AuditStatus.SUCCESS,
-      ip_address: ipAddress ?? null,
+      ip_address: validatedIp?.value ?? null,
+      user_agent: null,
       details: { role: input.role, tenant_id: tenantId, job_title: input.job_title, cpf: cleanedCpf },
       tenant_id: tenantId,
     });

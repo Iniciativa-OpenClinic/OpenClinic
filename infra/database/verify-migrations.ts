@@ -8,6 +8,13 @@ import { loadMigrations, migrationsDirectory, databaseDirectory } from '../../pa
 async function verify() {
   const migrations = loadMigrations();
   const snapshots = fs.readdirSync(path.join(migrationsDirectory, 'meta')).filter(file => file.endsWith('_snapshot.json')).sort();
+  assert.deepEqual(snapshots, migrations.map(migration => migration.tag.slice(0, 4) + '_snapshot.json'), 'Snapshots and migration journal do not match.');
+  let previousId = '00000000-0000-0000-0000-000000000000';
+  for (const file of snapshots) {
+    const snapshot = JSON.parse(fs.readFileSync(path.join(migrationsDirectory, 'meta', file), 'utf8'));
+    assert.equal(snapshot.prevId, previousId, 'Snapshot chain is broken: ' + file);
+    previousId = snapshot.id;
+  }
   const previous = JSON.parse(fs.readFileSync(path.join(migrationsDirectory, 'meta', snapshots.at(-1)!), 'utf8'));
   const current = generateDrizzleJson(schema, previous.id);
   // Comparing metadata never opens the generator's interactive rename prompts in CI.

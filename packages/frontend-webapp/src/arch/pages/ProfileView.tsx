@@ -28,7 +28,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
     <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 24, maxWidth: 760 }}>
       <h3 style={{ margin: '0 0 18px', color: '#0f172a', fontSize: '1.05rem', fontWeight: 700 }}>{t('PROFILE_TITLE')}</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* 1ª Linha: Nome Completo e Cargo / Função */}
+        {/* Row 1: Full Name and Job Title / Role */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('FIELD_FULL_NAME')}</label>
@@ -40,7 +40,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
           </div>
         </div>
 
-        {/* 2ª Linha: Nome de Usuário (username), E-mail, Perfil de Acesso */}
+        {/* Row 2: Username, Email, and Access Role */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('FIELD_USERNAME')}</label>

@@ -29,7 +29,7 @@ export const ApplicationSettingsView: React.FC = () => {
   // Application Data & Config
   const [data, setData] = useState<TenantApplicationConfigResponse | null>(null);
 
-  // Form State (Configuração do Sistema - Perfil ADMIN)
+  // Form State (System Configuration - ADMIN Role)
   const [supportContactName, setSupportContactName] = useState<string>('');
   const [supportPhone, setSupportPhone] = useState<string>('');
   const [supportEmail, setSupportEmail] = useState<string>('');
@@ -48,7 +48,7 @@ export const ApplicationSettingsView: React.FC = () => {
       const res = await getCurrentApplicationConfig();
       setData(res);
 
-      const cfg = (res.config.configJson || {}) as Record<string, any>;
+      const cfg = (res.config.configJson || {}) as Record<string, unknown>;
 
       setSupportContactName(String(cfg.supportContactName || cfg.support_contact_name || ''));
       setSupportPhone(formatPhone(String(cfg.supportPhone || cfg.support_phone || cfg.contactPhone || '')));
@@ -56,10 +56,11 @@ export const ApplicationSettingsView: React.FC = () => {
 
       setEnforceTerms(Boolean(res.config.enforceDocumentAcceptanceOnLogin));
       setIsActive(Boolean(res.config.isActive));
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : '';
       setFeedback({
         type: AlertBannerType.ERROR,
-        msg: t('APP_SETTINGS_LOAD_ERROR') + (err?.message ? ` (${err.message})` : ''),
+        msg: t('APP_SETTINGS_LOAD_ERROR') + (errMsg ? ` (${errMsg})` : ''),
       });
     } finally {
       setLoading(false);
@@ -122,10 +123,11 @@ export const ApplicationSettingsView: React.FC = () => {
         msg: t('APP_SETTINGS_SAVED_SUCCESS'),
       });
       await loadData();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : '';
       setFeedback({
         type: AlertBannerType.ERROR,
-        msg: t('APP_SETTINGS_SAVE_ERROR') + (err?.message ? ` (${err.message})` : ''),
+        msg: t('APP_SETTINGS_SAVE_ERROR') + (errMsg ? ` (${errMsg})` : ''),
       });
     } finally {
       setSaving(false);
@@ -156,7 +158,7 @@ export const ApplicationSettingsView: React.FC = () => {
           </p>
         </div>
 
-        {/* Navigation Tabs na sequência solicitada */}
+        {/* Navigation Tabs in requested sequence */}
         <div style={{ display: 'flex', gap: 6, marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 12 }}>
           <button
             type="button"
@@ -221,13 +223,13 @@ export const ApplicationSettingsView: React.FC = () => {
         />
       )}
 
-      {/* Formulário de Configurações do Sistema */}
+      {/* System Settings Form */}
       <form onSubmit={handleSave}>
-        {/* Aba 1: Visão Geral & Identidade */}
+        {/* Tab 1: Overview & Identity */}
         {activeTab === 'overview' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-              {/* Aplicação Conectada */}
+              {/* Connected Application */}
               <div style={{ background: '#fff', padding: 16, borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
                   {t('APP_SETTINGS_CARD_APP_NAME')}
@@ -242,7 +244,7 @@ export const ApplicationSettingsView: React.FC = () => {
                 )}
               </div>
 
-              {/* Versão do Software */}
+              {/* Software Version */}
               <div style={{ background: '#fff', padding: 16, borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
                   {t('APP_SETTINGS_CARD_VERSION')}
@@ -287,7 +289,7 @@ export const ApplicationSettingsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Fuso Horário & Idioma */}
+              {/* Timezone & Locale */}
               <div style={{ background: '#fff', padding: 16, borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>
                   {t('APP_SETTINGS_FIELD_TIMEZONE')}
@@ -312,7 +314,7 @@ export const ApplicationSettingsView: React.FC = () => {
           </div>
         )}
 
-        {/* Aba 2: Governança & Instância */}
+        {/* Tab 2: Governance & Instance */}
         {activeTab === 'governance' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: '#fff', padding: '20px 22px', borderRadius: 10, border: '1px solid #e2e8f0' }}>
@@ -353,7 +355,7 @@ export const ApplicationSettingsView: React.FC = () => {
                   />
                 </label>
 
-                {/* Switch de Ativação Operacional da Instância */}
+                {/* Operational Instance Activation Toggle */}
                 <label
                   style={{
                     display: 'flex',
@@ -386,7 +388,7 @@ export const ApplicationSettingsView: React.FC = () => {
           </div>
         )}
 
-        {/* Aba 3: Canais de Suporte Técnico */}
+        {/* Tab 3: Technical Support Channels */}
         {activeTab === 'support' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: '#fff', padding: '20px 22px', borderRadius: 10, border: '1px solid #e2e8f0' }}>
@@ -403,14 +405,13 @@ export const ApplicationSettingsView: React.FC = () => {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-                {/* Nome do Responsável / Equipe */}
+                {/* Contact Person / Support Team Name */}
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: 4 }}>
                     {t('APP_SETTINGS_FIELD_SUPPORT_NAME')}
                   </label>
                   <input
                     type="text"
-                    placeholder="Ex: Equipe de TI / Suporte Local"
                     maxLength={100}
                     value={supportContactName}
                     onChange={(e) => setSupportContactName(e.target.value)}
@@ -435,7 +436,6 @@ export const ApplicationSettingsView: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    placeholder="(11) 98765-4321"
                     maxLength={15}
                     value={supportPhone}
                     onChange={(e) => {
@@ -465,7 +465,6 @@ export const ApplicationSettingsView: React.FC = () => {
                   </label>
                   <input
                     type="email"
-                    placeholder="suporte@clinica.com.br"
                     maxLength={80}
                     value={supportEmail}
                     onChange={(e) => {
@@ -490,7 +489,7 @@ export const ApplicationSettingsView: React.FC = () => {
           </div>
         )}
 
-        {/* Botão de Ação Alinhado à Direita */}
+        {/* Action Button Right-Aligned */}
         {activeTab !== 'overview' && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
             <button

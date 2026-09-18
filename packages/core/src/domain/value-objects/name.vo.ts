@@ -2,7 +2,7 @@ import { ValueObject } from './value-object.base.js';
 import { ValidationError, ErrorCode } from '../../errors/index.js';
 
 /**
- * Value Object representing a personal or display name (Nome Completo / Nome Social / Nome de Exibição).
+ * Value Object representing a personal or display name (Full Name, Social Name, or Display Name).
  * Normalizes redundant whitespaces, enforces length boundaries (2 to 120 characters),
  * and provides helper getters for first name, last name, initials, and shortened display name.
  */

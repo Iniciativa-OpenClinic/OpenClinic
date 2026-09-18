@@ -1,19 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import {
   ErrorCode,
+  AppError,
+  AccessDeniedError,
+  ValidationError,
+} from '../src/errors/index.js';
+import {
   SuccessCode,
   getErrorMessage,
   getSuccessMessage,
   formatTemplate,
-  AppError,
-  AccessDeniedError,
-  ValidationError,
-  SupportedLocales,
-  errorMessagesPtBr,
-  errorMessagesEnUs,
-  successMessagesPtBr,
-  successMessagesEnUs,
-} from '../src/errors/index.js';
+  localePtBr,
+  localeEnUs,
+} from '../src/i18n/index.js';
+import { SupportedLocales } from '../src/domain/locales.js';
 
 describe('@openclinic/core - Errors and Messages', () => {
   it('should interpolate template parameters in formatTemplate', () => {
@@ -56,15 +56,9 @@ describe('@openclinic/core - Errors and Messages', () => {
     expect(error.message).toBe('A senha deve conter no mínimo 8 caracteres.');
   });
 
-  it('should maintain parity between pt-BR and en-US error catalogs', () => {
-    const ptKeys = Object.keys(errorMessagesPtBr).sort();
-    const enKeys = Object.keys(errorMessagesEnUs).sort();
-    expect(enKeys).toEqual(ptKeys);
-  });
-
-  it('should maintain parity between pt-BR and en-US success catalogs', () => {
-    const ptKeys = Object.keys(successMessagesPtBr).sort();
-    const enKeys = Object.keys(successMessagesEnUs).sort();
+  it('should maintain parity between pt-BR and en-US catalogs', () => {
+    const ptKeys = Object.keys(localePtBr).sort();
+    const enKeys = Object.keys(localeEnUs).sort();
     expect(enKeys).toEqual(ptKeys);
   });
 });

@@ -24,7 +24,7 @@ A auditoria 360° no branch `feature/auth` confirma que o módulo de Governança
 ## 2. 🚦 Matriz de Riscos & Bloqueadores (Status: 100% Mitigados)
 
 | ID | Severidade | Eixo | Item Auditado | Situação Inicial | Resolução / Status Atual |
-| :-: | :---: | :--- | :--- | :--- | :--- |
+| :---: | :---: | :--- | :--- | :--- | :--- |
 | **01** | 🟢 **BAIXA** *(Mitigado)* | **DX / Onboarding** | Usuário Inicial na Instalação | Banco subia sem usuários no Docker Compose; o login no README falhava. | ✅ **Resolvido:** `dbSetup` e o container `migrate` criam automaticamente o Superadministrador (`superadmin`, perfil `OWNER`, senha `temp1234`). |
 | **02** | 🟢 **BAIXA** *(Mitigado)* | **Contratos de API** | Rotas Clínicas Desconectadas | Rotas `/api/v1/clinical/*` expunham schemas genéricos no Swagger sem integração no frontend. | ✅ **Resolvido:** Rotas desregistradas do servidor HTTP neste branch; tabelas mantidas na baseline DDL para o branch `feature/clinical-core`. |
 | **03** | 🟢 **BAIXA** *(Mitigado)* | **OpenAPI / Swagger** | Idioma dos Metadados da API | Tags e resumos em português violavam o padrão Clean Code de APIs públicas. | ✅ **Resolvido:** OpenAPI 100% padronizado em inglês técnico em `src/config/swagger.ts` e roteadores. |
@@ -102,7 +102,7 @@ getPublicConfig()                 ───▶   GET    /api/v1/public/config
 listTenants()                     ───▶   GET    /api/v1/arch/tenants
 ```
 
-> **Nota de Compatibilidade:** As rotas `/api/v1/system/platform/application` e `/api/v1/system/application-configs/current` foram preservadas como *aliases* transparentes para clientes legados.
+> **Contratos atuais:** use `/api/v1/arch/platform/application` e `/api/v1/arch/application-configs/current`. Os aliases `/api/v1/system/*` foram removidos.
 
 #### 2.2 Documentação OpenAPI 3.0.3 e Padronização
 

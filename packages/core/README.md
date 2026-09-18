@@ -57,7 +57,7 @@ const isValid = await verifyPassword('SenhaSegura123!', hash);
 import { signAccessToken, verifyAccessToken, generateRefreshToken } from '@openclinic/core';
 
 const jwtConfig = {
-  secretKey: process.env.JWT_SECRET_KEY!,
+  secretKey: process.env.JWT_KEY!,
   issuer: 'openclinic.local',
   audience: 'openclinic-clients',
   expiresInSeconds: 900, // 15 minutos

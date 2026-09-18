@@ -42,7 +42,7 @@ export function getLocaleMetadata(locale: string): LocaleMetadata {
       shortLabel: locale.slice(0, 2).toUpperCase(),
       nativeName: locale,
       flag: '🌐',
-      labelKey: 'LANG_PT',
+      labelKey: 'PLATFORM_SETTINGS_LANG_PT',
       fallbackLabel: locale,
     }
   );

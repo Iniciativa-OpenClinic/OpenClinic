@@ -77,9 +77,11 @@ openclinic/
 │   ├── backend-cli/        # Utilitários de CLI, DDL migrations e seeding
 │   └── frontend-webapp/    # SPA React 19 + Vite 6, autenticação segura em memória e i18n
 ├── infra/
-│   └── database/           # DDL versionado linear com Drizzle ORM (0000_baseline, 0001_catalog)
-├── docker/                 # Imagens Docker e configuração Nginx do frontend
-├── stacks/                 # Stacks Docker Swarm / Portainer para deploy em produção
+│   ├── compliance/         # Auditorias, cenários canônicos e relatórios locais
+│   ├── database/           # DDL versionado linear com Drizzle ORM (0000_baseline, 0001_catalog)
+│   ├── docker/             # Imagens Docker e configuração Nginx do frontend
+│   ├── secrets/            # Gestão de segredos para orquestração e deploy seguro
+│   └── stacks/             # Stacks Docker Swarm / Portainer para deploy em produção
 └── docs/                   # Central de especificações, decisões (ADRs) e governança
 ```
 
@@ -125,7 +127,7 @@ npm run build -w packages/core
 npm run db:setup
 ```
 
-> O comando `npm run db:setup` aplica a baseline de 13 tabelas, insere o catálogo de recursos do sistema e provisiona o Superadministrador padrão.
+> O comando `npm run db:setup` aplica a baseline de 19 tabelas, insere o catálogo de recursos do sistema e provisiona o Superadministrador padrão.
 
 ### 5. Executar em Modo de Desenvolvimento
 
@@ -141,7 +143,7 @@ npm run dev:webapp
 
 - **Frontend Webapp:** [`http://localhost:5173`](http://localhost:5173)
 - **API Swagger UI:** [`http://localhost:3000/docs`](http://localhost:3000/docs)
-- **Health Check:** [`http://localhost:3000/health`](http://localhost:3000/health)
+- **Health Check:** [`http://localhost:3000/health/live`](http://localhost:3000/health/live)
 
 ---
 
@@ -205,7 +207,7 @@ npm run db:seed -- --demo
 # Verificação estrita de tipagem em todos os 4 pacotes (zero erros)
 npm run typecheck
 
-# Execução da suíte completa de testes automatizados (192 testes)
+# Execução da suíte completa de testes automatizados (287 testes)
 npm test
 
 # Compilação de todos os pacotes do monorepo

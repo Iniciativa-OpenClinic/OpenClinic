@@ -8,7 +8,7 @@ import { UpdateUserAdminUseCase } from '../../src/arch/application/use-cases/upd
 import { DeleteUserAdminUseCase } from '../../src/arch/application/use-cases/delete-user-admin.use-case.js';
 import type { IAMUnitOfWork } from '../../src/arch/domain/repositories.js';
 import type { UserEntity, LockoutEntity } from '../../src/arch/domain/entities.js';
-import { AccessDeniedError, EntityNotFoundError, ValidationError, EntityAlreadyExistsError, SuccessCode, UserRole, SupportedLocales } from '@openclinic/core';
+import { AccessDeniedError, EntityNotFoundError, ValidationError, EntityAlreadyExistsError, SuccessCode, UserRole, SupportedLocales, BOOTSTRAP_DEFAULTS } from '@openclinic/core';
 
 describe('User Management Use Cases', () => {
   let mockUow: IAMUnitOfWork;
@@ -104,7 +104,7 @@ describe('User Management Use Cases', () => {
       },
       groups: {
         getById: vi.fn(),
-        getDefaultGroup: vi.fn().mockResolvedValue({ id: 'grp-default-id', name: 'Todos os Usuários', is_default: true, is_active: true }),
+        getDefaultGroup: vi.fn().mockResolvedValue({ id: 'grp-default-id', name: BOOTSTRAP_DEFAULTS.DEFAULT_GROUP_NAME, is_default: true, is_active: true }),
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
@@ -121,7 +121,10 @@ describe('User Management Use Cases', () => {
       },
       sessions: {
         create: vi.fn(),
+        findById: vi.fn(),
         findByTokenHash: vi.fn(),
+        findAnyByTokenHash: vi.fn(),
+        revokeIfActive: vi.fn(),
         revoke: vi.fn(),
         revokeAllByUser: vi.fn(),
         deleteExpired: vi.fn(),
@@ -136,6 +139,7 @@ describe('User Management Use Cases', () => {
       },
       resources: {} as any,
       permissions: {} as any,
+      applications: {} as any,
       commit: vi.fn().mockResolvedValue(undefined),
       rollback: vi.fn().mockResolvedValue(undefined),
     };

@@ -2,7 +2,7 @@ import { ValueObject } from './value-object.base.js';
 import { ValidationError, ErrorCode } from '../../errors/index.js';
 
 /**
- * Cartão Nacional de Saúde (CNS) Value Object.
+ * Brazilian National Health Card (CNS - Cartão Nacional de Saúde) Value Object.
  * Conforms to Ministério da Saúde / DATASUS rules and SBIS ECF.17.16 requirement.
  * CNS has 15 numeric digits and can be either definitive (starts with 1 or 2)
  * or provisional/foreign (starts with 7, 8, or 9).

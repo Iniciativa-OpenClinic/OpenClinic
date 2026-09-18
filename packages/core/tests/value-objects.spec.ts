@@ -18,6 +18,7 @@ import {
   verifyPassword,
   Country,
   STANDARD_COUNTRIES,
+  Website,
 } from '../src/index.js';
 
 
@@ -64,7 +65,7 @@ describe('Value Objects Suite', () => {
   describe('Cnpj (Cadastro Nacional da Pessoa Jurídica - SBIS ECF.17.16)', () => {
     // Valid CNPJs
     const validCnpj1 = '11.222.333/0001-81';
-    const validCnpj2 = '00.000.000/0001-91'; // Banco do Brasil
+    const validCnpj2 = '00.000.000/0001-91'; // Known public entity CNPJ
 
     it('should validate and format valid CNPJ', () => {
       expect(Cnpj.isValid(validCnpj1)).toBe(true);
@@ -426,6 +427,39 @@ describe('Value Objects Suite', () => {
       const optionsEn = Country.getAllCountries('en-US');
       expect(optionsEn[0].code).toBe('BRA');
       expect(optionsEn[0].display).toBe('Brazil (BRA)');
+    });
+  });
+
+  describe('Website Value Object', () => {
+    it('should validate and clean standard URLs with or without scheme', () => {
+      expect(Website.isValid('www.exemplo.com.br')).toBe(true);
+      expect(Website.isValid('https://exemplo.com.br')).toBe(true);
+      expect(Website.isValid('http://hospital-central.med.br/portal')).toBe(true);
+      expect(Website.isValid('http://localhost:3000')).toBe(true);
+
+      expect(Website.clean('  www.exemplo.com.br/  ')).toBe('https://www.exemplo.com.br');
+      expect(Website.clean('http://hospital.org.br')).toBe('http://hospital.org.br');
+      expect(Website.clean('HTTPS://MyExample.COM/about/')).toBe('https://myexample.com/about/');
+    });
+
+    it('should instantiate immutable Website Value Object and expose URL getters', () => {
+      const site = Website.create('https://portal.exemplo.com.br/contato');
+      expect(site.value).toBe('https://portal.exemplo.com.br/contato');
+      expect(site.hostname).toBe('portal.exemplo.com.br');
+      expect(site.protocol).toBe('https:');
+      expect(site.origin).toBe('https://portal.exemplo.com.br');
+    });
+
+    it('should reject invalid domains and dangerous schemes', () => {
+      expect(Website.isValid('')).toBe(false);
+      expect(Website.isValid('   ')).toBe(false);
+      expect(Website.isValid('javascript:alert(1)')).toBe(false);
+      expect(Website.isValid('data:text/html,<h1>XSS</h1>')).toBe(false);
+      expect(Website.isValid('file:///etc/passwd')).toBe(false);
+      expect(Website.isValid('ftp://ftp.exemplo.com.br')).toBe(false);
+      expect(Website.isValid('not a website')).toBe(false);
+      expect(Website.isValid('exemplo')).toBe(false); // single word without dot or localhost
+      expect(() => Website.create('invalid')).toThrow();
     });
   });
 });

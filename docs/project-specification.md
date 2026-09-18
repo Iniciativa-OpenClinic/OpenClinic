@@ -45,14 +45,15 @@ openclinic/                          # Raiz do Monorepo
 │   ├── ARCHITECTURE.md              # Mapa resumido da arquitetura
 │   └── MEMORY.md                    # Registro persistente de decisões técnicas
 │
-├── docker/                          # Infraestrutura de deploy e inicialização
-│   └── init-db/                     # Scripts de inicialização de roles PostgreSQL
-│
 ├── docker-compose.yml               # Orquestração de containers (DB, API, Webapp)
-    │   ├── Dockerfile               # Build de produção multi-stage (Node 20 Alpine)
-    │   └── init-db/
-    │       ├── 000-roles.sql        # Criação dos roles 'owner' e 'app' + permissões
-    │
+├── infra/                           # Recursos e infraestrutura operacional do ecossistema
+│   ├── database/                    # Migrações, validação de schema e baseline
+│   ├── docker/                      # Dockerfiles e scripts de inicialização
+│   │   ├── Dockerfile               # Build de produção multi-stage (Node 20 Alpine)
+│   │   ├── Dockerfile.webapp        # Build e servidor Nginx do frontend
+│   │   └── init-db/000-roles.sh     # Provisionamento dinâmico dos roles 'owner' e 'app' via env
+│   ├── secrets/                     # Gestão de segredos e runtime de provedores
+│   └── stacks/                      # Stacks de produção Docker Swarm e Portainer
     ├── docs/                        # Documentação técnica do projeto
     │   ├── project-specification.md # [ESTE DOCUMENTO] Especificação geral
     │   ├── authentication-module.md # Especificação completa do Módulo de Autenticação e IAM
@@ -281,16 +282,16 @@ Para implantar em um servidor novo onde não há banco PostgreSQL instalado:
 
    ```bash
    cp .env.example .env
-   # Edite o .env configurando chaves seguras (JWT_SECRET_KEY, senhas)
+   # Edite o .env configurando chaves seguras (JWT_KEY / JWT_SECRET_NAME, senhas)
    ```
 
-3. Suba a stack completa (PostgreSQL + API):
+3. Suba a stack completa (PostgreSQL + API + Webapp):
 
    ```bash
-   docker compose -f docker/docker-compose.standalone.yml up -d
+   docker compose up -d
    ```
 
-4. O PostgreSQL provisiona roles com `000-roles.sql`; o serviço `migrate` aplica `infra/database/migrations` antes da API.
+4. O PostgreSQL provisiona roles dinamicamente com `000-roles.sh`; o serviço `migrate` aplica `infra/database/migrations` antes da API.
 
 ---
 
@@ -301,7 +302,7 @@ Para implantar quando já existe uma instância do PostgreSQL (ex: em rede Docke
 1. **Build da Imagem da API:**
 
    ```bash
-   docker build -t openclinic-api:latest -f docker/Dockerfile .
+   docker build -t openclinic-api:latest -f infra/docker/Dockerfile .
    ```
 
 2. **Provisionamento do Banco:**
@@ -310,22 +311,22 @@ Para implantar quando já existe uma instância do PostgreSQL (ex: em rede Docke
 
 3. **Publicação da Stack no Portainer:**
 
-   Crie uma Stack colando a definição de serviço do container `api`:
+   Crie uma Stack colando a definição canônica de [`infra/stacks/openclinic-production.yml`](../infra/stacks/openclinic-production.yml):
 
    ```yaml
    version: '3.8'
    services:
      api:
-       image: openclinic-api:latest
+       image: openclinic/openclinic-api:latest
        container_name: openclinic-api
        restart: unless-stopped
        ports:
          - "3000:3000"
        environment:
          - NODE_ENV=production
-         - DATABASE_URL=postgresql://openclinic_app:<SENHA>@<POSTGRES_HOST>:5432/openclinic
-         - DATABASE_OWNER_URL=postgresql://openclinic_owner:<SENHA>@<POSTGRES_HOST>:5432/openclinic
-         - JWT_SECRET_KEY=<CHAVE_JWT_SEGURA_MINIMO_32_CHARS>
+         - SECRETS_PROVIDER=file
+         - DB_APP_SECRET_NAME=database-secret-app
+         - JWT_SECRET_NAME=jwt-secret
          - JWT_ALGORITHM=HS256
          - ACCESS_TOKEN_EXPIRE_MINUTES=15
          - REFRESH_TOKEN_EXPIRE_DAYS=7
@@ -334,7 +335,7 @@ Para implantar quando já existe uma instância do PostgreSQL (ex: em rede Docke
        networks:
          - postgres_network
        healthcheck:
-         test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+         test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health/live"]
          interval: 30s
          timeout: 10s
          retries: 3

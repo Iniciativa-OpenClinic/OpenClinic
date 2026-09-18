@@ -21,14 +21,14 @@ import {
   type GroupMembersResponse,
   type UserGroupsResponse,
 } from '../../services/api.js';
-import { useI18n, SupportedLocales } from '../../i18n/index.js';
-import { UserRole, Cpf, Name, Username, Email, PasswordPolicy } from '@openclinic/core/shared';
+import { useI18n, SupportedLocales, type TranslationKey } from '../../i18n/index.js';
+import { UserRole, Cpf, Name, Username, Email, PasswordPolicy, BOOTSTRAP_DEFAULTS } from '@openclinic/core/shared';
 import type { UserProfile } from '../../types/auth.js';
 import { AlertBanner, AlertBannerType } from '../../components/AlertBanner.js';
 import { EyeIcon, EyeOffIcon } from '../../components/EyeIcons.js';
 import { FieldLabelWithTooltip, ToggleSwitch } from '../components/FormControls.js';
 
-const ROLE_BADGE_STYLES: Record<UserRole, { bg: string; color: string; border: string; labelKey: string }> = {
+const ROLE_BADGE_STYLES: Record<UserRole, { bg: string; color: string; border: string; labelKey: TranslationKey }> = {
   [UserRole.OWNER]: {
     bg: '#fef3c7',
     color: '#b45309',
@@ -65,17 +65,17 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
   const { t } = useI18n();
   const [adminSubTab, setAdminSubTab] = useState<'users' | 'groups'>('users');
 
-  // Usuários
+  // Users
   const [usersList, setUsersList] = useState<UserListItem[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userActionMsg, setUserActionMsg] = useState<string | null>(null);
   const [userActionError, setUserActionError] = useState<string | null>(null);
 
-  // Grupos
+  // Groups
   const [groupsList, setGroupsList] = useState<GroupListItem[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(false);
 
-  // Modais de Usuário
+  // User Modals State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
   const [newUserDisplayName, setNewUserDisplayName] = useState('');
@@ -105,7 +105,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
   const [editTouched, setEditTouched] = useState<Record<string, boolean>>({});
 
   const [resetTargetUser, setResetTargetUser] = useState<UserListItem | null>(null);
-  const [adminNewPassword, setAdminNewPassword] = useState('temp1234');
+  const [adminNewPassword, setAdminNewPassword] = useState<string>(BOOTSTRAP_DEFAULTS.DEV_DEFAULT_PASSWORD);
   const [showAdminResetPassword, setShowAdminResetPassword] = useState(false);
   const [adminResetLoading, setAdminResetLoading] = useState(false);
   const [adminResetTouched, setAdminResetTouched] = useState(false);
@@ -118,7 +118,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
   } | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
-  // Modais de Grupos
+  // Group Modals State
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
@@ -142,7 +142,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
   } | null>(null);
   const [confirmGroupActionLoading, setConfirmGroupActionLoading] = useState(false);
 
-  // Membros do Grupo / Grupos do Usuário
+  // Group Members / User Groups State
   const [manageMembersGroup, setManageMembersGroup] = useState<GroupListItem | null>(null);
   const [groupMembersData, setGroupMembersData] = useState<GroupMembersResponse | null>(null);
   const [groupMembersLoading, setGroupMembersLoading] = useState(false);
@@ -155,7 +155,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
   const [selectedAddGroupId, setSelectedAddGroupId] = useState<string>('');
   const [userGroupActionLoading, setUserGroupActionLoading] = useState(false);
 
-  // Ordenação
+  // Sorting
   const [userSortField, setUserSortField] = useState<'full_name' | 'username' | 'is_active'>('full_name');
   const [userSortOrder, setUserSortOrder] = useState<'asc' | 'desc'>('asc');
   const [groupSortField, setGroupSortField] = useState<'name' | 'is_active'>('name');
@@ -577,7 +577,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
       const res = await adminResetPassword(resetTargetUser.id, adminNewPassword);
       setUserActionMsg(res.message);
       setResetTargetUser(null);
-      setAdminNewPassword('temp1234');
+      setAdminNewPassword(BOOTSTRAP_DEFAULTS.DEV_DEFAULT_PASSWORD);
       setAdminResetTouched(false);
       setAdminResetError(null);
       loadUsersList();
@@ -611,7 +611,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
     }
   };
 
-  // Funções de Grupo
+  // Group Management Handlers
   const handleCreateGroupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUserActionError(null);
@@ -965,10 +965,10 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
         </div>
       </div>
 
-      {/* SUB-ABA 1: USUÁRIOS */}
+      {/* SUB-TAB 1: USERS */}
       {adminSubTab === 'users' && (
         <>
-          {/* Modal Criar Usuário */}
+          {/* Create User Modal */}
           {showCreateModal && (
             <div style={{ background: '#fff', border: '2px solid #38bdf8', borderRadius: 12, padding: 22, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 12, flexWrap: 'wrap', gap: 12 }}>
@@ -980,9 +980,9 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
               </div>
 
               <form onSubmit={handleCreateUserSubmit} noValidate style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14 }}>
-                {/* Linha 1: Nome Completo, Nome Usual, Cargo / Função */}
+                {/* Row 1: Full Name, Display Name, Job Title */}
                 <div style={{ gridColumn: 'span 4' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_FULL_NAME_LABEL')} tooltip={t('FIELD_FULL_NAME_TOOLTIP')} required />
+                  <FieldLabelWithTooltip label={t('FIELD_FULL_NAME_LABEL')} required />
                   <input
                     type="text"
                     value={newUserName}
@@ -1005,7 +1005,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(createErrors.fullName)}
                 </div>
                 <div style={{ gridColumn: 'span 4' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_DISPLAY_NAME_LABEL')} tooltip={t('FIELD_DISPLAY_NAME_TOOLTIP')} />
+                  <FieldLabelWithTooltip label={t('FIELD_DISPLAY_NAME_LABEL')} />
                   <input
                     type="text"
                     value={newUserDisplayName}
@@ -1028,7 +1028,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(createErrors.displayName)}
                 </div>
                 <div style={{ gridColumn: 'span 4' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_JOB_TITLE_LABEL')} tooltip={t('FIELD_JOB_TITLE_TOOLTIP')} />
+                  <FieldLabelWithTooltip label={t('FIELD_JOB_TITLE_LABEL')} />
                   <input
                     type="text"
                     value={newUserJobTitle}
@@ -1037,9 +1037,9 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   />
                 </div>
 
-                {/* Linha 2: CPF (menor largura), Nome de Usuário, E-mail, Perfil de Acesso */}
+                {/* Row 2: CPF, Username, Email, Access Role */}
                 <div style={{ gridColumn: 'span 2' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_CPF_LABEL')} tooltip={t('FIELD_CPF_TOOLTIP')} />
+                  <FieldLabelWithTooltip label={t('FIELD_CPF_LABEL')} />
                   <input
                     type="text"
                     value={newUserCpf}
@@ -1064,7 +1064,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(createErrors.cpf)}
                 </div>
                 <div style={{ gridColumn: 'span 3' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_USERNAME_LABEL')} tooltip={t('FIELD_USERNAME_TOOLTIP')} required />
+                  <FieldLabelWithTooltip label={t('FIELD_USERNAME_LABEL')} required />
                   <input
                     type="text"
                     value={newUserUsername}
@@ -1087,7 +1087,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(createErrors.username)}
                 </div>
                 <div style={{ gridColumn: 'span 4' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_EMAIL_LABEL')} tooltip={t('FIELD_EMAIL_TOOLTIP')} required />
+                  <FieldLabelWithTooltip label={t('FIELD_EMAIL_LABEL')} required />
                   <input
                     type="email"
                     value={newUserEmail}
@@ -1114,7 +1114,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   <select
                     id="create-user-role"
                     value={newUserRole}
-                    onChange={(e) => setNewUserRole(e.target.value as any)}
+                    onChange={(e) => setNewUserRole(e.target.value as UserRole)}
                     style={inputStyle}
                   >
                     <option value={UserRole.USER}>{t('ROLE_OPTION_USER')} ({UserRole.USER})</option>
@@ -1123,7 +1123,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   </select>
                 </div>
 
-                {/* Linha 3: Senha de Acesso */}
+                {/* Line 3: Access Password */}
                 <div style={{ gridColumn: 'span 12' }}>
                   <FieldLabelWithTooltip label={t('FIELD_PASSWORD_LABEL')} tooltip={t('FIELD_PASSWORD_TOOLTIP')} required />
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -1199,7 +1199,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
             </div>
           )}
 
-          {/* Modal Editar Usuário */}
+          {/* Edit User Modal */}
           {editTargetUser && (
             <div style={{ background: '#fff', border: '2px solid #3b82f6', borderRadius: 12, padding: 22, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 12, flexWrap: 'wrap', gap: 12 }}>
@@ -1217,9 +1217,9 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
               </div>
 
               <form onSubmit={handleEditUserSubmit} noValidate style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14 }}>
-                {/* Linha 1: Nome Completo, Nome Usual, Cargo / Função */}
+                {/* Row 1: Full Name, Display Name, Job Title */}
                 <div style={{ gridColumn: 'span 4' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_FULL_NAME_LABEL')} tooltip={t('FIELD_FULL_NAME_TOOLTIP')} required />
+                  <FieldLabelWithTooltip label={t('FIELD_FULL_NAME_LABEL')} required />
                   <input
                     type="text"
                     value={editUserName}
@@ -1242,7 +1242,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(editErrors.fullName)}
                 </div>
                 <div style={{ gridColumn: 'span 4' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_DISPLAY_NAME_LABEL')} tooltip={t('FIELD_DISPLAY_NAME_TOOLTIP')} />
+                  <FieldLabelWithTooltip label={t('FIELD_DISPLAY_NAME_LABEL')} />
                   <input
                     type="text"
                     value={editUserDisplayName}
@@ -1265,7 +1265,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(editErrors.displayName)}
                 </div>
                 <div style={{ gridColumn: 'span 4' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_JOB_TITLE_LABEL')} tooltip={t('FIELD_JOB_TITLE_TOOLTIP')} />
+                  <FieldLabelWithTooltip label={t('FIELD_JOB_TITLE_LABEL')} />
                   <input
                     type="text"
                     value={editUserJobTitle}
@@ -1274,9 +1274,9 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   />
                 </div>
 
-                {/* Linha 2: CPF (menor largura), Nome de Usuário, E-mail, Perfil de Acesso */}
+                {/* Row 2: CPF, Username, Email, Access Role */}
                 <div style={{ gridColumn: 'span 2' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_CPF_LABEL')} tooltip={t('FIELD_CPF_TOOLTIP')} />
+                  <FieldLabelWithTooltip label={t('FIELD_CPF_LABEL')} />
                   <input
                     type="text"
                     value={editUserCpf}
@@ -1301,7 +1301,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(editErrors.cpf)}
                 </div>
                 <div style={{ gridColumn: 'span 3' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_USERNAME_LABEL')} tooltip={t('FIELD_USERNAME_TOOLTIP')} required />
+                  <FieldLabelWithTooltip label={t('FIELD_USERNAME_LABEL')} required />
                   <input
                     type="text"
                     value={editUserUsername}
@@ -1324,7 +1324,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(editErrors.username)}
                 </div>
                 <div style={{ gridColumn: 'span 4' }}>
-                  <FieldLabelWithTooltip label={t('FIELD_EMAIL_LABEL')} tooltip={t('FIELD_EMAIL_TOOLTIP')} required />
+                  <FieldLabelWithTooltip label={t('FIELD_EMAIL_LABEL')} required />
                   <input
                     type="email"
                     value={editUserEmail}
@@ -1351,7 +1351,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   <select
                     id="edit-user-role"
                     value={editUserRole}
-                    onChange={(e) => setEditUserRole(e.target.value as any)}
+                    onChange={(e) => setEditUserRole(e.target.value as UserRole)}
                     style={inputStyle}
                   >
                     <option value={UserRole.USER}>{t('ROLE_OPTION_USER')} ({UserRole.USER})</option>
@@ -1396,7 +1396,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
             </div>
           )}
 
-          {/* Modal Alterar Senha de Usuário */}
+          {/* Change Password Modal */}
           {resetTargetUser && (
             <div style={{ background: '#fff', border: '2px solid #eab308', borderRadius: 12, padding: 22, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -1432,7 +1432,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowAdminResetPassword((prev) => !prev)}
-                        title={showAdminResetPassword ? 'Ocultar senha' : 'Exibir senha'}
+                        title={showAdminResetPassword ? t('TOOLTIP_HIDE_PASS') : t('TOOLTIP_SHOW_PASS')}
                         style={{
                           padding: '4px 6px',
                           borderRadius: 6,
@@ -1481,7 +1481,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
             </div>
           )}
 
-          {/* Tabela de Usuários */}
+          {/* Users Table */}
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
               <h4 style={{ margin: 0, color: '#0f172a', fontSize: '0.95rem', fontWeight: 700 }}>
@@ -1551,7 +1551,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                               border: roleMeta.border,
                               display: 'inline-block',
                             }}>
-                              {t(roleMeta.labelKey as any)}
+                              {t(roleMeta.labelKey)}
                             </span>
                           );
                         })()}
@@ -1615,7 +1615,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
         </>
       )}
 
-      {/* SUB-ABA 2: GRUPOS DE USUÁRIOS */}
+      {/* SUB-TAB 2: USER GROUPS */}
       {adminSubTab === 'groups' && (
         <>
           {/* Modal Criar Grupo */}
@@ -1631,7 +1631,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
 
               <form onSubmit={handleCreateGroupSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ width: '50%', minWidth: 280 }}>
-                  <FieldLabelWithTooltip label={t('FIELD_GROUP_NAME')} tooltip={t('TOOLTIP_GROUP_NAME')} required />
+                  <FieldLabelWithTooltip label={t('FIELD_GROUP_NAME')} required />
                   <input
                     type="text"
                     value={newGroupName}
@@ -1655,7 +1655,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(createGroupErrors.name)}
                 </div>
                 <div>
-                  <FieldLabelWithTooltip label={t('FIELD_GROUP_DESC')} tooltip={t('TOOLTIP_GROUP_DESC')} />
+                  <FieldLabelWithTooltip label={t('FIELD_GROUP_DESC')} />
                   <textarea
                     rows={3}
                     value={newGroupDesc}
@@ -1708,7 +1708,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
 
               <form onSubmit={handleEditGroupSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ width: '50%', minWidth: 280 }}>
-                  <FieldLabelWithTooltip label={t('FIELD_GROUP_NAME')} tooltip={t('TOOLTIP_GROUP_NAME')} required />
+                  <FieldLabelWithTooltip label={t('FIELD_GROUP_NAME')} required />
                   <input
                     type="text"
                     value={editGroupName}
@@ -1732,7 +1732,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                   {renderFieldError(editGroupErrors.name)}
                 </div>
                 <div>
-                  <FieldLabelWithTooltip label={t('FIELD_GROUP_DESC')} tooltip={t('TOOLTIP_GROUP_DESC')} />
+                  <FieldLabelWithTooltip label={t('FIELD_GROUP_DESC')} />
                   <textarea
                     rows={3}
                     value={editGroupDesc}
@@ -1797,7 +1797,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
                 {t('TAB_USER_GROUPS')}
               </h4>
               <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 2 }}>
-                Gerenciamento de grupos e perfis de permissão
+                {t('USER_GROUPS_SUBTITLE')}
               </div>
             </div>
 
@@ -1904,7 +1904,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
               <button onClick={() => setManageMembersGroup(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#64748b' }}>✖</button>
             </div>
 
-            {/* Adicionar Usuário ao Grupo */}
+            {/* Add User to Group */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
               <select
                 value={selectedAddUserId}
@@ -1973,7 +1973,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
         </div>
       )}
 
-      {/* Modal: Gerenciar Grupos do Usuário */}
+      {/* Modal: Manage User Groups */}
       {manageGroupsUser && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -2081,7 +2081,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
         </div>
       )}
 
-      {/* Modal de Confirmação Crítica (Usuário) */}
+      {/* Critical Confirmation Modal (User) */}
       {confirmAction && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -2111,7 +2111,7 @@ export const UsersManagementView: React.FC<UsersManagementViewProps> = ({
         </div>
       )}
 
-      {/* Modal de Confirmação Crítica (Grupo) */}
+      {/* Critical Confirmation Modal (Group) */}
       {confirmGroupAction && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,

@@ -1,12 +1,25 @@
-import { EntityNotFoundError, AccessDeniedError, ErrorCode, SuccessCode, getSuccessMessage, logger, SupportedLocales } from '@openclinic/core';
+import {
+  EntityNotFoundError,
+  AccessDeniedError,
+  ErrorCode,
+  SuccessCode,
+  getSuccessMessage,
+  logger,
+  SupportedLocales,
+  IpAddress,
+  UserRole,
+  AuditStatus,
+  AuditAction,
+  AuditResource,
+} from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO } from '../../domain/dtos.js';
-import { UserRole, AuditStatus } from '../../../shared/domain/enums.js';
 
 export class DeleteUserAdminUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(creatorRole: UserRole, creatorUserId: string, targetUserId: string, ipAddress?: string): Promise<ActionResponseDTO<{ id: string }>> {
+  async execute(creatorRole: UserRole, creatorUserId: string, targetUserId: string, ipAddress?: string | IpAddress, creatorTenantId?: string): Promise<ActionResponseDTO<{ id: string }>> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     if (creatorUserId === targetUserId) {
       throw new AccessDeniedError(ErrorCode.USER_CANNOT_DELETE_SELF);
     }
@@ -17,8 +30,13 @@ export class DeleteUserAdminUseCase {
     }
 
     const targetUserRole = targetUser.role;
-    if (creatorRole !== UserRole.OWNER && targetUserRole === UserRole.OWNER) {
-      throw new AccessDeniedError(ErrorCode.OWNER_IMMUTABLE);
+    if (creatorRole !== UserRole.OWNER) {
+      if (creatorTenantId && targetUser.tenant_id && targetUser.tenant_id !== creatorTenantId) {
+        throw new AccessDeniedError(ErrorCode.FORBIDDEN);
+      }
+      if (targetUserRole === UserRole.OWNER) {
+        throw new AccessDeniedError(ErrorCode.OWNER_IMMUTABLE);
+      }
     }
 
     // Revoke sessions and clean lockouts
@@ -34,10 +52,10 @@ export class DeleteUserAdminUseCase {
     await this.uow.auditLogs.create({
       user_id: targetUserId,
       username: targetUser.username,
-      action: 'user_deleted_by_admin',
-      resource: 'iam_users',
+      action: AuditAction.USER_DELETED_BY_ADMIN,
+      resource: AuditResource.IAM_USERS,
       status: AuditStatus.SUCCESS,
-      ip_address: ipAddress ?? null,
+      ip_address: validatedIp?.value ?? null,
       user_agent: null,
       details: {
         deleted_user: {

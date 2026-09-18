@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import {
   type JwtConfig,
+  type ApplicationPermissionSyncDTO,
   UserRole,
   ApplicationContext,
   ErrorCode,
@@ -34,7 +35,7 @@ export const SYNC_STATUS = {
 } as const;
 
 export function registerIamRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jwtConfig: JwtConfig): void {
-  const authenticateJwt = createAuthenticateJwt(jwtConfig);
+  const authenticateJwt = createAuthenticateJwt(jwtConfig, uow);
   const iamService = new IAMPermissionService(uow);
 
   // ── 1. Authenticated User Permissions & Capabilities ──
@@ -87,7 +88,7 @@ export function registerIamRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jwtC
               type: 'object',
               properties: {
                 key: { type: 'string', example: 'op_schedule' },
-                label: { type: 'string', example: 'Agenda & Marcações' },
+                label: { type: 'string', example: 'Appointments & Scheduling' },
                 icon: { type: 'string', nullable: true },
                 route: { type: 'string', nullable: true },
                 resource_type: { type: 'string' },
@@ -459,7 +460,7 @@ export function registerIamRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jwtC
       },
     },
     async (request, reply) => {
-      const payload = request.body as any;
+      const payload = request.body as ApplicationPermissionSyncDTO;
       const requesterRole = request.user?.role as UserRole | undefined;
       const success = await iamService.syncPermissions(payload, requesterRole);
       return reply.status(200).send({ status: success ? SYNC_STATUS.OK : SYNC_STATUS.ERROR });

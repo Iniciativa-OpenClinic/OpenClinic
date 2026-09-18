@@ -48,6 +48,7 @@ export const CreateUserRequestSchema = z.object({
   job_title: z.string().max(100).optional().nullable(),
   password: z.string().min(8, getErrorMessage(ErrorCode.PASSWORD_TOO_SHORT)),
   role: z.nativeEnum(UserRole),
+  tenant_id: z.string().uuid().optional().nullable(),
   is_active: z.boolean().optional(),
 });
 

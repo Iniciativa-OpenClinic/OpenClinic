@@ -2,7 +2,7 @@ import { ValueObject } from './value-object.base.js';
 import { ValidationError, ErrorCode } from '../../errors/index.js';
 
 /**
- * Cadastro Nacional de Estabelecimentos de Saúde (CNES) Value Object.
+ * National Registry of Health Establishments (CNES - Cadastro Nacional de Estabelecimentos de Saúde) Value Object.
  * Conforms to DATASUS rules and SBIS ECF.17.16 / ECF.10.04 requirements.
  * Composed of exactly 7 numeric digits.
  */

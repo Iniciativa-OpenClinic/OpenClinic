@@ -1,61 +1,45 @@
 # ============================================================
-# OpenClinic - Production Docker Stack
+# OpenClinic - Application Docker Stack (Scenario 1)
 # ============================================================
-# Serviços:
-#   - db: PostgreSQL 17 Alpine com esquemas e roles iniciais
-#   - api: Backend REST Fastify (Clean Architecture)
-#   - webapp: Frontend SPA Vite/React servido via Nginx Alpine
+# Services:
+#   - api: REST Fastify Backend (Clean Architecture)
+#   - webapp: Vite/React SPA Frontend served via Nginx Alpine
+#   - migrate: Database Migration & Setup Task
+# Note: PostgreSQL runs in an independent service/stack,
+#       accessible via postgres_network.
 # ============================================================
 
 services:
-  db:
-    image: postgres:17-alpine
-    container_name: openclinic-postgres
-    environment:
-      POSTGRES_USER: openclinic_owner
-      POSTGRES_PASSWORD: temp1234
-      POSTGRES_DB: openclinic
-    ports:
-      - "5432:5432"
-    volumes:
-      - openclinic_data:/var/lib/postgresql/data
-      - ./docker/init-db/000-roles.sql:/docker-entrypoint-initdb.d/000-roles.sql
-    networks:
-      - openclinic_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U openclinic_owner -d openclinic"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
   api:
     image: openclinic-api:latest
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: infra/docker/Dockerfile
     container_name: openclinic-api
     depends_on:
-      db:
-        condition: service_healthy
       migrate:
         condition: service_completed_successfully
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - ./secrets:/app/secrets:ro
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://openclinic_app:temp1234@openclinic-postgres:5432/openclinic
-      - JWT_SECRET_KEY=openclinic-change-me-in-production-at-least-32-chars
-      - JWT_ALGORITHM=HS256
-      - ACCESS_TOKEN_EXPIRE_MINUTES=15
-      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - NODE_ENV=${NODE_ENV:-development}
+      - SECRETS_PROVIDER=${SECRETS_PROVIDER:-file}
+      - DB_APP_SECRET_NAME=${DB_APP_SECRET_NAME:-database-secret-app}
+      - JWT_SECRET_NAME=${JWT_SECRET_NAME:-jwt-secret}
+      - DB_HOST=${DB_HOST:-postgres_postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-openclinic}
       - APP_HOST=0.0.0.0
       - APP_PORT=3000
-      - LOG_LEVEL=info
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     networks:
       - openclinic_network
+      - postgres_network
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/health/live"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -67,21 +51,24 @@ services:
       context: .
       dockerfile: infra/database/Dockerfile
     command: ["npm", "run", "db:setup"]
+    volumes:
+      - ./secrets:/app/secrets:ro
     environment:
-      DATABASE_OWNER_URL: postgresql://openclinic_owner:temp1234@db:5432/openclinic
-      DATABASE_URL: postgresql://openclinic_owner:temp1234@db:5432/openclinic
-    depends_on:
-      db:
-        condition: service_healthy
+      - SECRETS_PROVIDER=${SECRETS_PROVIDER:-file}
+      - DB_APP_SECRET_NAME=${DB_APP_SECRET_NAME:-database-secret-app}
+      - DB_OWNER_SECRET_NAME=${DB_OWNER_SECRET_NAME:-database-secret-owner}
+      - DB_HOST=${DB_HOST:-postgres_postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-openclinic}
     networks:
-      - openclinic_network
+      - postgres_network
     restart: "no"
 
   webapp:
     image: openclinic-webapp:latest
     build:
       context: .
-      dockerfile: docker/Dockerfile.webapp
+      dockerfile: infra/docker/Dockerfile.webapp
     container_name: openclinic-webapp
     depends_on:
       api:
@@ -102,6 +89,5 @@ networks:
     name: openclinic_network
     driver: bridge
 
-volumes:
-  openclinic_data:
-    name: openclinic_data
+  postgres_network:
+    external: true

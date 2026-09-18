@@ -6,7 +6,7 @@ import { AlertBanner, AlertBannerType } from '../components/AlertBanner.js';
 import { useConfig } from '../context/ConfigContext.js';
 import { t } from '../i18n/index.js';
 import logoImg from '../assets/logo.png';
-import { LoginIdentifierType, Cpf } from '@openclinic/core/shared';
+import { LoginIdentifierType, Cpf, BOOTSTRAP_DEFAULTS } from '@openclinic/core/shared';
 
 type AuthView = 'login' | 'forgot' | 'reset';
 
@@ -42,12 +42,10 @@ export default function LoginPage() {
     },
     [LoginIdentifierType.USERNAME]: {
       label: t('FIELD_LOGIN_IDENTIFIER_USERNAME'),
-      placeholder: 'usuario.exemplo',
       type: 'text',
     },
     [LoginIdentifierType.EMAIL]: {
       label: t('FIELD_LOGIN_IDENTIFIER_EMAIL'),
-      placeholder: 'usuario@clinica.com.br',
       type: 'email',
     },
   }[primaryLoginIdentifier] || {
@@ -231,7 +229,7 @@ export default function LoginPage() {
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <img
           src={appLogoUrl || logoImg}
-          alt={appName || "OpenClinic Logo"}
+          alt={appName || "Logo"}
           style={{ height: 64, objectFit: 'contain', marginBottom: 10 }}
           onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
         />
@@ -330,13 +328,12 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Esqueci a senha */}
+            {/* Forgot password link */}
             <div style={{ textAlign: 'right', marginTop: 6 }}>
               <button
                 type="button"
-                tabIndex={-1}
-                onClick={() => { setView('forgot'); setForgotError(null); setForgotResult(null); clearError(); }}
-                style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                onClick={() => { setView('forgot'); clearError(); }}
+                style={{ background: 'transparent', border: 'none', color: '#0284c7', fontSize: '0.80rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}
               >
                 {t('FORGOT_PASS_LINK')}
               </button>
@@ -350,7 +347,7 @@ export default function LoginPage() {
           <div style={{ marginTop: 12, padding: 12, background: '#f8fafc', borderRadius: 8, fontSize: '0.75rem', color: '#64748b', border: '1px dashed #cbd5e1', lineHeight: 1.8 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontWeight: 700, color: '#334155' }}>
-                👥 Usuários de Teste (senha: <code>temp1234</code>)
+                {t('LOGIN_TEST_USERS_TITLE', { pass: BOOTSTRAP_DEFAULTS.DEV_DEFAULT_PASSWORD })}
               </span>
               <span style={{
                 fontSize: '0.68rem',
@@ -370,27 +367,22 @@ export default function LoginPage() {
                   key={u.username}
                   onClick={() => {
                     setIdentifier(activeCredential);
-                    setPassword('temp1234');
-                    setIdentifierError(null);
-                    clearError();
+                    setPassword(BOOTSTRAP_DEFAULTS.DEV_DEFAULT_PASSWORD);
                   }}
                   style={{
-                    padding: '3px 6px',
-                    borderRadius: 4,
-                    cursor: 'pointer',
                     display: 'flex',
-                    alignItems: 'center',
                     justifyContent: 'space-between',
-                    transition: 'background 0.15s ease',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    borderRadius: 4,
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#e2e8f0'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                  title={`Preencher credencial de teste: ${activeCredential}`}
                 >
-                  <span>
-                    • <code>{u.username}</code> — CPF: <code>{u.cpf}</code> — {u.role}
+                  <span style={{ fontFamily: 'monospace', color: '#0f172a' }}>
+                    {activeCredential}
                   </span>
-                  <span style={{ fontSize: '0.68rem', color: '#0284c7', fontWeight: 600 }}>Usar ↵</span>
+                  <span style={{ color: '#0284c7', fontWeight: 600 }}>{u.role}</span>
                 </div>
               );
             })}
@@ -398,14 +390,23 @@ export default function LoginPage() {
         </form>
       )}
 
-      {/* ── 2. TELA ESQUECI A SENHA ── */}
+      {/* ── 2. FORGOT PASSWORD VIEW ── */}
       {view === 'forgot' && (
         <form onSubmit={handleForgotSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ textAlign: 'center', marginBottom: 8 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0' }}>
+              {t('FORGOT_PASS_LINK')}
+            </h2>
+            <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+              {t('FORGOT_SUBTITLE')}
+            </p>
+          </div>
+
           {forgotError && (
             <AlertBanner
               type={AlertBannerType.ERROR}
               message={forgotError}
-              onClose={() => setForgotError(null)}
+              onClose={clearError}
             />
           )}
 
@@ -416,15 +417,21 @@ export default function LoginPage() {
                   {t('FIELD_LOGIN_IDENTIFIER')}
                 </label>
                 <input
-                  type="text"
+                  type="email"
+                  required
                   value={forgotIdentifier}
                   onChange={(e) => setForgotIdentifier(e.target.value)}
                   style={inputStyle}
-                  required
+                  onFocus={(e) => { e.target.style.borderColor = '#0284c7'; }}
+                  onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; }}
                 />
               </div>
 
-              <button type="submit" disabled={forgotLoading} style={{ ...btnStyle, opacity: forgotLoading ? 0.7 : 1 }}>
+              <button
+                type="submit"
+                disabled={forgotLoading}
+                style={{ ...btnStyle, opacity: forgotLoading ? 0.7 : 1, marginTop: 6 }}
+              >
                 {forgotLoading ? t('BTN_PROCESSING') : t('BTN_SEND_RECOVERY')}
               </button>
             </>
@@ -433,24 +440,17 @@ export default function LoginPage() {
           {forgotResult && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ padding: 14, background: '#f0fdf4', color: '#166534', borderRadius: 8, fontSize: '0.84rem', border: '1px solid #bbf7d0', lineHeight: 1.5 }}>
-                ✅ <strong>Simulação de E-mail Enviado:</strong><br />
-                {forgotResult.message}<br />
-                {forgotResult.data?.simulated_email && (
-                  <span style={{ fontSize: '0.78rem', color: '#15803d' }}>
-                    Destinatário: <strong>{forgotResult.data.simulated_email}</strong>
-                  </span>
-                )}
+                ✅ <strong>{t('LOGIN_SIMULATION_TITLE')}</strong><br />
+                {forgotResult.message}
               </div>
 
-              {forgotResult.data?.reset_token && (
-                <button
-                  type="button"
-                  onClick={() => setView('reset')}
-                  style={{ ...btnStyle, background: '#16a34a' }}
-                >
-                  {t('BTN_CONTINUE_RESET')} ➔
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setView('reset')}
+                style={{ ...btnStyle, background: '#0284c7' }}
+              >
+                {t('BTN_CONTINUE_RESET')} ➔
+              </button>
             </div>
           )}
 
@@ -466,7 +466,7 @@ export default function LoginPage() {
         </form>
       )}
 
-      {/* ── 3. TELA REDEFINIR SENHA ── */}
+      {/* ── 3. RESET PASSWORD VIEW ── */}
       {view === 'reset' && (
         <form onSubmit={handleResetSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {resetError && (

@@ -119,20 +119,58 @@ Alterna o status do usuário entre **Ativo** e **Inativo**.
 
 ---
 
-## ⚙ Configuração do Ambiente (.env)
+## 🖥 Documentação Interativa Swagger UI & OpenAPI
 
-Crie o arquivo `.env` na raiz ou em `packages/backend-api/.env`:
+O servidor disponibiliza documentação interativa baseada em schemas Fastify / JSON Schema (SSOT):
+
+- **Swagger UI Local**: [http://localhost:3000/docs](http://localhost:3000/docs)
+- **Exportação de Contratos**: Para regerar as especificações estáticas OpenAPI 3.0.3 (`openapi.json` e `openapi.yaml` em `docs/openapi/`), execute:
+
+  ```bash
+  npm run export:openapi
+  ```
+
+- **Guia Detalhado**: Consulte o [**Guia do Swagger UI**](../../docs/openapi/swagger.md) e a [**Central de Contratos OpenAPI**](../../docs/openapi/README.md).
+
+---
+
+## ⚙ Configuração do Ambiente (.env) & Secrets
+
+O backend consome credenciais de forma desacoplada via arquitetura de **Secrets Provider**:
 
 ```env
-PORT=3000
-HOST=0.0.0.0
+# Servidor HTTP
+APP_HOST=0.0.0.0
+APP_PORT=3000
 NODE_ENV=development
-DATABASE_URL=postgresql://openclinic_app:temp1234@localhost:5432/openclinic
-DATABASE_OWNER_URL=postgresql://openclinic_owner:temp1234@localhost:5432/openclinic
-JWT_SECRET_KEY=openclinic_super_secret_jwt_key_2026_dev_environment_key_32chars!
-JWT_ISSUER=openclinic.local
-JWT_AUDIENCE=openclinic-clients
+LOG_LEVEL=info
+
+# Provedor ativo de credenciais ('env', 'file', 'gsm', 'aws')
+SECRETS_PROVIDER=env
+
+# Configuração atômica do banco (quando SECRETS_PROVIDER=env)
+# DATABASE_URL é sintetizada dinamicamente em memória e NUNCA salva no .env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=openclinic
+DB_USER=openclinic_app
+DB_PASS="sua-senha-de-desenvolvimento"
+
+# Chave de assinatura JWT (mínimo de 32 caracteres)
+JWT_KEY="chave-aleatoria-criptograficamente-segura-min-32-chars"
+
+# Identificadores de secrets (para SECRETS_PROVIDER=file, gsm ou aws)
+DB_APP_SECRET_NAME=database-secret-app
+DB_OWNER_SECRET_NAME=database-secret-owner
+JWT_SECRET_NAME=jwt-secret
+SECRETS_DIR=./secrets
 ```
+
+> 🛡️ **Invariantes P0**:
+>
+> - **Princípio do Menor Privilégio (PoLP)**: A API executa estritamente sob a role `openclinic_app` (DML). Migrações estruturais (DDL) exigem a role `openclinic_owner` via CLI/migration runner.
+> - **Zero Raw Secrets no Git**: Arquivos `.credentials.json` são ignorados no Git.
+> - Consulte o [**Guia de Secrets**](../../secrets/README.md) para detalhes completos de configuração em modo `file` e orquestração.
 
 ---
 

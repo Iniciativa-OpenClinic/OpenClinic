@@ -1,6 +1,6 @@
 import path from 'node:path';
 import postgres from 'postgres';
-import { executePgDump, executePgRestore, type PgConnectionConfig } from './pg-runner.js';
+import { executePgDump, executePgRestore, formatBackupTimestamp, type PgConnectionConfig } from './pg-runner.js';
 import { inspectMigrations, MIGRATION_LOCK } from './migration-runner.js';
 
 function connectionUrl(config: PgConnectionConfig, database = config.database) {
@@ -13,11 +13,14 @@ function connectionUrl(config: PgConnectionConfig, database = config.database) {
 export async function cloneVersionedDatabase(local: PgConnectionConfig, remote: PgConnectionConfig) {
   const source = postgres(connectionUrl(local), { max: 1, connect_timeout: 10 });
   const target = postgres(connectionUrl(remote), { max: 1, connect_timeout: 10 });
-  const stamp = Date.now();
-  const stage = `oc_clone_${stamp}`;
-  const archive = `oc_previous_${stamp}`;
-  const sourceDump = path.resolve('backups', `clone-source-${stamp}.dump`);
-  const targetDump = path.resolve('backups', `clone-target-${stamp}.dump`);
+  const timestamp = formatBackupTimestamp();
+  const sourceDb = decodeURIComponent(local.database);
+  const targetDb = decodeURIComponent(remote.database);
+  const baseName = targetDb.slice(0, 35);
+  const stage = `${baseName}_stage_${timestamp}`;
+  const archive = `${baseName}_previous_${timestamp}`;
+  const sourceDump = path.resolve('backups', `${sourceDb}_clone-source_${timestamp}.dump`);
+  const targetDump = path.resolve('backups', `${targetDb}_clone-target_${timestamp}.dump`);
   let targetBlocked = false;
   let switched = false;
   const admin = postgres(connectionUrl(remote, 'postgres'), { max: 1, connect_timeout: 10 });

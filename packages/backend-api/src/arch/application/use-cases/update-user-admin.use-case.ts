@@ -9,10 +9,11 @@ import {
   logger,
   SupportedLocales,
   Cpf,
+  IpAddress,
 } from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO } from '../../domain/dtos.js';
-import { UserRole, AuditStatus, ROLE_HIERARCHY } from '@openclinic/core';
+import { UserRole, AuditStatus, AuditAction, AuditResource, ROLE_HIERARCHY } from '@openclinic/core';
 
 export interface UpdateUserInputDTO {
   email: string;
@@ -23,6 +24,8 @@ export interface UpdateUserInputDTO {
   job_title?: string | null;
   role: UserRole;
   is_active?: boolean;
+  tenant_id?: string | null;
+  user_groups?: string[];
 }
 
 export interface UpdatedUserDataDTO {
@@ -41,7 +44,8 @@ export interface UpdatedUserDataDTO {
 export class UpdateUserAdminUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(creatorRole: UserRole, targetUserId: string, input: UpdateUserInputDTO, ipAddress?: string): Promise<ActionResponseDTO<UpdatedUserDataDTO>> {
+  async execute(creatorRole: UserRole, targetUserId: string, input: UpdateUserInputDTO, ipAddress?: string | IpAddress, creatorTenantId?: string): Promise<ActionResponseDTO<UpdatedUserDataDTO>> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     const targetUser = await this.uow.users.getById(targetUserId);
     if (!targetUser) {
       throw new EntityNotFoundError('User', targetUserId);
@@ -49,6 +53,9 @@ export class UpdateUserAdminUseCase {
 
     const currentRole = targetUser.role;
     if (creatorRole !== UserRole.OWNER) {
+      if (creatorTenantId && targetUser.tenant_id && targetUser.tenant_id !== creatorTenantId) {
+        throw new AccessDeniedError(ErrorCode.FORBIDDEN);
+      }
       if (currentRole === UserRole.OWNER) {
         throw new AccessDeniedError(ErrorCode.OWNER_IMMUTABLE);
       }
@@ -138,10 +145,10 @@ export class UpdateUserAdminUseCase {
     await this.uow.auditLogs.create({
       user_id: updatedUser.id,
       username: updatedUser.username,
-      action: 'user_updated_by_admin',
-      resource: 'iam_users',
+      action: AuditAction.USER_UPDATED_BY_ADMIN,
+      resource: AuditResource.IAM_USERS,
       status: AuditStatus.SUCCESS,
-      ip_address: ipAddress ?? null,
+      ip_address: validatedIp?.value ?? null,
       user_agent: null,
       details: {
         previous: { email: targetUser.email, username: targetUser.username, role: currentRole, job_title: targetUser.job_title },

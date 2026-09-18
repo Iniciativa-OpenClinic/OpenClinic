@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useI18n } from '../../i18n/index.js';
+import { useI18n, type TranslationKey } from '../../i18n/index.js';
 
 export const HelpSupportView: React.FC = () => {
   const { t } = useI18n();
   const [supportSubject, setSupportSubject] = useState('');
-  const [supportCategory, setSupportCategory] = useState('HELP_CAT_QUESTION');
+  const [supportCategory, setSupportCategory] = useState<TranslationKey>('HELP_CAT_QUESTION');
   const [supportMessage, setSupportMessage] = useState('');
   const [supportTickets, setSupportTickets] = useState<Array<{ id: string; subject: string; category: string; date: string; status: string }>>([
     { id: 'TKT-1082', subject: t('HELP_SAMPLE_TICKET_SUBJECT'), category: t('HELP_CAT_QUESTION'), date: new Date().toLocaleDateString(), status: t('HELP_STATUS_ANSWERED') },
@@ -16,7 +16,7 @@ export const HelpSupportView: React.FC = () => {
     const newTkt = {
       id: `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
       subject: supportSubject,
-      category: t(supportCategory as any),
+      category: t(supportCategory),
       date: new Date().toLocaleDateString(),
       status: t('HELP_STATUS_OPEN'),
     };
@@ -77,7 +77,7 @@ export const HelpSupportView: React.FC = () => {
         <form onSubmit={handleSupportSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>{t('FIELD_HELP_CATEGORY')}</label>
-            <select value={supportCategory} onChange={(e) => setSupportCategory(e.target.value)} style={inputStyle}>
+            <select value={supportCategory} onChange={(e) => setSupportCategory(e.target.value as TranslationKey)} style={inputStyle}>
               <option value="HELP_CAT_QUESTION">{t('HELP_CAT_QUESTION')}</option>
               <option value="HELP_CAT_ACCESS">{t('HELP_CAT_ACCESS')}</option>
               <option value="HELP_CAT_SUGGESTION">{t('HELP_CAT_SUGGESTION')}</option>

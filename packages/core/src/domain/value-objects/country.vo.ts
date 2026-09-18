@@ -2,26 +2,26 @@ import { ValueObject } from './value-object.base.js';
 import { ValidationError, ErrorCode } from '../../errors/index.js';
 
 export const STANDARD_COUNTRIES = [
-  'BRA', // Brasil
+  'BRA', // Brazil
   'PRT', // Portugal
-  'USA', // Estados Unidos
+  'USA', // United States
   'ARG', // Argentina
-  'URY', // Uruguai
+  'URY', // Uruguay
   'CHL', // Chile
-  'PRY', // Paraguai
-  'BOL', // Bolívia
+  'PRY', // Paraguay
+  'BOL', // Bolivia
   'PER', // Peru
-  'COL', // Colômbia
-  'ESP', // Espanha
-  'FRA', // França
-  'DEU', // Alemanha
-  'ITA', // Itália
-  'GBR', // Reino Unido
-  'CAN', // Canadá
-  'MEX', // México
+  'COL', // Colombia
+  'ESP', // Spain
+  'FRA', // France
+  'DEU', // Germany
+  'ITA', // Italy
+  'GBR', // United Kingdom
+  'CAN', // Canada
+  'MEX', // Mexico
   'AGO', // Angola
-  'MOZ', // Moçambique
-  'CPV', // Cabo Verde
+  'MOZ', // Mozambique
+  'CPV', // Cape Verde
 ] as const;
 
 export type CountryCode = (typeof STANDARD_COUNTRIES)[number];

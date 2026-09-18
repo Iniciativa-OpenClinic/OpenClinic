@@ -1,6 +1,7 @@
 import React from 'react';
 import type { UserProfile } from '../../types/auth.js';
 import { useI18n } from '../../i18n/index.js';
+import { MockDataBanner } from '../../components/MockDataBanner.js';
 
 export interface AuditLogsViewProps {
   user: UserProfile | null;
@@ -11,6 +12,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <MockDataBanner />
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 22 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
           <div>

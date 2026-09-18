@@ -14,6 +14,44 @@ import { FieldLabel } from '../../components/FieldLabel.js';
 import { useConfig } from '../../context/ConfigContext.js';
 import { isValidCallingCode } from '../utils/phone.utils.js';
 
+export const LOGO_ALLOWED_EXTENSIONS = ['png', 'svg', 'jpg', 'jpeg', 'webp', 'ico'];
+export const FAVICON_ALLOWED_EXTENSIONS = ['ico', 'png', 'svg', 'webp'];
+
+/**
+ * Validates web asset URL or relative path for safety, structure, and supported image extensions.
+ */
+export function isValidAssetUrl(url: string, allowedExtensions: string[]): boolean {
+  if (!url || !url.trim()) return true;
+  const trimmed = url.trim();
+
+  // Reject dangerous schemes
+  if (/^(javascript|data|vbscript|file):/i.test(trimmed)) {
+    return false;
+  }
+
+  let pathname = '';
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    pathname = trimmed.split('?')[0].split('#')[0];
+  } else {
+    try {
+      const parsed = new URL(trimmed);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return false;
+      }
+      pathname = parsed.pathname;
+    } catch {
+      return false;
+    }
+  }
+
+  // Check supported file extension
+  const extMatch = pathname.match(/\.([a-zA-Z0-9]+)$/);
+  if (!extMatch) {
+    return false;
+  }
+  return allowedExtensions.includes(extMatch[1].toLowerCase());
+}
+
 /**
  * Validates semantic version matching format up to 99.999.99999 according to SemVer best practices.
  * e.g. 1.0.0, 0.1.0, 10.20.300, 99.999.99999
@@ -106,7 +144,11 @@ export const PlatformSettingsView: React.FC = () => {
   const [versionError, setVersionError] = useState<string | null>(null);
   const [appDescription, setAppDescription] = useState<string>('');
   const [appLogoUrl, setAppLogoUrl] = useState<string>('');
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoLoadFailed, setLogoLoadFailed] = useState<boolean>(false);
   const [appFaviconUrl, setAppFaviconUrl] = useState<string>('');
+  const [faviconError, setFaviconError] = useState<string | null>(null);
+  const [faviconLoadFailed, setFaviconLoadFailed] = useState<boolean>(false);
 
   // Security Invariants & Password Requirements (OWASP / NIST)
   const [primaryLoginIdentifier, setPrimaryLoginIdentifier] = useState<LoginIdentifierType>(LoginIdentifierType.CPF);
@@ -158,11 +200,16 @@ export const PlatformSettingsView: React.FC = () => {
       setVersionError(null);
       setAppDescription(app.appDescription ?? '');
       setAppLogoUrl(app.appLogoUrl ?? '');
+      setLogoError(null);
+      setLogoLoadFailed(false);
       setAppFaviconUrl(app.appFaviconUrl ?? '');
+      setFaviconError(null);
+      setFaviconLoadFailed(false);
       const docBrandingTitle = app.appName && app.appSubtitle ? `${app.appName} - ${app.appSubtitle}` : (app.appName || 'OpenClinic');
       applyDocumentBranding(docBrandingTitle, app.appFaviconUrl);
 
-      const loginId = app.primaryLoginIdentifier ?? (app as any).primary_login_identifier;
+      const rawApp = app as PlatformApplicationData & { primary_login_identifier?: LoginIdentifierType };
+      const loginId = app.primaryLoginIdentifier ?? rawApp.primary_login_identifier;
       if (loginId && Object.values(LoginIdentifierType).includes(loginId as LoginIdentifierType)) {
         setPrimaryLoginIdentifier(loginId as LoginIdentifierType);
       } else {
@@ -208,10 +255,11 @@ export const PlatformSettingsView: React.FC = () => {
       } else {
         setDialingCodeError(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : '';
       setFeedback({
         type: AlertBannerType.ERROR,
-        msg: t('PLATFORM_SETTINGS_LOAD_ERROR') + (err?.message ? ` (${err.message})` : ''),
+        msg: t('PLATFORM_SETTINGS_LOAD_ERROR') + (errMsg ? ` (${errMsg})` : ''),
       });
     } finally {
       setLoading(false);
@@ -228,6 +276,26 @@ export const PlatformSettingsView: React.FC = () => {
       setVersionError(t('PLATFORM_SETTINGS_VERSION_INVALID'));
     } else {
       setVersionError(null);
+    }
+  };
+
+  const handleLogoUrlChange = (val: string) => {
+    setAppLogoUrl(val);
+    setLogoLoadFailed(false);
+    if (val.trim() && !isValidAssetUrl(val, LOGO_ALLOWED_EXTENSIONS)) {
+      setLogoError(t('PLATFORM_SETTINGS_LOGO_URL_INVALID'));
+    } else {
+      setLogoError(null);
+    }
+  };
+
+  const handleFaviconUrlChange = (val: string) => {
+    setAppFaviconUrl(val);
+    setFaviconLoadFailed(false);
+    if (val.trim() && !isValidAssetUrl(val, FAVICON_ALLOWED_EXTENSIONS)) {
+      setFaviconError(t('PLATFORM_SETTINGS_FAVICON_URL_INVALID'));
+    } else {
+      setFaviconError(null);
     }
   };
 
@@ -303,6 +371,24 @@ export const PlatformSettingsView: React.FC = () => {
       return;
     }
 
+    if (appLogoUrl.trim() && !isValidAssetUrl(appLogoUrl, LOGO_ALLOWED_EXTENSIONS)) {
+      setFeedback({
+        type: AlertBannerType.ERROR,
+        msg: t('PLATFORM_SETTINGS_LOGO_URL_INVALID'),
+      });
+      setActiveTab('branding');
+      return;
+    }
+
+    if (appFaviconUrl.trim() && !isValidAssetUrl(appFaviconUrl, FAVICON_ALLOWED_EXTENSIONS)) {
+      setFeedback({
+        type: AlertBannerType.ERROR,
+        msg: t('PLATFORM_SETTINGS_FAVICON_URL_INVALID'),
+      });
+      setActiveTab('branding');
+      return;
+    }
+
     if (defaultDialingCode && !isValidCallingCode(defaultDialingCode)) {
       setFeedback({
         type: AlertBannerType.ERROR,
@@ -356,10 +442,11 @@ export const PlatformSettingsView: React.FC = () => {
         msg: t('PLATFORM_SETTINGS_SAVED_SUCCESS'),
       });
       await loadData();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : '';
       setFeedback({
         type: AlertBannerType.ERROR,
-        msg: t('PLATFORM_SETTINGS_SAVE_ERROR') + (err?.message ? ` (${err.message})` : ''),
+        msg: t('PLATFORM_SETTINGS_SAVE_ERROR') + (errMsg ? ` (${errMsg})` : ''),
       });
     } finally {
       setSaving(false);
@@ -401,7 +488,7 @@ export const PlatformSettingsView: React.FC = () => {
               </div>
             )}
 
-            {/* Aplicação (Nome oficial no BD: OpenClinic) */}
+            {/* Application (Database canonical name: OpenClinic) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#64748b' }}>
                 {t('PLATFORM_SETTINGS_HEADER_APP')}:
@@ -500,6 +587,7 @@ export const PlatformSettingsView: React.FC = () => {
                   <input
                     type="text"
                     required
+                    placeholder={t('PLATFORM_SETTINGS_APP_NAME_PLACEHOLDER')}
                     value={appName}
                     onChange={(e) => setAppName(e.target.value)}
                     style={{ width: '100%', padding: '9px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
@@ -509,10 +597,10 @@ export const PlatformSettingsView: React.FC = () => {
                 <div style={{ flex: '2 1 360px' }}>
                   <FieldLabel
                     label={t('PLATFORM_SETTINGS_FIELD_APP_SUBTITLE')}
-                    tooltip={t('PLATFORM_SETTINGS_APP_SUBTITLE_HINT')}
                   />
                   <input
                     type="text"
+                    placeholder={t('PLATFORM_SETTINGS_APP_SUBTITLE_PLACEHOLDER')}
                     value={appSubtitle}
                     onChange={(e) => setAppSubtitle(e.target.value)}
                     style={{ width: '100%', padding: '9px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
@@ -528,6 +616,7 @@ export const PlatformSettingsView: React.FC = () => {
                   <input
                     type="text"
                     required
+                    placeholder={t('PLATFORM_SETTINGS_APP_VERSION_PLACEHOLDER')}
                     value={appVersion}
                     onChange={(e) => handleVersionChange(e.target.value)}
                     style={{
@@ -556,6 +645,7 @@ export const PlatformSettingsView: React.FC = () => {
                 />
                 <textarea
                   rows={3}
+                  placeholder={t('PLATFORM_SETTINGS_APP_DESC_PLACEHOLDER')}
                   value={appDescription}
                   onChange={(e) => setAppDescription(e.target.value)}
                   style={{ width: '100%', padding: '9px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: '0.85rem', resize: 'vertical' }}
@@ -563,33 +653,74 @@ export const PlatformSettingsView: React.FC = () => {
               </div>
 
               {/* Logo & Favicon URLs unified with live preview inside same container border */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginTop: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginTop: 16 }}>
                 {/* Unified Logo Box */}
                 <div style={{
-                  border: '1px solid #e2e8f0',
+                  border: logoError ? '1.5px solid #e11d48' : '1px solid #e2e8f0',
                   borderRadius: 8,
                   padding: 14,
-                  background: '#ffffff',
+                  background: logoError ? '#fff1f2' : '#ffffff',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 8,
+                  transition: 'all 0.15s ease',
                 }}>
-                  <FieldLabel
-                    label={t('PLATFORM_SETTINGS_FIELD_LOGO_URL')}
-                    tooltip={t('PLATFORM_SETTINGS_LOGO_HINT')}
-                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <FieldLabel
+                      label={t('PLATFORM_SETTINGS_FIELD_LOGO_URL')}
+                      tooltip={t('PLATFORM_SETTINGS_LOGO_HINT')}
+                    />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {!appLogoUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => handleLogoUrlChange('/logo.png')}
+                          style={{
+                            background: '#f1f5f9',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 4,
+                            padding: '2px 7px',
+                            fontSize: '0.70rem',
+                            color: '#0369a1',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {t('PLATFORM_SETTINGS_USE_DEFAULT_LOGO')}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleLogoUrlChange('')}
+                          style={{
+                            background: '#f1f5f9',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 4,
+                            padding: '2px 7px',
+                            fontSize: '0.70rem',
+                            color: '#64748b',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {t('PLATFORM_SETTINGS_CLEAR_FIELD')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     <input
                       type="text"
-                      placeholder="https://... ou /logo.png"
+                      placeholder={t('PLATFORM_SETTINGS_LOGO_PLACEHOLDER')}
                       value={appLogoUrl}
-                      onChange={(e) => setAppLogoUrl(e.target.value)}
+                      onChange={(e) => handleLogoUrlChange(e.target.value)}
                       style={{
                         flex: 1,
                         padding: '9px 12px',
                         borderRadius: 6,
-                        border: '1px solid #cbd5e1',
+                        border: logoError ? '1.5px solid #e11d48' : '1px solid #cbd5e1',
                         fontSize: '0.85rem',
+                        background: '#ffffff',
                       }}
                     />
                     <div style={{
@@ -600,18 +731,25 @@ export const PlatformSettingsView: React.FC = () => {
                       justifyContent: 'center',
                       background: '#0f172a',
                       borderRadius: 6,
-                      border: '1px solid #334155',
+                      border: logoError || logoLoadFailed ? '1px solid #e11d48' : '1px solid #334155',
                       flexShrink: 0,
                       overflow: 'hidden',
                       padding: '2px 6px',
                     }}>
                       {appLogoUrl ? (
-                        <img
-                          src={appLogoUrl}
-                          alt="Logo Preview"
-                          style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0.3'; }}
-                        />
+                        logoLoadFailed ? (
+                          <span style={{ fontSize: '0.65rem', color: '#f87171', textAlign: 'center', lineHeight: 1.1 }}>
+                            ⚠️ {t('PLATFORM_SETTINGS_IMAGE_LOAD_FAILED')}
+                          </span>
+                        ) : (
+                          <img
+                            src={appLogoUrl}
+                            alt="Logo Preview"
+                            style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+                            onLoad={() => setLogoLoadFailed(false)}
+                            onError={() => setLogoLoadFailed(true)}
+                          />
+                        )
                       ) : (
                         <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
                           {t('PLATFORM_SETTINGS_NOT_CONFIGURED')}
@@ -619,34 +757,88 @@ export const PlatformSettingsView: React.FC = () => {
                       )}
                     </div>
                   </div>
+                  {logoError ? (
+                    <div style={{ fontSize: '0.72rem', color: '#e11d48', marginTop: 2 }}>
+                      ⚠️ {logoError}
+                    </div>
+                  ) : logoLoadFailed && appLogoUrl ? (
+                    <div style={{ fontSize: '0.72rem', color: '#d97706', marginTop: 2 }}>
+                      ⚠️ {t('PLATFORM_SETTINGS_IMAGE_LOAD_FAILED')}
+                    </div>
+                  ) : appLogoUrl ? (
+                    <div style={{ fontSize: '0.72rem', color: '#16a34a', marginTop: 2 }}>
+                      ✓ {t('PLATFORM_SETTINGS_IMAGE_LOADED')}
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Unified Favicon Box */}
                 <div style={{
-                  border: '1px solid #e2e8f0',
+                  border: faviconError ? '1.5px solid #e11d48' : '1px solid #e2e8f0',
                   borderRadius: 8,
                   padding: 14,
-                  background: '#ffffff',
+                  background: faviconError ? '#fff1f2' : '#ffffff',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 8,
+                  transition: 'all 0.15s ease',
                 }}>
-                  <FieldLabel
-                    label={t('PLATFORM_SETTINGS_FIELD_FAVICON_URL')}
-                    tooltip={t('PLATFORM_SETTINGS_FAVICON_HINT')}
-                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <FieldLabel
+                      label={t('PLATFORM_SETTINGS_FIELD_FAVICON_URL')}
+                      tooltip={t('PLATFORM_SETTINGS_FAVICON_HINT')}
+                    />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {!appFaviconUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => handleFaviconUrlChange('/favicon.ico')}
+                          style={{
+                            background: '#f1f5f9',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 4,
+                            padding: '2px 7px',
+                            fontSize: '0.70rem',
+                            color: '#0369a1',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {t('PLATFORM_SETTINGS_USE_DEFAULT_FAVICON')}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleFaviconUrlChange('')}
+                          style={{
+                            background: '#f1f5f9',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 4,
+                            padding: '2px 7px',
+                            fontSize: '0.70rem',
+                            color: '#64748b',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {t('PLATFORM_SETTINGS_CLEAR_FIELD')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     <input
                       type="text"
-                      placeholder="https://... ou /favicon.png"
+                      placeholder={t('PLATFORM_SETTINGS_FAVICON_PLACEHOLDER')}
                       value={appFaviconUrl}
-                      onChange={(e) => setAppFaviconUrl(e.target.value)}
+                      onChange={(e) => handleFaviconUrlChange(e.target.value)}
                       style={{
                         flex: 1,
                         padding: '9px 12px',
                         borderRadius: 6,
-                        border: '1px solid #cbd5e1',
+                        border: faviconError ? '1.5px solid #e11d48' : '1px solid #cbd5e1',
                         fontSize: '0.85rem',
+                        background: '#ffffff',
                       }}
                     />
                     <div style={{
@@ -657,23 +849,41 @@ export const PlatformSettingsView: React.FC = () => {
                       justifyContent: 'center',
                       background: '#0f172a',
                       borderRadius: 6,
-                      border: '1px solid #334155',
+                      border: faviconError || faviconLoadFailed ? '1px solid #e11d48' : '1px solid #334155',
                       flexShrink: 0,
                       overflow: 'hidden',
                       padding: 2,
                     }}>
                       {appFaviconUrl ? (
-                        <img
-                          src={appFaviconUrl}
-                          alt="Favicon Preview"
-                          style={{ width: 22, height: 22, objectFit: 'contain' }}
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0.3'; }}
-                        />
+                        faviconLoadFailed ? (
+                          <span style={{ fontSize: '0.85rem' }}>⚠️</span>
+                        ) : (
+                          <img
+                            src={appFaviconUrl}
+                            alt="Favicon Preview"
+                            style={{ width: 22, height: 22, objectFit: 'contain' }}
+                            onLoad={() => setFaviconLoadFailed(false)}
+                            onError={() => setFaviconLoadFailed(true)}
+                          />
+                        )
                       ) : (
                         <span style={{ fontSize: '0.75rem' }}>🌐</span>
                       )}
                     </div>
                   </div>
+                  {faviconError ? (
+                    <div style={{ fontSize: '0.72rem', color: '#e11d48', marginTop: 2 }}>
+                      ⚠️ {faviconError}
+                    </div>
+                  ) : faviconLoadFailed && appFaviconUrl ? (
+                    <div style={{ fontSize: '0.72rem', color: '#d97706', marginTop: 2 }}>
+                      ⚠️ {t('PLATFORM_SETTINGS_IMAGE_LOAD_FAILED')}
+                    </div>
+                  ) : appFaviconUrl ? (
+                    <div style={{ fontSize: '0.72rem', color: '#16a34a', marginTop: 2 }}>
+                      ✓ {t('PLATFORM_SETTINGS_IMAGE_LOADED')}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -977,10 +1187,10 @@ export const PlatformSettingsView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Opções de Complexidade (Interactive Card Selectors) */}
+                {/* Complexity Options (Interactive Card Selectors) */}
                 <div>
                   <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#475569', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Regras Obrigatórias de Caracteres
+                    {t('PLATFORM_SETTINGS_COMPLEXITY_RULES_TITLE')}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
                     {/* Option 1: Uppercase */}
@@ -1181,7 +1391,7 @@ export const PlatformSettingsView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Botão de gerar e copiar senha */}
+                {/* Generate & Copy Password Button */}
                 <div style={{
                   borderTop: '1px solid #e2e8f0',
                   paddingTop: 12,
@@ -1546,6 +1756,7 @@ export const PlatformSettingsView: React.FC = () => {
                   <input
                     type="text"
                     maxLength={5}
+                    placeholder={t('PLATFORM_SETTINGS_DIALING_CODE_PLACEHOLDER')}
                     value={defaultDialingCode}
                     onChange={handleDialingCodeChange}
                     style={{
@@ -1594,7 +1805,7 @@ export const PlatformSettingsView: React.FC = () => {
                     type="number"
                     min={30}
                     max={3650}
-                    step={30}
+                    step={1}
                     value={auditRetentionDays}
                     onChange={(e) => setAuditRetentionDays(Number(e.target.value.slice(0, 4)))}
                     style={{

@@ -68,7 +68,7 @@ As rotas da API são organizadas em tags semânticas para facilitar a navegaçã
 | :--- | :--- | :--- |
 | **Authentication & Session** | Fluxos de autenticação, perfil, renovação de tokens e logout | `/api/v1/auth/*` |
 | **IAM & Access Control** | Gestão de usuários, grupos clínicos, capabilities e permissões | `/api/v1/iam/*` |
-| **System Health** | Verificação de integridade e liveness da API | `/health` |
+| **System Health** | Verificação de integridade e liveness da API | `/health/live` |
 
 ---
 

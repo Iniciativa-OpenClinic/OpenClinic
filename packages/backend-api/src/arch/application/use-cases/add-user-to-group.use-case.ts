@@ -1,5 +1,6 @@
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO } from '../../domain/dtos.js';
+import type { IpAddress } from '@openclinic/core';
 import { AddGroupMemberUseCase } from './add-group-member.use-case.js';
 
 export class AddUserToGroupUseCase {
@@ -9,7 +10,7 @@ export class AddUserToGroupUseCase {
     this.addGroupMemberUseCase = new AddGroupMemberUseCase(uow);
   }
 
-  async execute(userId: string, groupId: string, ipAddress?: string, username?: string): Promise<ActionResponseDTO<{ userId: string; groupId: string }>> {
+  async execute(userId: string, groupId: string, ipAddress?: string | IpAddress, username?: string): Promise<ActionResponseDTO<{ userId: string; groupId: string }>> {
     const res = await this.addGroupMemberUseCase.execute(groupId, userId, ipAddress, username);
     return {
       code: res.code,

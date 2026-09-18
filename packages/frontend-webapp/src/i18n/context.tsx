@@ -4,8 +4,18 @@ import type { TranslationKey, TranslationCatalog } from './types.js';
 import { localePtBr } from './locales/pt-br.js';
 import { localeEnUs } from './locales/en-us.js';
 
-export const LOCALE_STORAGE_KEY = 'openclinic_locale';
-export const SUPPORTED_LOCALES_STORAGE_KEY = 'openclinic_supported_locales';
+export const DEFAULT_STORAGE_PREFIX = 'openclinic';
+
+export function getLocaleStorageKey(prefix: string = DEFAULT_STORAGE_PREFIX): string {
+  return `${prefix}_locale`;
+}
+
+export function getSupportedLocalesStorageKey(prefix: string = DEFAULT_STORAGE_PREFIX): string {
+  return `${prefix}_supported_locales`;
+}
+
+export const LOCALE_STORAGE_KEY = getLocaleStorageKey();
+export const SUPPORTED_LOCALES_STORAGE_KEY = getSupportedLocalesStorageKey();
 
 export const catalogs: Record<SupportedLocale, TranslationCatalog> = {
   [SupportedLocales.PT_BR]: localePtBr,
@@ -23,19 +33,21 @@ export interface I18nContextValue {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-export function getStoredLocale(): SupportedLocale {
+export function getStoredLocale(prefix?: string): SupportedLocale {
   if (typeof window === 'undefined') return DEFAULT_LOCALE;
-  const saved = localStorage.getItem(LOCALE_STORAGE_KEY) as SupportedLocale | null;
+  const key = prefix ? getLocaleStorageKey(prefix) : LOCALE_STORAGE_KEY;
+  const saved = localStorage.getItem(key) as SupportedLocale | null;
   if (saved === SupportedLocales.EN_US || saved === SupportedLocales.PT_BR) {
     return saved;
   }
   return DEFAULT_LOCALE;
 }
 
-export function getStoredSupportedLocales(): string[] {
+export function getStoredSupportedLocales(prefix?: string): string[] {
   if (typeof window === 'undefined') return [SupportedLocales.PT_BR, SupportedLocales.EN_US];
   try {
-    const saved = localStorage.getItem(SUPPORTED_LOCALES_STORAGE_KEY);
+    const key = prefix ? getSupportedLocalesStorageKey(prefix) : SUPPORTED_LOCALES_STORAGE_KEY;
+    const saved = localStorage.getItem(key);
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -104,7 +116,7 @@ export function I18nProvider({ children }: { children: ReactNode }): React.React
 export function useI18n(): I18nContextValue {
   const context = useContext(I18nContext);
   if (!context) {
-    // Fallback gracioso se usado fora do Provider
+    // Graceful fallback if used outside Provider
     const fallbackCatalog = catalogs[getStoredLocale()] ?? localePtBr;
     return {
       locale: getStoredLocale(),

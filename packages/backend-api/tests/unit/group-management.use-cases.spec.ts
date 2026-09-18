@@ -11,7 +11,7 @@ import { AddUserToGroupUseCase } from '../../src/arch/application/use-cases/add-
 import { RemoveUserFromGroupUseCase } from '../../src/arch/application/use-cases/remove-user-from-group.use-case.js';
 import type { IAMUnitOfWork } from '../../src/arch/domain/repositories.js';
 import type { GroupEntity, UserEntity } from '../../src/arch/domain/entities.js';
-import { EntityNotFoundError, EntityAlreadyExistsError, AccessDeniedError, ValidationError, SuccessCode, SupportedLocales, UserRole } from '@openclinic/core';
+import { EntityNotFoundError, EntityAlreadyExistsError, AccessDeniedError, ValidationError, SuccessCode, SupportedLocales, UserRole, BOOTSTRAP_DEFAULTS } from '@openclinic/core';
 
 describe('Group Management Use Cases', () => {
   let mockUow: IAMUnitOfWork;
@@ -42,7 +42,7 @@ describe('Group Management Use Cases', () => {
 
   const mockDefaultGroup: GroupEntity = {
     id: 'grp-default-id',
-    name: 'Todos os Usuários',
+    name: BOOTSTRAP_DEFAULTS.DEFAULT_GROUP_NAME,
     description: 'Grupo padrão do sistema',
     is_active: true,
     is_default: true,
@@ -117,7 +117,10 @@ describe('Group Management Use Cases', () => {
       },
       sessions: {
         create: vi.fn(),
+        findById: vi.fn(),
         findByTokenHash: vi.fn(),
+        findAnyByTokenHash: vi.fn(),
+        revokeIfActive: vi.fn(),
         revoke: vi.fn(),
         revokeAllByUser: vi.fn(),
         deleteExpired: vi.fn(),
@@ -132,6 +135,7 @@ describe('Group Management Use Cases', () => {
       },
       resources: {} as any,
       permissions: {} as any,
+      applications: {} as any,
       commit: vi.fn().mockResolvedValue(undefined),
       rollback: vi.fn().mockResolvedValue(undefined),
     };

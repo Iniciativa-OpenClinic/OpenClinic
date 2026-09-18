@@ -1,12 +1,22 @@
-import { hashPassword, EntityAlreadyExistsError, ErrorCode, logger } from '@openclinic/core';
+import {
+  hashPassword,
+  EntityAlreadyExistsError,
+  ErrorCode,
+  logger,
+  IpAddress,
+  UserRole,
+  AuditStatus,
+  AuditAction,
+  AuditResource,
+} from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { RegisterRequestDTO, UserProfileDTO } from '../../domain/dtos.js';
-import { UserRole, AuditStatus } from '../../../shared/domain/enums.js';
 
 export class RegisterUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(data: RegisterRequestDTO, ipAddress?: string): Promise<UserProfileDTO> {
+  async execute(data: RegisterRequestDTO, ipAddress?: string | IpAddress): Promise<UserProfileDTO> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     // 1. Check uniqueness
     const existingEmail = await this.uow.users.getByEmail(data.email);
     if (existingEmail) {
@@ -20,7 +30,7 @@ export class RegisterUseCase {
 
     // 2. Get default tenant
     const defaultTenant = await this.uow.tenants?.getDefaultTenant();
-    const tenantId = (data as any).tenant_id ?? defaultTenant?.id ?? null;
+    const tenantId = data.tenant_id ?? defaultTenant?.id ?? null;
 
     // 3. Hash password and create user
     const hashedPassword = await hashPassword(data.password);
@@ -36,7 +46,7 @@ export class RegisterUseCase {
       is_tenant_owner: false,
     });
 
-    // 4. Auto-vincular obrigatoriamente ao grupo padrão (is_default = true)
+    // 4. Automatically bind to the default system group (is_default = true)
     try {
       const defaultGroup = await this.uow.groups.getDefaultGroup(tenantId ?? undefined);
       if (defaultGroup) {
@@ -47,7 +57,15 @@ export class RegisterUseCase {
     }
 
     // 5. Audit log
-    await this.uow.auditLogs.create({ user_id: user.id, username: user.username, action: 'register', resource: 'auth', status: AuditStatus.SUCCESS, ip_address: ipAddress ?? null, user_agent: null });
+    await this.uow.auditLogs.create({
+      user_id: user.id,
+      username: user.username,
+      action: AuditAction.REGISTER,
+      resource: AuditResource.AUTH,
+      status: AuditStatus.SUCCESS,
+      ip_address: validatedIp?.value ?? null,
+      user_agent: null,
+    });
 
     logger.info({ userId: user.id, email: user.email }, 'User registered successfully');
 

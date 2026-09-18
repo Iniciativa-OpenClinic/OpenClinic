@@ -1,11 +1,6 @@
 import { TenantRepository } from './tenant.repository.js';
 import { ResourceRepository } from './resource.repository.js';
 import { PermissionRepository } from './permission.repository.js';
-import {
-  PatientRepository,
-  PractitionerRepository,
-  EncounterRepository,
-} from '../../../business/infrastructure/clinical.repositories.js';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { randomUUID } from 'node:crypto';
 import { UserRepository } from './user.repository.js';
@@ -59,9 +54,6 @@ export class UnitOfWork implements IAMUnitOfWork {
   public readonly resources: ResourceRepository;
   public readonly permissions: PermissionRepository;
   public readonly applications: ApplicationRepository;
-  public readonly patients: PatientRepository;
-  public readonly practitioners: PractitionerRepository;
-  public readonly encounters: EncounterRepository;
 
   constructor(public readonly db: PostgresJsDatabase) {
     this.tenants = new TenantRepository(db);
@@ -73,9 +65,6 @@ export class UnitOfWork implements IAMUnitOfWork {
     this.resources = new ResourceRepository(db);
     this.permissions = new PermissionRepository(db);
     this.applications = new ApplicationRepository(db);
-    this.patients = new PatientRepository(db);
-    this.practitioners = new PractitionerRepository(db);
-    this.encounters = new EncounterRepository(db);
   }
 
   async commit(): Promise<void> {}

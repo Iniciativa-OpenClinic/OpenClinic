@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { t, useI18n, getLocaleMetadata } from '../../i18n/index.js';
+import { t, useI18n, getLocaleMetadata, type SupportedLocale } from '../../i18n/index.js';
 import type { UserProfile } from '../../types/auth.js';
 
 export interface HeaderProps {
@@ -63,15 +63,15 @@ export const Header: React.FC<HeaderProps> = ({
       case 'menu_profile': return t('USER_MENU_PROFILE');
       case 'menu_password': return t('USER_MENU_SECURITY');
       case 'menu_help': return t('USER_MENU_HELP');
-      // Gestão
+      // Management
       case 'menu_mgmt_indicators': return t('NAV_MGMT_INDICATORS');
       case 'menu_mgmt_reports': return t('NAV_MGMT_REPORTS');
-      // Sistema
+      // System
       case 'menu_sys_settings': return t('NAV_SYS_SETTINGS');
       case 'menu_sys_users': return t('NAV_SYS_USERS');
       case 'menu_sys_institution': return t('NAV_SYS_INSTITUTION');
       case 'menu_sys_audit': return t('NAV_SYS_AUDIT');
-      // Plataforma
+      // Platform
       case 'menu_platform_settings': return t('NAV_PLATFORM_SETTINGS');
       case 'menu_platform_tenants': return t('NAV_PLATFORM_TENANTS');
       case 'menu_platform_api_keys': return t('NAV_PLATFORM_API_KEYS');
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        {/* Container Unificado: Perfil do Usuário + Seletor de Idioma Integrado à Direita */}
+        {/* Unified Container: User Profile + Integrated Language Selector on the Right */}
         <div style={{ position: 'relative' }} ref={userMenuRef}>
           <div
             style={{
@@ -108,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
               gap: 10,
             }}
           >
-            {/* Botão de Disparo do Perfil do Usuário */}
+            {/* User Profile Trigger Button */}
             <button
               type="button"
               onClick={() => setIsUserMenuOpen((prev) => !prev)}
@@ -187,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
 
-            {/* Seletor de Idioma Integrado à Direita da Borda do Usuário (Apenas quando houver mais de 1 idioma ativo) */}
+            {/* Integrated Language Selector on the Right of User Profile (Visible when multiple languages are active) */}
             {supportedLocales && supportedLocales.length > 1 && (
               <>
                 <div style={{ width: 1, height: 32, background: '#cbd5e1', flexShrink: 0 }} />
@@ -218,7 +218,7 @@ export const Header: React.FC<HeaderProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setLocale(loc as any);
+                          setLocale(loc as SupportedLocale);
                         }}
                         title={langTitle}
                         style={{

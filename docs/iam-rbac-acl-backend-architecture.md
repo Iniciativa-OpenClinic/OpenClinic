@@ -254,7 +254,7 @@ Para garantir **zero inconsistência (zero drift)** entre Código, Rotas, Telas 
 #### NÃO. Um formulário de CRUD livre (criação/edição manual de recursos por tela) é um anti-pattern grave de arquitetura
 
 - **Contrato de Software vs Dados de Negócio:** Um recurso (`MENU`, `API_ACTION`, `UI_ACTION`) não é um dado operacional; é um **contrato de infraestrutura de software**. Se um usuário alterar o `item_code` de `op_schedule` para outro valor na tela, os componentes do Frontend e os decorators da API quebram. Se criar um recurso fictício, não há tela nem endpoint correspondente.
-- **O que REALMENTE é editável na interface:** A matriz de permissões (`iam_permissions`) através do modal [`PermissionsMatrixModal`](../packages/frontend-webapp/src/arch/pages/PermissionsMatrixModal.tsx) (concessão e revogação de acessos por grupo/usuário).
+- **O que REALMENTE é editável na interface:** A matriz de permissões (`iam_permissions`) através do modal [`PermissionsMatrixModal`](../packages/frontend-webapp/src/arch/components/PermissionsMatrixModal.tsx) (concessão e revogação de acessos por grupo/usuário).
 - **Tela Recomendada (Opcional - Inspetor Read-Only):** Uma tela técnica de auditoria na aba Plataforma (*Inspetor de Recursos*), estritamente **somente leitura**, exibindo a árvore sincronizada, a versão do catálogo e o status de ativação.
 
 ### 7.3. Aderência Estrutural da Tabela ao Manifesto

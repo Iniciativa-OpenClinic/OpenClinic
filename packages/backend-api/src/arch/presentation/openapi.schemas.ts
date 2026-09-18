@@ -6,17 +6,17 @@
 export const ProblemDetailsSchema = {
   $id: 'ProblemDetails',
   type: 'object',
-  description: 'Estrutura padronizada de erros da aplicação no padrão RFC 7807',
+  description: 'Standardized application error structure adhering to RFC 7807',
   properties: {
-    type: { type: 'string', description: 'URI identificadora do tipo de erro' },
-    title: { type: 'string', description: 'Resumo legível do erro' },
-    status: { type: 'integer', description: 'Código de status HTTP' },
-    detail: { type: 'string', description: 'Descrição detalhada e traduzida do erro' },
-    code: { type: 'string', description: 'Código unívoco de erro da aplicação (ex: ERR_AUTH_INVALID_CREDENTIALS)' },
-    instance: { type: 'string', description: 'URI do endpoint onde ocorreu o erro' },
+    type: { type: 'string', description: 'URI identifier for the error type' },
+    title: { type: 'string', description: 'Human-readable summary of the error' },
+    status: { type: 'integer', description: 'HTTP status code' },
+    detail: { type: 'string', description: 'Detailed and localized error description' },
+    code: { type: 'string', description: 'Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)' },
+    instance: { type: 'string', description: 'URI of the endpoint where the error occurred' },
     invalid_params: {
       type: 'array',
-      description: 'Lista de parâmetros com falha de validação',
+      description: 'List of parameters that failed validation',
       items: {
         type: 'object',
         properties: {
@@ -35,23 +35,23 @@ export const ProblemDetailsRef = {
 
 export const StandardErrorResponses = {
   400: {
-    description: 'Requisição inválida ou erro de validação (RFC 7807)',
+    description: 'Bad request or validation failure (RFC 7807)',
     ...ProblemDetailsRef,
   },
   401: {
-    description: 'Não autenticado ou token inválido/expirado (RFC 7807)',
+    description: 'Unauthenticated or invalid/expired token (RFC 7807)',
     ...ProblemDetailsRef,
   },
   403: {
-    description: 'Acesso negado — Permissão ou Role insuficiente (RFC 7807)',
+    description: 'Forbidden — Insufficient role or permissions (RFC 7807)',
     ...ProblemDetailsRef,
   },
   404: {
-    description: 'Recurso não encontrado (RFC 7807)',
+    description: 'Resource not found (RFC 7807)',
     ...ProblemDetailsRef,
   },
   500: {
-    description: 'Erro interno do servidor (RFC 7807)',
+    description: 'Internal server error (RFC 7807)',
     ...ProblemDetailsRef,
   },
 };
@@ -61,3 +61,28 @@ export const SecurityBearer = [
     BearerAuth: [],
   },
 ];
+
+/**
+ * Creates a standard OpenAPI JSON schema matching ActionResponseDTO<T>.
+ */
+export function createActionResponseSchema(
+  dataSchema?: Record<string, unknown>,
+  description = 'Action executed successfully'
+) {
+  const dataDef = dataSchema
+    ? 'type' in dataSchema
+      ? dataSchema
+      : { type: 'object', properties: dataSchema }
+    : undefined;
+
+  return {
+    description,
+    type: 'object',
+    properties: {
+      code: { type: 'string' },
+      message: { type: 'string' },
+      ...(dataDef ? { data: dataDef } : {}),
+    },
+    required: ['code', 'message'],
+  };
+}

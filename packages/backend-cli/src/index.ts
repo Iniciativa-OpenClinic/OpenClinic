@@ -1,9 +1,7 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
-import dotenv from 'dotenv';
-import path from 'node:path';
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { loadEnvironment } from '@openclinic/core/server';
 import { dbInit } from './commands/db-init.js';
 import { dbSeed } from './commands/db-seed.js';
 import { dbMigrate, dbStatus, dbBaseline } from './commands/db-migrate.js';
@@ -12,124 +10,142 @@ import { dbBackup } from './commands/db-backup.js';
 import { dbRestore } from './commands/db-restore.js';
 import { userCreateAdmin } from './commands/user-create-admin.js';
 import { userResetPassword } from './commands/user-reset-password.js';
-import { userPurge } from './commands/user-purge.js';
-import { groupPurge } from './commands/group-purge.js';
 import { authCheck } from './commands/auth-check.js';
 import { dbSyncRemote } from './commands/db-sync-remote.js';
 
-// Carrega .env de múltiplos caminhos candidatos (raiz do monorepo ou pasta local)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envCandidates = [
-  path.resolve(process.cwd(), '.env'),
-  path.resolve(process.cwd(), '../../.env'),
-  path.resolve(process.cwd(), '../.env'),
-  path.resolve(__dirname, '../../../.env'),
-  path.resolve(__dirname, '../../../../.env'),
-];
 
-for (const p of envCandidates) {
-  if (fs.existsSync(p)) {
-    dotenv.config({ path: p });
-    break;
-  }
+
+interface CliPackageManifest {
+  name?: string;
+  version?: string;
+  description?: string;
+  bin?: Record<string, string>;
 }
 
+function loadCliManifest(): { name: string; description: string; version: string } {
+  const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as CliPackageManifest;
+  const name = pkg.bin ? Object.keys(pkg.bin)[0] : undefined;
+  if (!name || typeof pkg.description !== 'string' || !pkg.description.trim()
+    || typeof pkg.version !== 'string' || !pkg.version.trim()) {
+    throw new Error('CLI package.json must define a bin name, description and version.');
+  }
+  return { name, description: pkg.description, version: pkg.version };
+}
+
+const cliManifest = loadCliManifest();
+
 const program = new Command();
+program.hook('preAction', () => { loadEnvironment(); });
 
 program
-  .name('openclinic')
-  .description('OpenClinic CLI - Ferramentas administrativas e de banco')
-  .version('0.1.0');
+  .name(cliManifest.name)
+  .description(cliManifest.description)
+  .version(cliManifest.version);
 
 program
   .command('db:init')
-  .description('Cria a base openclinic e os roles owner/app usando superusuario Postgres')
-  .action(dbInit);
-
+  .description('Initializes configured database and provisions owner/app roles using PostgreSQL superuser')
+  .option('--target <target>', 'Target environment: local or remote')
+  .option('--superuser <user>', 'PostgreSQL administrative superuser username')
+  .option('--superuser-password <password>', 'PostgreSQL administrative superuser password')
+  .option('--owner-user <user>', 'Owner role name to be created/managed (DDL permissions)')
+  .option('--owner-password <password>', 'Owner role password')
+  .option('--app-user <user>', 'Application runtime role name (DML permissions)')
+  .option('--app-password <password>', 'Application runtime role password')
+  .option('--host <host>', 'PostgreSQL server host')
+  .option('--port <port>', 'PostgreSQL server port')
+  .option('--database <database>', 'Target database name')
+  .option('--non-interactive', 'Runs in non-interactive mode using CLI parameters or env variables')
+  .action((options) => dbInit(options));
 
 program
   .command('db:migrate')
-  .description('Aplica apenas migrations pendentes, com checksum, lock e transacao')
-  .option('--target <target>', 'local ou remote', 'local')
-  .option('--confirm-target <identity>', 'Confirma host:porta/database para escrita remota')
+  .description('Applies pending migrations with checksum verification, advisory locks, and transactions')
+  .option('--target <target>', 'Target environment: local or remote', 'local')
+  .option('--confirm-target <identity>', 'Confirm host:port/database identity for remote write')
+  .option('--backup', 'Creates safety backup before applying migrations (mandatory for remote)')
   .action((options) => dbMigrate(options));
 
 program.command('db:status')
-  .description('Lista migrations aplicadas e pendentes sem alterar o banco')
-  .option('--target <target>', 'local ou remote', 'local')
+  .description('Lists applied and pending migrations without modifying the database')
+  .option('--target <target>', 'Target environment: local or remote', 'local')
   .action((options) => dbStatus(options));
 
 program.command('db:baseline')
-  .description('Verifica ou registra a baseline em um banco existente, preservando dados')
-  .option('--target <target>', 'local ou remote', 'local')
-  .option('--check', 'Somente verifica a estrutura (padrao)')
-  .option('--apply', 'Registra a baseline somente se a estrutura corresponder')
-  .option('--reconcile-legacy', 'Prepara somente diferencas legadas conhecidas, sem truncar nem descartar dados')
-  .option('--confirm-target <identity>', 'Confirma host:porta/database para escrita remota')
+  .description('Checks or records migration baseline on an existing database while preserving data')
+  .option('--target <target>', 'Target environment: local or remote', 'local')
+  .option('--check', 'Only verifies database structure (default)')
+  .option('--apply', 'Registers baseline only if structure matches')
+  .option('--confirm-target <identity>', 'Confirm host:port/database identity for remote write')
   .action((options) => dbBaseline(options));
 
 program
   .command('db:seed')
-  .description('Carga opcional de demonstracao em banco local sem dados operacionais')
-  .option('--demo', 'Cria usuarios e dados ficticios; recusa banco populado')
-  .option('--target <target>', 'Somente local', 'local')
+  .description('Optional demonstration data load on local database with no operational data')
+  .option('--demo', 'Creates mock users and demo records; rejects populated database')
+  .option('--target <target>', 'Local environment only', 'local')
   .action((options) => dbSeed(options));
 
 program
   .command('db:setup')
-  .description('Aplica migrations e valida o banco local; demonstracao opcional')
-  .option('--demo', 'Inclui dados ficticios em banco sem dados operacionais')
+  .description('Applies migrations and validates local database; optional demonstration seed')
+  .option('--demo', 'Includes demo mock records in clean database')
   .action((options) => dbSetup(options));
 
 program
   .command('db:backup')
-  .description('Gera backup completo do banco de dados (local ou remoto) em formato .dump portátil')
-  .action(dbBackup);
+  .description('Generates full portable database backup in .dump format (local or remote)')
+  .option('--source <source>', 'Source environment: local or remote')
+  .option('--user <user>', 'PostgreSQL connection username for backup')
+  .option('--password <password>', 'PostgreSQL user password')
+  .option('--host <host>', 'Database host')
+  .option('--port <port>', 'Database port')
+  .option('--database <database>', 'Database name')
+  .option('--output <path>', 'Output .dump file path')
+  .action((options) => dbBackup(options));
 
 program
   .command('db:restore')
-  .description('Restaura um backup .dump no banco de dados (local ou remoto na nuvem)')
-  .action(dbRestore);
+  .description('Restores a .dump backup into the database (local or remote cloud)')
+  .option('--file <file>', 'Path to .dump file for restoration')
+  .option('--destination <destination>', 'Destination environment: local or remote')
+  .option('--user <user>', 'PostgreSQL connection username for restore')
+  .option('--password <password>', 'PostgreSQL user password')
+  .option('--host <host>', 'Destination database host')
+  .option('--port <port>', 'Destination database port')
+  .option('--database <database>', 'Destination database name')
+  .action((options) => dbRestore(options));
 
 program
   .command('db:sync-remote')
-  .description('Sincroniza, audita, monitora usuários ou redefine o banco remoto a partir do desenvolvimento')
-  .option('-m, --mode <mode>', 'Modo de operação: audit, users, clone ou reset')
-  .option('-H, --remote-host <host>', 'Host / IP do servidor remoto de destino')
-  .option('-f, --force', 'Ignora perguntas de confirmação')
-  .option('--maintenance', 'Confirma que a aplicacao remota foi pausada para clonagem')
-  .option('--confirm-target <identity>', 'Confirma host:porta/database para clonagem')
+  .description('Audits databases, monitors users, or clones a reviewed database to a remote target')
+  .option('-m, --mode <mode>', 'Operation mode: audit, users, or clone')
+  .option('-H, --remote-host <host>', 'Remote target host / IP')
+  .option('-f, --force', 'Bypasses interactive confirmation prompts')
+  .option('--maintenance', 'Confirms remote application is stopped for cloning')
+  .option('--confirm-target <identity>', 'Confirm host:port/database identity for cloning')
   .action((options) => dbSyncRemote(options));
 
 program
   .command('user:create-admin')
-  .description('Cria um usuario superadministrador com hash Argon2id (interativo ou via --non-interactive)')
-  .option('--non-interactive', 'Cria o superadministrador padrao sem prompts interativos')
-  .option('--email <email>', 'Email do administrador')
-  .option('--username <username>', 'Username do administrador')
-  .option('--password <password>', 'Senha do administrador')
-  .option('--full-name <fullName>', 'Nome completo do administrador')
+  .description('Creates superadministrator user with Argon2id hash (interactive or via --non-interactive)')
+  .option('--non-interactive', 'Creates default superadministrator without interactive prompts')
+  .option('--email <email>', 'Administrator email')
+  .option('--username <username>', 'Administrator username')
+  .option('--password <password>', 'Administrator password')
+  .option('--full-name <fullName>', 'Administrator full name')
   .action((options) => userCreateAdmin(options));
 
 program
   .command('user:reset-password')
-  .description('Redefine a senha de qualquer usuario cadastrado')
-  .action(userResetPassword);
-
-program
-  .command('user:purge')
-  .description('Expurga usuarios de teste (user.oliveira, owner.silva, admin.santos) e registros associados')
-  .action(userPurge);
-
-program
-  .command('group:purge')
-  .description('Expurga fisicamente os grupos legados/owner de governança de sistema/plataforma e seus vínculos')
-  .action(groupPurge);
+  .description('Resets password for any registered user (interactive or via flags)')
+  .option('-i, --identifier <identifier>', 'Username or email of the user')
+  .option('-p, --password <password>', 'New password (min 8 characters)')
+  .action((options) => userResetPassword(options));
 
 program
   .command('auth:check')
-  .description('Valida conexao com o banco, hash Argon2id e assinatura/decodificacao JWT')
+  .description('Validates database connection, Argon2id hashing, and JWT signing/decoding')
   .action(authCheck);
 
 program.parseAsync().catch((error: unknown) => {

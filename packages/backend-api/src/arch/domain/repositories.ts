@@ -1,6 +1,29 @@
-import type { RepositoryInterface } from '../../shared/domain/repository.interface.js';
-import type { UserEntity, SessionEntity, LockoutEntity, AuditLogEntry, GroupEntity, TenantEntity } from './entities.js';
-import type { GroupListItemDTO } from './dtos.js';
+import type {
+  RepositoryInterface,
+  UserRole,
+  ApplicationContext,
+  ResourceAction,
+  PermissionEffect,
+} from '@openclinic/core';
+import type {
+  UserEntity,
+  SessionEntity,
+  LockoutEntity,
+  AuditLogEntry,
+  GroupEntity,
+  TenantEntity,
+  ApplicationResourceEntity,
+  ResourceTreeNodeEntity,
+  ApplicationPermissionEntity,
+  PermissionAclTupleEntity,
+} from './entities.js';
+import type { GroupListItemDTO, MenuItemDTO } from './dtos.js';
+import type {
+  PlatformApplicationEntity,
+  TenantApplicationConfigEntity,
+  UpdatePlatformApplicationDto,
+  UpdateTenantApplicationConfigDto,
+} from './application.dto.js';
 
 export interface ITenantRepository extends RepositoryInterface<TenantEntity> {
   getDefaultTenant(): Promise<TenantEntity | null>;
@@ -23,9 +46,26 @@ export interface IGroupRepository extends RepositoryInterface<GroupEntity> {
   isMember(groupId: string, userId: string): Promise<boolean>;
 }
 
+export type RotateSessionInput = {
+  token_hash: string;
+  expires_at: Date;
+  id?: string;
+  user_id?: string;
+  user_agent?: string | null;
+  ip_address?: string | null;
+  revoked_at?: Date | null;
+};
+
 export interface ISessionRepository {
-  create(session: Omit<SessionEntity, 'id' | 'created_at' | 'updated_at'>): Promise<SessionEntity>;
+  create(session: Omit<SessionEntity, 'id' | 'created_at' | 'updated_at'> & { id?: string }): Promise<SessionEntity>;
+  findById(id: string): Promise<SessionEntity | null>;
   findByTokenHash(tokenHash: string): Promise<SessionEntity | null>;
+  findAnyByTokenHash(tokenHash: string): Promise<SessionEntity | null>;
+  revokeIfActive(tokenHash: string): Promise<SessionEntity | null>;
+  rotate(
+    oldTokenHash: string,
+    newSession: RotateSessionInput
+  ): Promise<{ oldSession: SessionEntity; newSession: SessionEntity } | null>;
   revoke(id: string): Promise<void>;
   revokeAllByUser(userId: string): Promise<void>;
   deleteExpired(): Promise<number>;
@@ -41,6 +81,47 @@ export interface IAuditLogRepository {
   create(entry: AuditLogEntry): Promise<void>;
 }
 
+export interface IResourceRepository {
+  listAll(limit?: number): Promise<ApplicationResourceEntity[]>;
+  listByContext(context: ApplicationContext): Promise<ApplicationResourceEntity[]>;
+  getById(id: string): Promise<ApplicationResourceEntity | null>;
+  getByItemCode(itemCode: string): Promise<ApplicationResourceEntity | null>;
+  getTree(context?: ApplicationContext): Promise<ResourceTreeNodeEntity[]>;
+  listMenusForRole(role: UserRole): Promise<MenuItemDTO[]>;
+}
+
+export interface IPermissionRepository {
+  listByUserId(userId: string): Promise<ApplicationPermissionEntity[]>;
+  listByGroupId(groupId: string): Promise<ApplicationPermissionEntity[]>;
+  listAll(): Promise<ApplicationPermissionEntity[]>;
+  getAclMap(userId: string, groupIds: string[]): Promise<PermissionAclTupleEntity[]>;
+  deleteByUser(userId: string): Promise<void>;
+  deleteByGroup(groupId: string): Promise<void>;
+  deleteById(id: string): Promise<void>;
+  create(permission: {
+    id?: string;
+    user_id?: string | null;
+    group_id?: string | null;
+    resource_id: string;
+    action: ResourceAction;
+    effect?: PermissionEffect;
+    tenant_id?: string | null;
+  }): Promise<ApplicationPermissionEntity>;
+}
+
+export interface IApplicationRepository {
+  getDefaultApplication(): Promise<PlatformApplicationEntity | null>;
+  getApplicationById(id: string): Promise<PlatformApplicationEntity | null>;
+  getApplicationByCode(code: string): Promise<PlatformApplicationEntity | null>;
+  updateApplication(id: string, data: UpdatePlatformApplicationDto): Promise<PlatformApplicationEntity>;
+  getTenantApplicationConfig(applicationId: string, tenantId?: string | null): Promise<TenantApplicationConfigEntity>;
+  upsertTenantApplicationConfig(
+    applicationId: string,
+    tenantId: string | null | undefined,
+    data: UpdateTenantApplicationConfigDto
+  ): Promise<TenantApplicationConfigEntity>;
+}
+
 export interface IAMUnitOfWork {
   tenants: ITenantRepository;
   users: IUserRepository;
@@ -48,9 +129,9 @@ export interface IAMUnitOfWork {
   sessions: ISessionRepository;
   lockouts: ILockoutRepository;
   auditLogs: IAuditLogRepository;
-  resources: any;
-  permissions: any;
-  applications: any;
+  resources: IResourceRepository;
+  permissions: IPermissionRepository;
+  applications: IApplicationRepository;
   commit(): Promise<void>;
   rollback(): Promise<void>;
 }

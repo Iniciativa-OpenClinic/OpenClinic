@@ -1,15 +1,29 @@
-import { EntityNotFoundError, EntityAlreadyExistsError, ValidationError, ErrorCode, SuccessCode, getSuccessMessage, logger, SupportedLocales } from '@openclinic/core';
+import {
+  EntityNotFoundError,
+  EntityAlreadyExistsError,
+  ValidationError,
+  ErrorCode,
+  SuccessCode,
+  getSuccessMessage,
+  logger,
+  SupportedLocales,
+  AUDIT_CONSTANTS,
+  IpAddress,
+  AuditStatus,
+  AuditAction,
+  AuditResource,
+} from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO, UpdateGroupDTO, GroupListItemDTO } from '../../domain/dtos.js';
-import { AuditStatus } from '../../../shared/domain/enums.js';
 
 export class UpdateGroupUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(id: string, input: UpdateGroupDTO, ipAddress?: string, username?: string): Promise<ActionResponseDTO<GroupListItemDTO>> {
+  async execute(id: string, input: UpdateGroupDTO, ipAddress?: string | IpAddress, username?: string): Promise<ActionResponseDTO<GroupListItemDTO>> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     const existingGroup = await this.uow.groups.getById(id);
     if (!existingGroup) {
-      throw new EntityNotFoundError('Grupo', id, ErrorCode.GROUP_NOT_FOUND);
+      throw new EntityNotFoundError('Group', id, ErrorCode.GROUP_NOT_FOUND);
     }
 
     if (input.name !== undefined) {
@@ -20,7 +34,7 @@ export class UpdateGroupUseCase {
       if (trimmedName !== existingGroup.name) {
         const nameConflict = await this.uow.groups.findByName(trimmedName, existingGroup.tenant_id ?? undefined);
         if (nameConflict && nameConflict.id !== id) {
-          throw new EntityAlreadyExistsError('Grupo', 'nome', trimmedName, ErrorCode.GROUP_NAME_EXISTS);
+          throw new EntityAlreadyExistsError('Group', 'name', trimmedName, ErrorCode.GROUP_NAME_EXISTS);
         }
       }
     }
@@ -42,11 +56,11 @@ export class UpdateGroupUseCase {
 
     await this.uow.auditLogs.create({
       user_id: null,
-      username: username ?? 'admin',
-      action: 'group_updated',
-      resource: 'iam_groups',
+      username: username ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR,
+      action: AuditAction.GROUP_UPDATED,
+      resource: AuditResource.IAM_GROUPS,
       status: AuditStatus.SUCCESS,
-      ip_address: ipAddress ?? null,
+      ip_address: validatedIp?.value ?? null,
       user_agent: null,
       details: { groupId: id, changes: input },
     });

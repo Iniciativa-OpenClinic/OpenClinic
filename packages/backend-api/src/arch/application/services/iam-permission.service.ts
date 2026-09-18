@@ -19,8 +19,12 @@ import {
   EntityNotFoundError,
   ErrorCode,
 } from '@openclinic/core';
-import type { ApplicationResourceRecord, ResourceTreeNode } from '../../infrastructure/database/resource.repository.js';
-import type { PermissionAclTuple } from '../../infrastructure/database/permission.repository.js';
+import type {
+  ApplicationResourceEntity,
+  ResourceTreeNodeEntity,
+  PermissionAclTupleEntity,
+  UserEntity,
+} from '../../domain/entities.js';
 
 export class IAMPermissionService {
   constructor(private readonly uow: IAMUnitOfWork) {}
@@ -32,15 +36,16 @@ export class IAMPermissionService {
     const effectivePermissions = new Set<string>();
     const userRole: UserRole = user.role || UserRoleEnum.USER;
 
-    // 1. OWNER tem acesso total
+    // 1. OWNER has full unrestricted access
     const allResources = await this.uow.resources.listAll(1000);
     if (userRole === UserRoleEnum.OWNER) {
-      return allResources.map((r: ApplicationResourceRecord) => r.item_code).sort();
+      return allResources.map((r: ApplicationResourceEntity) => r.item_code).sort();
     }
 
-    // 2. Resolução de ACL (Grupos + Usuário com precedência de DENY)
+    // 2. ACL Resolution (Groups + User with DENY precedence)
     const userGroups = await this.uow.groups.getUserGroups(userId);
-    const groupIds = userGroups.map((g) => g.id);
+    const activeGroups = userGroups.filter((g) => g.is_active !== false);
+    const groupIds = activeGroups.map((g) => g.id);
     const { allowMap, denyMap } = await this._getAclMap(userId, groupIds);
 
     const resById = new Map<string, string>();
@@ -70,13 +75,14 @@ export class IAMPermissionService {
     if (!user) return [];
 
     const userRole: UserRole = user.role || UserRoleEnum.USER;
-    const allResources: ApplicationResourceRecord[] = await this.uow.resources.listAll(1000);
+    const allResources: ApplicationResourceEntity[] = await this.uow.resources.listAll(1000);
 
     const userGroups = await this.uow.groups.getUserGroups(userId);
-    const groupIds = userGroups.map((g) => g.id);
+    const activeGroups = userGroups.filter((g) => g.is_active !== false);
+    const groupIds = activeGroups.map((g) => g.id);
     const { allowMap, denyMap } = await this._getAclMap(userId, groupIds);
 
-    // Propaga leitura para os pais na árvore
+    // Propagate READ permissions upward to parent nodes in the hierarchy tree
     this._propagateAclUpward(allowMap, allResources);
 
     return this._consolidateCapabilities(userRole, allResources, allowMap, denyMap);
@@ -92,7 +98,7 @@ export class IAMPermissionService {
     return [
       {
         context,
-        title: context === ContextEnum.BUSINESS ? 'Módulos Clínicos & Atendimento' : 'Administração do Sistema',
+        title: context === ContextEnum.BUSINESS ? 'Clinical & Care Modules' : 'System Administration',
         items: filteredItems,
       },
     ];
@@ -154,7 +160,8 @@ export class IAMPermissionService {
     const userGroups = await this.uow.groups.getUserGroups(userId);
     if (!userGroups || userGroups.length === 0) return [];
 
-    const groupIds = userGroups.map((g) => g.id);
+    const activeGroups = userGroups.filter((g) => g.is_active !== false);
+    const groupIds = activeGroups.map((g) => g.id);
     const allResources = await this.uow.resources.listAll(1000);
     const resMap = new Map<string, string>();
     for (const r of allResources) {
@@ -206,7 +213,7 @@ export class IAMPermissionService {
     }
 
     let tenantId: string | null = null;
-    let targetUser: any = null;
+    let targetUser: UserEntity | null = null;
 
     if (user_id) {
       targetUser = await this.uow.users.getById(user_id);
@@ -289,10 +296,6 @@ export class IAMPermissionService {
     const capability = capabilities.find((c) => c.key === resourceKey);
     if (!capability) return false;
 
-    if (capability.actions.includes(ActionEnum.ALL) || capability.actions.includes(ActionEnum.MANAGE)) {
-      return true;
-    }
-
     return capability.actions.includes(requiredAction);
   }
 
@@ -300,7 +303,7 @@ export class IAMPermissionService {
     userId: string,
     groupIds: string[]
   ): Promise<{ allowMap: Map<string, Set<ResourceAction>>; denyMap: Map<string, Set<ResourceAction>> }> {
-    const aclTuples: PermissionAclTuple[] = await this.uow.permissions.getAclMap(userId, groupIds);
+    const aclTuples: PermissionAclTupleEntity[] = await this.uow.permissions.getAclMap(userId, groupIds);
     const allowMap = new Map<string, Set<ResourceAction>>();
     const denyMap = new Map<string, Set<ResourceAction>>();
 
@@ -308,19 +311,18 @@ export class IAMPermissionService {
       const resId = item.resource_id;
       const action = item.action;
       const effect = item.effect || PermissionEffect.ALLOW;
-      const permUserId = item.user_id;
 
-      // Negação individual do usuário tem prioridade
-      if (permUserId === userId && effect === PermissionEffect.DENY) {
+      // Group and User DENY both take strict precedence over ALLOW
+      if (effect === PermissionEffect.DENY) {
         if (!denyMap.has(resId)) denyMap.set(resId, new Set());
         denyMap.get(resId)!.add(action);
-      } else if (effect !== PermissionEffect.DENY) {
+      } else {
         if (!allowMap.has(resId)) allowMap.set(resId, new Set());
         allowMap.get(resId)!.add(action);
       }
     }
 
-    // Subtrai negações individuais
+    // Subtract DENY overrides
     const effectiveAllowMap = new Map<string, Set<ResourceAction>>();
     for (const [resId, actions] of allowMap.entries()) {
       const denied = denyMap.get(resId) || new Set();
@@ -338,8 +340,8 @@ export class IAMPermissionService {
     return { allowMap: effectiveAllowMap, denyMap };
   }
 
-  private _propagateAclUpward(allowMap: Map<string, Set<ResourceAction>>, allResources: ApplicationResourceRecord[]): void {
-    const resById = new Map<string, ApplicationResourceRecord>();
+  private _propagateAclUpward(allowMap: Map<string, Set<ResourceAction>>, allResources: ApplicationResourceEntity[]): void {
+    const resById = new Map<string, ApplicationResourceEntity>();
     for (const r of allResources) {
       resById.set(r.id, r);
     }
@@ -361,7 +363,7 @@ export class IAMPermissionService {
 
   private _consolidateCapabilities(
     userRole: UserRole,
-    allResources: ApplicationResourceRecord[],
+    allResources: ApplicationResourceEntity[],
     allowMap: Map<string, Set<ResourceAction>>,
     denyMap: Map<string, Set<ResourceAction>>
   ): IAMCapabilityDTO[] {
@@ -379,7 +381,7 @@ export class IAMPermissionService {
 
       const actions = new Set<ResourceAction>();
 
-      // 1. OWNER tem acesso total e irrestrito (Superadmin)
+      // 1. OWNER has full and unrestricted access (Superadmin)
       if (userRole === UserRoleEnum.OWNER) {
         actions.add(ActionEnum.READ);
         actions.add(ActionEnum.WRITE);
@@ -389,20 +391,32 @@ export class IAMPermissionService {
         actions.add(ActionEnum.ALL);
       }
 
-      // 2. ACL (para ADMIN e USER as permissões são derivadas estritamente de seus Grupos e Atribuições Diretas)
+      // 2. ACL (For ADMIN and USER, permissions are derived strictly from their Groups and Direct Assignments)
       if (allowMap.has(res.id)) {
         for (const a of allowMap.get(res.id)!) {
+          if (a === ActionEnum.ALL || a === ActionEnum.MANAGE) {
+            actions.add(ActionEnum.READ);
+            actions.add(ActionEnum.WRITE);
+            actions.add(ActionEnum.DELETE);
+            actions.add(ActionEnum.EXECUTE);
+          }
           actions.add(a);
         }
       }
 
-      // 3. Subtração de DENY
+      // 3. Subtract DENY overrides (DENY always overrides broad actions like MANAGE or ALL)
       if (userRole !== UserRoleEnum.OWNER && denyMap.has(res.id)) {
-        for (const a of denyMap.get(res.id)!) {
-          actions.delete(a);
-        }
-        if (denyMap.get(res.id)!.has(ActionEnum.READ)) {
+        const deniedActions = denyMap.get(res.id)!;
+        if (deniedActions.has(ActionEnum.ALL) || deniedActions.has(ActionEnum.MANAGE) || deniedActions.has(ActionEnum.READ)) {
           actions.clear();
+        } else {
+          for (const a of deniedActions) {
+            actions.delete(a);
+          }
+          if (deniedActions.size > 0) {
+            actions.delete(ActionEnum.ALL);
+            actions.delete(ActionEnum.MANAGE);
+          }
         }
       }
 
@@ -422,7 +436,7 @@ export class IAMPermissionService {
     return capabilities;
   }
 
-  private _filterTreeByCapabilities(tree: ResourceTreeNode[], allowedKeys: Set<string>): NavigationMenuItemDTO[] {
+  private _filterTreeByCapabilities(tree: ResourceTreeNodeEntity[], allowedKeys: Set<string>): NavigationMenuItemDTO[] {
     const result: NavigationMenuItemDTO[] = [];
 
     for (const node of tree) {

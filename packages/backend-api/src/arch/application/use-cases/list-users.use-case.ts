@@ -4,10 +4,13 @@ import type { IAMUnitOfWork } from '../../domain/repositories.js';
 export class ListUsersUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(skip = 0, limit = 100, requesterRole?: UserRole) {
+  async execute(skip = 0, limit = 100, requesterRole?: UserRole, requesterTenantId?: string) {
     let users = await this.uow.users.listAll(skip, limit);
     if (requesterRole !== UserRole.OWNER) {
       users = users.filter((u) => u.role !== UserRole.OWNER);
+      if (requesterTenantId) {
+        users = users.filter((u) => u.tenant_id === requesterTenantId);
+      }
     }
     const now = new Date();
 

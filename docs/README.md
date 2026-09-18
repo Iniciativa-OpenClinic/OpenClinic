@@ -46,12 +46,18 @@ Bem-vindo à documentação oficial do projeto **OpenClinic**. Este repositório
 - [**Contrato OpenAPI 3.0.3 (JSON)**](./openapi/openapi.json): Especificação completa dos endpoints em formato JSON (SSOT).
 - [**Contrato OpenAPI 3.0.3 (YAML)**](./openapi/openapi.yaml): Especificação completa dos endpoints em formato YAML.
 
-### 7. 📋 Auditorias e Conformidade
+### 7. 🔐 Credenciais, Secrets & Variáveis de Ambiente
+
+- [**Arquitetura de Secrets & Credenciais**](../secrets/README.md): Especificação dos provedores agnósticos suportados (`env`, `file`, `gsm`, `aws`), isolamento de roles (PoLP: `openclinic_owner` DDL vs `openclinic_app` DML), síntese dinâmica de `DATABASE_URL` em memória e padrão de arquivos `.credentials.json`.
+- [**Arquivo de Configuração de Ambiente (.env.example)**](../.env.example): Template oficial com variáveis atômicas e identificadores lógicos de secrets para desenvolvimento e produção.
+
+### 8. 📋 Auditorias e Conformidade
 
 - [**Auditoria Técnica 360° (Branch feature/auth)**](./audit-feature-auth.md): Relatório de conformidade, diagnóstico de migrations, contratos de API e checklist pré-publicação para o upstream oficial.
-- [**Auditoria de Conformidade e Segurança (Setembro/2026)**](./compliance/compliance-architecture-review-2026_09_02.md): Relatório de auditoria de arquitetura, integridade e conformidade de segurança.
+- [**Auditoria de Conformidade e Segurança (Setembro/2026)**](../infra/compliance/reports/README.md): Relatório de auditoria de arquitetura, integridade e conformidade de segurança.
+- [**Governança de Compliance & Playbooks](../infra/compliance/README.md): Playbooks operacionais de compliance e relatórios cronológicos padronizados.
 
-### 8. 🐳 Infraestrutura, Docker & Deploy
+### 9. 🐳 Infraestrutura, Docker & Deploy
 
 - [**Manual de Instalação e Execução Local via Docker**](./docker-installation-guide.md): Guia passo a passo completo para clonar, configurar variáveis `.env`, compilar e executar o OpenClinic localmente com Docker Compose e PostgreSQL.
 

@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { type JwtConfig, UserRole } from '@openclinic/core';
+import { type JwtConfig, UserRole, AUDIT_CONSTANTS } from '@openclinic/core';
 import type { IAMUnitOfWork } from '../domain/repositories.js';
 import { ListGroupsUseCase } from '../application/use-cases/list-groups.use-case.js';
 import { CreateGroupUseCase } from '../application/use-cases/create-group.use-case.js';
@@ -19,12 +19,12 @@ import {
 } from './group.schemas.js';
 import { createAuthenticateJwt } from './middlewares/authenticate-jwt.js';
 import { requireRole } from './middlewares/require-permission.js';
-import { SecurityBearer, StandardErrorResponses } from './openapi.schemas.js';
+import { SecurityBearer, StandardErrorResponses, createActionResponseSchema } from './openapi.schemas.js';
 
 export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jwtConfig: JwtConfig): void {
-  const authenticateJwt = createAuthenticateJwt(jwtConfig);
+  const authenticateJwt = createAuthenticateJwt(jwtConfig, uow);
 
-  // ── GESTÃO DE GRUPOS DE USUÁRIOS (ADMIN & OWNER) ──
+  // ── USER GROUPS MANAGEMENT (ADMIN & OWNER) ──
 
   // GET /api/v1/iam/groups
   app.get(
@@ -32,13 +32,13 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Listar Todos os Grupos',
-        description: 'Retorna a lista de grupos cadastrados na clínica com a contagem de membros vinculados.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'List All Groups',
+        description: 'Returns list of registered groups with count of linked members.',
         security: SecurityBearer,
         response: {
           200: {
-            description: 'Lista de grupos',
+            description: 'Groups list',
             type: 'array',
             items: {
               type: 'object',
@@ -71,37 +71,41 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Criar Grupo Clínico / Funcional',
-        description: 'Cadastra um novo grupo para agrupamento de usuários e herança de permissões (ACL).',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'Create Clinical/Functional Group',
+        description: 'Registers a new group for user aggregation and ACL permissions inheritance.',
         security: SecurityBearer,
         body: {
           type: 'object',
           required: ['name', 'description'],
           properties: {
-            name: { type: 'string', minLength: 2, example: 'Corpo Clínico - Cardiologia' },
-            description: { type: 'string', minLength: 1, example: 'Médicos especialistas com acesso a laudos cardiológicos' },
+            name: { type: 'string', minLength: 2, example: 'Clinical Staff - Cardiology' },
+            description: { type: 'string', minLength: 1, example: 'Specialist physicians with access to cardiology reports' },
             is_active: { type: 'boolean', default: true },
           },
         },
         response: {
-          201: {
-            description: 'Grupo criado com sucesso',
-            type: 'object',
-            properties: {
+          201: createActionResponseSchema(
+            {
               id: { type: 'string', format: 'uuid' },
               name: { type: 'string' },
-              description: { type: 'string' },
+              description: { type: 'string', nullable: true },
               is_active: { type: 'boolean' },
+              is_default: { type: 'boolean' },
+              member_count: { type: 'integer' },
+              tenant_id: { type: 'string', format: 'uuid', nullable: true },
+              created_at: { type: 'string' },
+              updated_at: { type: 'string', nullable: true },
             },
-          },
+            'Group created successfully'
+          ),
           ...StandardErrorResponses,
         },
       },
     },
     async (request, reply) => {
       const body = CreateGroupRequestSchema.parse(request.body);
-      const username = (request.user as any)?.email ?? 'admin';
+      const username = request.user?.email ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR;
       const useCase = new CreateGroupUseCase(uow);
       const result = await useCase.execute(body, request.ip, username);
       return reply.status(201).send(result);
@@ -114,9 +118,9 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Atualizar Grupo',
-        description: 'Atualiza o nome, descrição e status ativo de um grupo existente.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'Update Group',
+        description: 'Updates name, description, and active status of an existing group.',
         security: SecurityBearer,
         params: {
           type: 'object',
@@ -134,16 +138,20 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
           },
         },
         response: {
-          200: {
-            description: 'Grupo atualizado com sucesso',
-            type: 'object',
-            properties: {
+          200: createActionResponseSchema(
+            {
               id: { type: 'string', format: 'uuid' },
               name: { type: 'string' },
-              description: { type: 'string' },
+              description: { type: 'string', nullable: true },
               is_active: { type: 'boolean' },
+              is_default: { type: 'boolean' },
+              member_count: { type: 'integer' },
+              tenant_id: { type: 'string', format: 'uuid', nullable: true },
+              created_at: { type: 'string' },
+              updated_at: { type: 'string', nullable: true },
             },
-          },
+            'Group updated successfully'
+          ),
           ...StandardErrorResponses,
         },
       },
@@ -151,7 +159,7 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     async (request, reply) => {
       const { id } = request.params as { id: string };
       const body = UpdateGroupRequestSchema.parse(request.body);
-      const username = (request.user as any)?.email ?? 'admin';
+      const username = request.user?.email ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR;
       const useCase = new UpdateGroupUseCase(uow);
       const result = await useCase.execute(id, body, request.ip, username);
       return reply.status(200).send(result);
@@ -164,9 +172,9 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Excluir Grupo',
-        description: 'Remove um grupo de usuários e desvincula suas permissões associadas.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'Delete Group',
+        description: 'Deletes a user group and unbinds its associated permissions.',
         security: SecurityBearer,
         params: {
           type: 'object',
@@ -176,27 +184,27 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              code: { type: 'string' },
-              message: { type: 'string' },
+          200: createActionResponseSchema(
+            {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string' },
             },
-          },
+            'Group deleted successfully'
+          ),
           ...StandardErrorResponses,
         },
       },
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
-      const username = (request.user as any)?.email ?? 'admin';
+      const username = request.user?.email ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR;
       const useCase = new DeleteGroupUseCase(uow);
       const result = await useCase.execute(id, request.ip, username);
       return reply.status(200).send(result);
     }
   );
 
-  // ── ASSOCIAÇÃO A PARTIR DO GRUPO (MEMBROS) ──
+  // ── GROUP-CENTRIC MEMBERSHIP ──
 
   // GET /api/v1/iam/groups/:id/members
   app.get(
@@ -204,9 +212,9 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Listar Membros do Grupo',
-        description: 'Retorna a lista de usuários que pertencem ao grupo e a lista de usuários disponíveis para vinculação.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'List Group Members',
+        description: 'Returns users belonging to the group and users available for association.',
         security: SecurityBearer,
         params: {
           type: 'object',
@@ -287,9 +295,9 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Adicionar Usuário ao Grupo',
-        description: 'Associa um usuário existente ao grupo para conceder as permissões herdadas.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'Add User to Group',
+        description: 'Associates an existing user with the group to grant inherited permissions.',
         security: SecurityBearer,
         params: {
           type: 'object',
@@ -306,12 +314,13 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              status: { type: 'string', example: 'ok' },
+          200: createActionResponseSchema(
+            {
+              groupId: { type: 'string', format: 'uuid' },
+              userId: { type: 'string', format: 'uuid' },
             },
-          },
+            'Member added to group successfully'
+          ),
           ...StandardErrorResponses,
         },
       },
@@ -319,7 +328,7 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     async (request, reply) => {
       const { id } = request.params as { id: string };
       const body = AddGroupMemberRequestSchema.parse(request.body);
-      const username = (request.user as any)?.email ?? 'admin';
+      const username = request.user?.email ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR;
       const useCase = new AddGroupMemberUseCase(uow);
       const result = await useCase.execute(id, body.user_id, request.ip, username);
       return reply.status(200).send(result);
@@ -332,9 +341,9 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Remover Usuário do Grupo',
-        description: 'Desassocia um usuário do grupo.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'Remove User from Group',
+        description: 'Disassociates a user from the group.',
         security: SecurityBearer,
         params: {
           type: 'object',
@@ -345,26 +354,27 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              status: { type: 'string', example: 'ok' },
+          200: createActionResponseSchema(
+            {
+              groupId: { type: 'string', format: 'uuid' },
+              userId: { type: 'string', format: 'uuid' },
             },
-          },
+            'Member removed from group successfully'
+          ),
           ...StandardErrorResponses,
         },
       },
     },
     async (request, reply) => {
       const { id, userId } = request.params as { id: string; userId: string };
-      const username = (request.user as any)?.email ?? 'admin';
+      const username = request.user?.email ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR;
       const useCase = new RemoveGroupMemberUseCase(uow);
       const result = await useCase.execute(id, userId, request.ip, username);
       return reply.status(200).send(result);
     }
   );
 
-  // ── ASSOCIAÇÃO A PARTIR DO USUÁRIO (GRUPOS VINCULADOS) ──
+  // ── USER-CENTRIC GROUP MEMBERSHIP ──
 
   // GET /api/v1/iam/users/:id/groups
   app.get(
@@ -372,9 +382,9 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Listar Grupos do Usuário',
-        description: 'Retorna a lista de grupos aos quais o usuário pertence e a lista de grupos disponíveis.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'List User Groups',
+        description: 'Returns list of groups the user belongs to and available groups.',
         security: SecurityBearer,
         params: {
           type: 'object',
@@ -453,9 +463,9 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Vincular Usuário a um Grupo',
-        description: 'Adiciona um grupo à lista de grupos do usuário.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'Bind User to Group',
+        description: 'Adds a group to the user groups list.',
         security: SecurityBearer,
         params: {
           type: 'object',
@@ -472,12 +482,13 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              status: { type: 'string', example: 'ok' },
+          200: createActionResponseSchema(
+            {
+              userId: { type: 'string', format: 'uuid' },
+              groupId: { type: 'string', format: 'uuid' },
             },
-          },
+            'User added to group successfully'
+          ),
           ...StandardErrorResponses,
         },
       },
@@ -485,7 +496,7 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     async (request, reply) => {
       const { id } = request.params as { id: string };
       const body = AddUserToGroupRequestSchema.parse(request.body);
-      const username = (request.user as any)?.email ?? 'admin';
+      const username = request.user?.email ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR;
       const useCase = new AddUserToGroupUseCase(uow);
       const result = await useCase.execute(id, body.group_id, request.ip, username);
       return reply.status(200).send(result);
@@ -498,9 +509,9 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
     {
       preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
       schema: {
-        tags: ['Grupos Clínicos (IAM)'],
-        summary: 'Desvincular Usuário de um Grupo',
-        description: 'Remove o vínculo entre o usuário e o grupo indicado.',
+        tags: ['Clinical Groups (IAM)'],
+        summary: 'Unbind User from Group',
+        description: 'Removes the binding between user and group.',
         security: SecurityBearer,
         params: {
           type: 'object',
@@ -511,19 +522,20 @@ export function registerGroupRoutes(app: FastifyInstance, uow: IAMUnitOfWork, jw
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              status: { type: 'string', example: 'ok' },
+          200: createActionResponseSchema(
+            {
+              userId: { type: 'string', format: 'uuid' },
+              groupId: { type: 'string', format: 'uuid' },
             },
-          },
+            'User removed from group successfully'
+          ),
           ...StandardErrorResponses,
         },
       },
     },
     async (request, reply) => {
       const { id, groupId } = request.params as { id: string; groupId: string };
-      const username = (request.user as any)?.email ?? 'admin';
+      const username = request.user?.email ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR;
       const useCase = new RemoveUserFromGroupUseCase(uow);
       const result = await useCase.execute(id, groupId, request.ip, username);
       return reply.status(200).send(result);

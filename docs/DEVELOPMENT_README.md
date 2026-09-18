@@ -1,11 +1,11 @@
 # 🏥 OpenClinic - Prontuário Eletrônico do Paciente (PEP) Open Source
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](../LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Fastify](https://img.shields.io/badge/Fastify-5.x-000000?logo=fastify&logoColor=white)](https://www.fastify.io/)
 [![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../CONTRIBUTING.md)
 
 > Plataforma moderna, segura e modular de Prontuário Eletrônico do Paciente (PEP) e Gestão Clínica desenvolvida em **TypeScript Monorepo**, **Fastify**, **React 19**, **PostgreSQL** e **Drizzle ORM**.
 
@@ -43,10 +43,10 @@ O projeto está organizado como um Monorepo NPM com 4 pacotes desacoplados e ind
 
 | Pacote | Caminho | Descrição |
 | :--- | :--- | :--- |
-| **`@openclinic/core`** | [`packages/core`](./packages/core) | Primitivas compartilhadas, DTOs clínicos canônicos, criptografia Argon2id, JWT, pooling de DB, Logger e erros RFC 7807. |
-| **`@openclinic/backend-api`** | [`packages/backend-api`](./packages/backend-api) | API REST Fastify 5.x estruturada em Clean Architecture (Use Cases, Repositories e Presentation), RBAC e auditoria. |
-| **`@openclinic/backend-cli`** | [`packages/backend-cli`](./packages/backend-cli) | CLI multiplataforma para criação de roles, migrations DDL e seed automatizado do banco. |
-| **`@openclinic/frontend-webapp`** | [`packages/frontend-webapp`](./packages/frontend-webapp) | SPA em React 19 + Vite 6 com autenticação em memória, menus adaptativos, i18n bilíngue e gestão clínica. |
+| **`@openclinic/core`** | [`packages/core`](../packages/core) | Primitivas compartilhadas, DTOs clínicos canônicos, criptografia Argon2id, JWT, pooling de DB, Logger e erros RFC 7807. |
+| **`@openclinic/backend-api`** | [`packages/backend-api`](../packages/backend-api) | API REST Fastify 5.x estruturada em Clean Architecture (Use Cases, Repositories e Presentation), RBAC e auditoria. |
+| **`@openclinic/backend-cli`** | [`packages/backend-cli`](../packages/backend-cli) | CLI multiplataforma para criação de roles, migrations DDL e seed automatizado do banco. |
+| **`@openclinic/frontend-webapp`** | [`packages/frontend-webapp`](../packages/frontend-webapp) | SPA em React 19 + Vite 6 com autenticação em memória, menus adaptativos, i18n bilíngue e gestão clínica. |
 
 ---
 
@@ -85,7 +85,7 @@ npm run db:setup
 
 O setup aplica migrations de estrutura e catálogo obrigatório e valida autenticação. Não redefine senhas de roles nem cria contas fictícias automaticamente. Opcionalmente, em uma base sem dados operacionais, use `npm run db:seed -- --demo` para carregar a demonstração. Sem demonstração, crie a primeira conta com `npm run user:create-admin`.
 
-**Banco já existente:** execute primeiro `npm run db:baseline -- --check`. A adoção preserva registros e recusa diferenças estruturais; a transição legada conhecida tem um procedimento explícito. Consulte o [guia de versionamento, atualização remota e clonagem](infra/database/README.md).
+**Banco já existente:** execute primeiro `npm run db:baseline -- --check`. A adoção preserva registros e recusa diferenças estruturais; a transição legada conhecida tem um procedimento explícito. Consulte o [guia de versionamento, atualização remota e clonagem](../infra/database/README.md).
 
 O Compose completo executa um serviço de migrations antes da API. Atualizar um container PostgreSQL ou seu volume não substitui a execução das migrations.
 
@@ -106,7 +106,7 @@ Acesse a documentação interativa Swagger UI em: **`http://localhost:3000/docs`
 
 #### Atualização do banco
 
-O atalho destrutivo `db:reset` foi removido. Para atualizar use `npm run db:migrate`; para substituir excepcionalmente a base remota, siga o [procedimento de clonagem com staging e backup](infra/database/README.md).
+O atalho destrutivo `db:reset` foi removido. Para atualizar use `npm run db:migrate`; para substituir excepcionalmente a base remota, siga o [procedimento de clonagem com staging e backup](../infra/database/README.md).
 
 ---
 
@@ -118,7 +118,7 @@ Você pode subir a stack completa (**Banco PostgreSQL 17**, **Backend API Fastif
 docker compose up --build -d
 ```
 
-> 📖 **Manual Completo:** Para o guia detalhado passo a passo (instalação do Docker, configuração de variáveis `.env`, logs, migrations e troubleshooting), consulte o [**Manual de Instalação e Operação via Docker**](./docs/docker-installation-guide.md).
+> 📖 **Manual Completo:** Para o guia detalhado passo a passo (instalação do Docker, configuração de variáveis `.env`, logs, migrations e troubleshooting), consulte o [**Manual de Instalação e Operação via Docker**](./docker-installation-guide.md).
 
 ### URLs de Acesso
 
@@ -127,7 +127,7 @@ docker compose up --build -d
 | **Frontend Webapp** | [`http://localhost`](http://localhost) | Interface Web servida via Nginx reverso |
 | **Backend REST API** | [`http://localhost:3000`](http://localhost:3000) | API REST Fastify 5.x |
 | **Swagger UI** | [`http://localhost:3000/docs`](http://localhost:3000/docs) | Documentação interativa OpenAPI 3.0/3.1 |
-| **Health Check** | [`http://localhost:3000/health`](http://localhost:3000/health) | Verificação de integridade dos serviços |
+| **Health Check** | [`http://localhost:3000/health/live`](http://localhost:3000/health/live) | Verificação de integridade dos serviços |
 
 ### Comandos Úteis do Compose
 
@@ -230,27 +230,27 @@ npm run export:openapi
 
 ## 📚 Central de Documentação Técnica
 
-Para especificações detalhadas, decisões de arquitetura e diagramas, consulte a **[Central de Documentação](./docs/README.md)**:
+Para especificações detalhadas, decisões de arquitetura e diagramas, consulte a **[Central de Documentação](./README.md)**:
 
-- 🏛 [Especificação Geral do Projeto](./docs/project-specification.md)
-- 🤝 [Visão do Projeto & Governança](./docs/project-presentation-and-governance.md)
-- 📐 [Diretrizes de Arquitetura & Governança](./docs/architectural-decisions-and-guidelines.md)
-- 📝 [Architecture Decision Records (ADRs)](./docs/adr/README.md)
-- 🗄 [Modelagem do Banco de Dados & DDL](./docs/database-schema.md)
-- 🛡 [Arquitetura de IAM, RBAC e ACL](./docs/iam-rbac-acl-backend-architecture.md)
-- 🔌 [Contratos OpenAPI & Especificações](./docs/openapi/README.md)
-- 🖥️ [Guia Interativo do Swagger UI](./docs/openapi/swagger.md)
-- 📋 [Relatório de Auditoria de Conformidade](./docs/compliance/compliance-architecture-review-2026_09_02.md)
-- 🐳 [Manual de Instalação e Operação via Docker](./docs/docker-installation-guide.md)
+- 🏛 [Especificação Geral do Projeto](./project-specification.md)
+- 🤝 [Visão do Projeto & Governança](./project-presentation-and-governance.md)
+- 📐 [Diretrizes de Arquitetura & Governança](./architectural-decisions-and-guidelines.md)
+- 📝 [Architecture Decision Records (ADRs)](./adr/README.md)
+- 🗄 [Modelagem do Banco de Dados & DDL](./database-schema.md)
+- 🛡 [Arquitetura de IAM, RBAC e ACL](./iam-rbac-acl-backend-architecture.md)
+- 🔌 [Contratos OpenAPI & Especificações](./openapi/README.md)
+- 🖥️ [Guia Interativo do Swagger UI](./openapi/swagger.md)
+- 📋 [Relatório de Auditoria de Conformidade](./compliance/compliance-architecture-review-2026_09_02.md)
+- 🐳 [Manual de Instalação e Operação via Docker](./docker-installation-guide.md)
 
 ---
 
 ## 🤝 Contribuindo
 
-Contribuições da comunidade Open Source são muito bem-vindas! Consulte o guia em [CONTRIBUTING.md](./CONTRIBUTING.md) para diretrizes de desenvolvimento, branches e Pull Requests.
+Contribuições da comunidade Open Source são muito bem-vindas! Consulte o guia em [CONTRIBUTING.md](../CONTRIBUTING.md) para diretrizes de desenvolvimento, branches e Pull Requests.
 
 ---
 
 ## 📜 Licença
 
-Este projeto é software livre sob a licença **GNU Affero General Public License v3.0 (AGPL-3.0)**. Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
+Este projeto é software livre sob a licença **GNU Affero General Public License v3.0 (AGPL-3.0)**. Consulte o arquivo [LICENSE](../LICENSE) para mais detalhes.

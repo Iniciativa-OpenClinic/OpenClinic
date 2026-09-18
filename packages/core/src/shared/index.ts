@@ -7,6 +7,20 @@ export {
   getLocaleMetadata,
 } from '../domain/locales.js';
 export {
+  AUTH_SECURITY_DEFAULTS,
+  type AuthSecurityDefaults,
+  SUPPORTED_JWT_ALGORITHMS,
+  type SupportedJwtAlgorithm,
+  AUDIT_CONSTANTS,
+  type AuditConstants,
+  BOOTSTRAP_DEFAULTS,
+  type BootstrapDefaults,
+  SYSTEM_DEFAULTS,
+  type SystemDefaults,
+  TIME_CONSTANTS,
+  type TimeConstants,
+} from '../constants/index.js';
+export {
   UserRole,
   type UserRoleType,
   ROLE_HIERARCHY,
@@ -16,6 +30,10 @@ export {
   type PermissionEffectType,
   AuditStatus,
   type AuditStatusType,
+  AuditResource,
+  type AuditResourceType,
+  AuditAction,
+  type AuditActionType,
   TenantStatus,
   type TenantStatusType,
   ResourceType,
@@ -26,6 +44,12 @@ export {
   type PermissionTargetTypeType,
   LoginIdentifierType,
   type LoginIdentifierTypeType,
+  NodeEnvironment,
+  type NodeEnvironmentType,
+  Environment,
+  type EnvironmentType,
+  LogLevel,
+  type LogLevelType,
 } from '../domain/enums.js';
 export type {
   IAMCapabilityDTO,
@@ -48,8 +72,10 @@ export type {
   HealthPlanDTO,
   ProcedureDTO,
 } from '../domain/clinical.dtos.js';
-export { ErrorCode, SuccessCode } from '../errors/index.js';
-export type { ProblemDetail, ErrorCodeValue, SuccessCodeValue } from '../errors/index.js';
+export { ErrorCode } from '../errors/index.js';
+export type { ProblemDetail, ErrorCodeValue } from '../errors/index.js';
+export { SuccessCode } from '../i18n/index.js';
+export type { SuccessCodeValue } from '../i18n/index.js';
 export type { BaseEntity, RepositoryInterface } from '../domain/entities.js';
 export {
   ValueObject,
@@ -75,6 +101,11 @@ export {
   type CountryCode,
   STANDARD_COUNTRIES,
   type CountryOption,
+  Website,
+  IPv4Address,
+  IPv6Address,
+  IpAddress,
+  type IpVersion,
 } from '../domain/value-objects/index.js';
 export {
   APP_RESOURCE_MANIFEST,

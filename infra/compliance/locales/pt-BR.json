@@ -1,0 +1,33 @@
+{
+  "title": "Compliance",
+  "menu": "Escolha uma ação",
+  "options": [
+    "Executar verificações automatizadas",
+    "Consultar ou validar catálogo",
+    "Criar cenário em rascunho",
+    "Preparar auditoria assistida com prompts locais",
+    "Sair"
+  ],
+  "scope": "Escopo: informe módulos separados por vírgula ou all",
+  "profile": "Perfil: 1 local (sem banco); 2 integration (PostgreSQL descartável)",
+  "task": "Auditoria: verification, architecture, governance, review ou catalog",
+  "catalogAction": "Catálogo: 1 listar; 2 validar",
+  "module": "Identificador do módulo (ex.: auth ou novo módulo)",
+  "id": "ID estável (ex.: AUTH-LOGIN-002)",
+  "scenarioTitle": "Título do cenário",
+  "confirm": "Executar os comandos apresentados? [s/N]",
+  "disposable": "Confirma que DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASS identifica um servidor descartável e autoriza criar/excluir bancos sintéticos? [s/N]",
+  "invalid": "Opção inválida.",
+  "cancelled": "Cancelado; nenhum gate iniciado.",
+  "nonTTY": "Sem terminal interativo. Use um subcomando explícito com --non-interactive; consulte --help.",
+  "plan": "Plano de execução",
+  "start": "Executando",
+  "report": "Relatório",
+  "bundle": "Pacote de auditoria",
+  "catalogValid": "Catálogo válido",
+  "draft": "Rascunho criado; revise requisitos, passos, evidências e testes antes de ativar.",
+  "noAI": "Nenhuma IA foi chamada. Abra o pacote no assistente escolhido com acesso a este clone.",
+  "running": "Ainda executando; aguardando conclusão do processo...",
+  "failure": "Não foi possível concluir a operação. Verifique os argumentos e pré-requisitos.",
+  "instructions": "Use os comandos abaixo a partir da raiz do clone."
+}

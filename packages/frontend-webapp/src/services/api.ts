@@ -79,25 +79,23 @@ async function apiFetch<T>(path: string, options: RequestInit = {}, isRetry = fa
   if (_accessToken) {
     headers['Authorization'] = `Bearer ${_accessToken}`;
   }
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+    credentials: options.credentials ?? 'same-origin',
+  });
   if (!response.ok) {
-    // Interceptar 401 para tentativa de Silent Refresh
+    // Intercept 401 for silent refresh attempt via HttpOnly cookie or RAM token
     if (response.status === 401 && !isRetry && path !== '/auth/login' && path !== '/auth/refresh') {
-      if (_refreshToken) {
-        try {
-          if (!_refreshPromise) {
-            _refreshPromise = refreshTokens().finally(() => {
-              _refreshPromise = null;
-            });
-          }
-          await _refreshPromise;
-          return apiFetch<T>(path, options, true);
-        } catch {
-          if (_onSessionExpired) {
-            _onSessionExpired();
-          }
+      try {
+        if (!_refreshPromise) {
+          _refreshPromise = refreshTokens().finally(() => {
+            _refreshPromise = null;
+          });
         }
-      } else {
+        await _refreshPromise;
+        return apiFetch<T>(path, options, true);
+      } catch {
         if (_onSessionExpired) {
           _onSessionExpired();
         }
@@ -115,7 +113,11 @@ async function apiFetch<T>(path: string, options: RequestInit = {}, isRetry = fa
 }
 
 export async function login(identifier: string, password: string): Promise<LoginResponse> {
-  const data = await apiFetch<LoginResponse>('/auth/login', { method: 'POST', body: JSON.stringify({ identifier, password }) });
+  const data = await apiFetch<LoginResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ identifier, password }),
+    credentials: 'same-origin',
+  });
   setTokens(data.access_token, data.refresh_token);
   return data;
 }
@@ -125,15 +127,24 @@ export async function getProfile(): Promise<UserProfile> {
 }
 
 export async function refreshTokens(): Promise<RefreshResponse> {
-  if (!_refreshToken) throw new ApiError(getTranslation('ERROR_NO_REFRESH_TOKEN'), 'ERR_TOKEN_EXPIRED', 401);
-  const data = await apiFetch<RefreshResponse>('/auth/refresh', { method: 'POST', body: JSON.stringify({ refresh_token: _refreshToken }) });
-  setTokens(data.access_token, data.refresh_token);
+  const body = _refreshToken ? JSON.stringify({ refresh_token: _refreshToken }) : JSON.stringify({});
+  const data = await apiFetch<RefreshResponse>('/auth/refresh', {
+    method: 'POST',
+    body,
+    credentials: 'same-origin',
+  });
+  setTokens(data.access_token, data.refresh_token ?? _refreshToken);
   return data;
 }
 
 export async function logout(): Promise<void> {
   try {
-    await apiFetch('/auth/logout', { method: 'POST', body: JSON.stringify({ refresh_token: _refreshToken }) });
+    const body = _refreshToken ? JSON.stringify({ refresh_token: _refreshToken }) : JSON.stringify({});
+    await apiFetch('/auth/logout', {
+      method: 'POST',
+      body,
+      credentials: 'same-origin',
+    });
   } finally {
     clearTokens();
   }
@@ -247,7 +258,7 @@ export async function unlockUser(userId: string): Promise<ActionResponse<{ id: s
   });
 }
 
-// ── GRUPOS DE USUÁRIOS & ASSOCIAÇÕES ──
+// ── USER GROUPS & MEMBERSHIPS ──
 
 export interface GroupListItem {
   id: string;
@@ -332,7 +343,7 @@ export async function removeUserFromGroup(userId: string, groupId: string): Prom
   });
 }
 
-// ── IAM & CONTROLE DE ACESSO (RBAC + ACL) ──
+// ── IAM & ACCESS CONTROL (RBAC + ACL) ──
 
 export async function getPermissions(): Promise<string[]> {
   return apiFetch<string[]>('/iam/permissions');
@@ -378,7 +389,7 @@ export async function syncPermissions(payload: {
 }
 
 
-// ── SISTEMA & PLATAFORMA (SYS_APPLICATIONS & CONFIGS) ──
+// ── SYSTEM & PLATFORM (SYS_APPLICATIONS & CONFIGS) ──
 
 export interface PlatformApplicationData {
   id: string;
@@ -494,22 +505,9 @@ export interface PublicConfig {
   defaultDialingCode: string;
   acceptedLoginMethods?: string[];
   primaryLoginIdentifier?: LoginIdentifierType;
-  // snake_case aliases for backwards compatibility
-  app_name?: string;
-  app_subtitle?: string | null;
-  app_version?: string;
-  app_logo_url?: string | null;
-  app_favicon_url?: string | null;
-  app_description?: string | null;
-  tenant_name?: string;
-  default_locale?: string;
-  supported_locales?: string[];
-  default_timezone?: string;
-  default_dialing_code?: string;
-  primary_login_identifier?: LoginIdentifierType;
+  sessionTimeoutMinutes?: number;
 }
 
-export type PublicApplicationData = PublicConfig;
 
 export async function getPublicConfig(): Promise<PublicConfig> {
   return apiFetch<PublicConfig>(`/public/config?_t=${Date.now()}`, {
@@ -517,9 +515,6 @@ export async function getPublicConfig(): Promise<PublicConfig> {
   });
 }
 
-export async function getPublicApplicationSettings(): Promise<PublicApplicationData> {
-  return getPublicConfig();
-}
 
 export function applyDocumentBranding(
   title?: string | null,

@@ -1,12 +1,25 @@
-import { EntityNotFoundError, AccessDeniedError, ErrorCode, SuccessCode, getSuccessMessage, logger, SupportedLocales } from '@openclinic/core';
+import {
+  EntityNotFoundError,
+  AccessDeniedError,
+  ErrorCode,
+  SuccessCode,
+  getSuccessMessage,
+  logger,
+  SupportedLocales,
+  IpAddress,
+  UserRole,
+  AuditStatus,
+  AuditAction,
+  AuditResource,
+} from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO } from '../../domain/dtos.js';
-import { UserRole, AuditStatus } from '../../../shared/domain/enums.js';
 
 export class ToggleUserStatusUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(creatorRole: UserRole, targetUserId: string, ipAddress?: string, creatorUserId?: string): Promise<ActionResponseDTO<{ id: string; is_active: boolean }>> {
+  async execute(creatorRole: UserRole, targetUserId: string, ipAddress?: string | IpAddress, creatorUserId?: string, creatorTenantId?: string): Promise<ActionResponseDTO<{ id: string; is_active: boolean }>> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     if (creatorUserId && creatorUserId === targetUserId) {
       throw new AccessDeniedError(ErrorCode.USER_CANNOT_DEACTIVATE_SELF);
     }
@@ -16,9 +29,14 @@ export class ToggleUserStatusUseCase {
       throw new EntityNotFoundError('User', targetUserId);
     }
 
-    const targetUserRole = targetUser.role;
-    if (creatorRole !== UserRole.OWNER && targetUserRole === UserRole.OWNER) {
-      throw new AccessDeniedError(ErrorCode.OWNER_IMMUTABLE);
+    if (creatorRole !== UserRole.OWNER) {
+      if (creatorTenantId && targetUser.tenant_id && targetUser.tenant_id !== creatorTenantId) {
+        throw new AccessDeniedError(ErrorCode.FORBIDDEN);
+      }
+      const targetUserRole = targetUser.role;
+      if (targetUserRole === UserRole.OWNER) {
+        throw new AccessDeniedError(ErrorCode.OWNER_IMMUTABLE);
+      }
     }
 
     const nextActiveState = !targetUser.is_active;
@@ -39,10 +57,10 @@ export class ToggleUserStatusUseCase {
       await this.uow.auditLogs.create({
         user_id: targetUser.id,
         username: targetUser.username,
-        action: nextActiveState ? 'user_activated' : 'user_deactivated',
-        resource: 'iam_users',
+        action: nextActiveState ? AuditAction.USER_ACTIVATED : AuditAction.USER_DEACTIVATED,
+        resource: AuditResource.IAM_USERS,
         status: AuditStatus.SUCCESS,
-        ip_address: ipAddress ?? null,
+        ip_address: validatedIp?.value ?? null,
         user_agent: null,
       });
     } catch (err) {

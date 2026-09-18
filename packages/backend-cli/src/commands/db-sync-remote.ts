@@ -3,25 +3,36 @@ import fs from 'node:fs';
 import path from 'node:path';
 import postgres from 'postgres';
 import { testPgConnection, PgConnectionConfig } from '../utils/pg-runner.js';
+import { getDatabaseConfig, resolveDatabaseTarget } from '../utils/database-connection.js';
 import { cloneVersionedDatabase } from '../utils/database-clone.js';
 import { databaseDirectory } from '../utils/migration-runner.js';
-import { resolveDatabaseTarget } from '../utils/database-target.js';
+import { UserRole } from '@openclinic/core';
+
+export enum DbSyncRemoteMode {
+  AUDIT = 'audit',
+  CLONE = 'clone',
+  USERS = 'users',
+}
 
 export interface DbSyncRemoteOptions {
-  mode?: 'audit' | 'clone' | 'users';
+  mode?: DbSyncRemoteMode;
   remoteHost?: string;
   force?: boolean;
   maintenance?: boolean;
   confirmTarget?: string;
 }
 
-export type UserPresenceStatus = 'ONLINE' | 'IDLE_RECENT' | 'INACTIVE';
+export enum UserPresenceStatus {
+  ONLINE = 'ONLINE',
+  IDLE_RECENT = 'IDLE_RECENT',
+  INACTIVE = 'INACTIVE',
+}
 
 export interface ActiveUserInfo {
   username: string;
   fullName: string;
   email: string;
-  role: string;
+  role: UserRole;
   latestIp: string | null;
   activeSessionCount: number;
   lastLoginAt: Date;
@@ -34,7 +45,7 @@ export interface ActiveSessionInfo {
   username: string;
   fullName: string;
   email: string;
-  role: string;
+  role: UserRole;
   ipAddress: string | null;
   userAgent: string | null;
   createdAt: Date;
@@ -46,7 +57,7 @@ interface TableSummary {
   localCount: number | string;
   remoteCount: number | string;
   diffCount: number | string;
-  status: 'COERENTE' | 'DIVERGENTE' | 'FALTA NO REMOTO' | 'FALTA NO DEV';
+  status: 'COHERENT' | 'DRIFT' | 'MISSING_IN_REMOTE' | 'MISSING_IN_DEV';
 }
 
 /**
@@ -73,26 +84,43 @@ function getExpectedTablesFromSchema(): string[] {
  */
 function resolveLocalConfig(): PgConnectionConfig {
   const { url, parsed } = resolveDatabaseTarget();
-  return { host: parsed.hostname, port: Number(parsed.port || 5432), database: decodeURIComponent(parsed.pathname.slice(1)),
-    user: decodeURIComponent(parsed.username), password: decodeURIComponent(parsed.password), connectionUrl: url };
+  return {
+    host: parsed.hostname,
+    port: Number(parsed.port || 5432),
+    database: decodeURIComponent(parsed.pathname.slice(1)),
+    user: decodeURIComponent(parsed.username),
+    password: decodeURIComponent(parsed.password),
+    connectionUrl: url,
+  };
 }
 
 /**
  * Builds PostgreSQL connection URL string from config
  */
 function buildConnectionUrl(config: PgConnectionConfig): string {
-  return config.connectionUrl ?? `postgresql://${encodeURIComponent(config.user)}:${encodeURIComponent(config.password || '')}@${config.host}:${config.port}/${config.database}`;
+  return (
+    config.connectionUrl ??
+    `postgresql://${encodeURIComponent(config.user)}:${encodeURIComponent(config.password || '')}@${config.host}:${config.port}/${config.database}`
+  );
 }
 
 /**
  * Prompt remote connection settings
  */
 async function promptRemoteConfig(defaultHost?: string): Promise<PgConnectionConfig> {
+  const config = getDatabaseConfig();
+
   if (process.env['REMOTE_DATABASE_OWNER_URL'] && !defaultHost) {
     const connectionUrl = process.env['REMOTE_DATABASE_OWNER_URL'];
     const url = new URL(connectionUrl);
-    return { host: url.hostname, port: Number(url.port || 5432), database: decodeURIComponent(url.pathname.slice(1)),
-      user: decodeURIComponent(url.username), password: decodeURIComponent(url.password), connectionUrl };
+    return {
+      host: url.hostname,
+      port: Number(url.port || 5432),
+      database: decodeURIComponent(url.pathname.slice(1)),
+      user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      connectionUrl,
+    };
   }
   const envRemoteUrl = process.env['DATABASE_REMOTE_URL'];
   let parsedRemote: Partial<PgConnectionConfig> = {};
@@ -102,9 +130,9 @@ async function promptRemoteConfig(defaultHost?: string): Promise<PgConnectionCon
       parsedRemote = {
         host: p.hostname,
         port: p.port ? parseInt(p.port, 10) : 5432,
-        database: p.pathname.replace(/^\//, '') || 'openclinic',
-        user: decodeURIComponent(p.username || 'openclinic_owner'),
-        password: decodeURIComponent(p.password || 'temp1234'),
+        database: p.pathname.replace(/^\//, '') || config.database,
+        user: decodeURIComponent(p.username || config.ownerUser),
+        password: decodeURIComponent(p.password || config.ownerPassword || ''),
       };
     } catch {
       // Keep defaults
@@ -115,35 +143,36 @@ async function promptRemoteConfig(defaultHost?: string): Promise<PgConnectionCon
     {
       type: 'input',
       name: 'host',
-      message: 'Host / IP do servidor remoto de testes:',
+      message: 'Remote target server host / IP:',
       default: defaultHost || parsedRemote.host,
-      validate: (v: string) => v.trim().length > 0 || 'Host é obrigatório.',
+      validate: (v: string) => v.trim().length > 0 || 'Host is required.',
     },
     {
       type: 'input',
       name: 'port',
-      message: 'Porta do PostgreSQL remoto:',
-      default: String(parsedRemote.port || 5432),
-      validate: (v: string) => !isNaN(parseInt(v, 10)) || 'Porta inválida.',
+      message: 'Remote PostgreSQL port:',
+      default: String(parsedRemote.port || config.port),
+      validate: (v: string) => !isNaN(parseInt(v, 10)) || 'Invalid port.',
     },
     {
       type: 'input',
       name: 'database',
-      message: 'Nome do banco de dados remoto:',
-      default: parsedRemote.database || 'openclinic',
+      message: 'Remote database name:',
+      default: parsedRemote.database || config.database,
     },
     {
       type: 'input',
       name: 'user',
-      message: 'Usuário remoto (owner com permissões DDL):',
-      default: parsedRemote.user || 'openclinic_owner',
+      message: 'Remote user (owner with DDL privileges):',
+      default: parsedRemote.user || config.ownerUser,
     },
     {
       type: 'password',
       name: 'password',
-      message: 'Senha do usuário remoto:',
-      default: parsedRemote.password || 'temp1234',
+      message: 'Remote user password:',
+      default: parsedRemote.password || config.ownerPassword,
       mask: '*',
+      validate: (v: string) => v.length > 0 || 'Password is required.',
     },
   ]);
 
@@ -162,14 +191,14 @@ async function promptRemoteConfig(defaultHost?: string): Promise<PgConnectionCon
  */
 async function runDriftAudit(localConfig: PgConnectionConfig, remoteConfig: PgConnectionConfig): Promise<boolean> {
   console.log('\n------------------------------------------------------------');
-  console.log('  [1/3] Iniciando Auditoria de Coerência (Dev vs Remoto)    ');
+  console.log('  [1/3] Starting Coherence Audit (Dev vs Remote)            ');
   console.log('------------------------------------------------------------');
 
   const localSql = postgres(buildConnectionUrl(localConfig), { max: 1 });
   const remoteSql = postgres(buildConnectionUrl(remoteConfig), { max: 1 });
 
   try {
-    // 1. Consulta dinâmica das tabelas físicas existentes em ambos os bancos
+    // 1. Dynamic physical table inventory from information_schema
     const [localTablesRaw, remoteTablesRaw] = await Promise.all([
       localSql<{ table_name: string }[]>`
         SELECT table_name FROM information_schema.tables
@@ -199,15 +228,15 @@ async function runDriftAudit(localConfig: PgConnectionConfig, remoteConfig: PgCo
       const existsLocally = localTableSet.has(table);
       const existsRemotely = remoteTableSet.has(table);
 
-      let localCount: number | string = 'INEXISTENTE';
-      let remoteCount: number | string = 'INEXISTENTE';
+      let localCount: number | string = 'NONEXISTENT';
+      let remoteCount: number | string = 'NONEXISTENT';
 
       if (existsLocally) {
         try {
           const [lRes] = await localSql.unsafe(`SELECT count(*)::int AS count FROM "${table}"`);
           localCount = lRes?.count ?? 0;
         } catch {
-          localCount = 'ERRO';
+          localCount = 'ERROR';
         }
       }
 
@@ -216,33 +245,33 @@ async function runDriftAudit(localConfig: PgConnectionConfig, remoteConfig: PgCo
           const [rRes] = await remoteSql.unsafe(`SELECT count(*)::int AS count FROM "${table}"`);
           remoteCount = rRes?.count ?? 0;
         } catch {
-          remoteCount = 'ERRO';
+          remoteCount = 'ERROR';
         }
       }
 
-      let status: 'COERENTE' | 'DIVERGENTE' | 'FALTA NO REMOTO' | 'FALTA NO DEV' = 'COERENTE';
+      let status: 'COHERENT' | 'DRIFT' | 'MISSING_IN_REMOTE' | 'MISSING_IN_DEV' = 'COHERENT';
       let diffDisplay: number | string = 0;
 
       if (existsLocally && !existsRemotely) {
-        status = 'FALTA NO REMOTO';
+        status = 'MISSING_IN_REMOTE';
         diffDisplay = 'N/A';
         hasDrift = true;
-        missingItemsReport.push(`[SCHEMA DDL] Tabela "${table}" existe em Dev mas NÃO EXISTE no banco Remoto.`);
+        missingItemsReport.push(`[SCHEMA DDL] Table "${table}" exists in Dev but is MISSING in Remote database.`);
       } else if (!existsLocally && existsRemotely) {
-        status = 'FALTA NO DEV';
+        status = 'MISSING_IN_DEV';
         diffDisplay = 'N/A';
         hasDrift = true;
-        missingItemsReport.push(`[SCHEMA DDL] Tabela "${table}" existe no Remoto mas não existe em Dev.`);
+        missingItemsReport.push(`[SCHEMA DDL] Table "${table}" exists in Remote but does not exist in Dev.`);
       } else if (existsLocally && existsRemotely) {
         const lNum = typeof localCount === 'number' ? localCount : -1;
         const rNum = typeof remoteCount === 'number' ? remoteCount : -2;
         const diff = Math.abs(lNum - rNum);
         diffDisplay = diff;
         if (diff !== 0) {
-          status = 'DIVERGENTE';
+          status = 'DRIFT';
           hasDrift = true;
         } else {
-          status = 'COERENTE';
+          status = 'COHERENT';
         }
       }
 
@@ -255,126 +284,131 @@ async function runDriftAudit(localConfig: PgConnectionConfig, remoteConfig: PgCo
       });
     }
 
-    // 2. Análise aprofundada de registros de catálogo: sys_applications
+    // 2. Catalog analysis: sys_applications
     if (localTableSet.has('sys_applications') && remoteTableSet.has('sys_applications')) {
       try {
-        const localApps = await localSql`SELECT code, app_name, app_version FROM sys_applications WHERE deleted_at IS NULL`;
-        const remoteApps = await remoteSql`SELECT code, app_name, app_version FROM sys_applications WHERE deleted_at IS NULL`;
-        const remoteAppMap = new Map(remoteApps.map((a: any) => [a.code, a]));
+        interface AppRow { code: string; app_name: string; app_version: string }
+        const localApps = await localSql<AppRow[]>`SELECT code, app_name, app_version FROM sys_applications WHERE deleted_at IS NULL`;
+        const remoteApps = await remoteSql<AppRow[]>`SELECT code, app_name, app_version FROM sys_applications WHERE deleted_at IS NULL`;
+        const remoteAppMap = new Map(remoteApps.map((a) => [a.code, a]));
 
         for (const la of localApps) {
           const ra = remoteAppMap.get(la.code);
           if (!ra) {
             hasDrift = true;
-            missingItemsReport.push(`[sys_applications] Aplicação "${la.code}" (${la.app_name}) existe em Dev mas falta no Remoto`);
+            missingItemsReport.push(`[sys_applications] Application "${la.code}" (${la.app_name}) exists in Dev but missing in Remote`);
           } else if (la.app_version !== ra.app_version) {
             hasDrift = true;
-            missingItemsReport.push(`[sys_applications] Versão divergente em "${la.code}": Dev="${la.app_version}" vs Remoto="${ra.app_version}"`);
+            missingItemsReport.push(`[sys_applications] Version drift in "${la.code}": Dev="${la.app_version}" vs Remote="${ra.app_version}"`);
           }
         }
       } catch {
-        // Ignora caso schema difira
+        // Schema variance fallback
       }
     }
 
-    // 3. Análise aprofundada de recursos: sys_application_resources
+    // 3. Resource analysis: sys_application_resources
     if (localTableSet.has('sys_application_resources') && remoteTableSet.has('sys_application_resources')) {
       try {
-        const localResources = await localSql`SELECT item_code, resource_type, label_key, min_role, route FROM sys_application_resources WHERE deleted_at IS NULL`;
-        const remoteResources = await remoteSql`SELECT item_code, resource_type, label_key, min_role, route FROM sys_application_resources WHERE deleted_at IS NULL`;
-        const remoteResMap = new Map(remoteResources.map((r: any) => [r.item_code, r]));
+        interface ResRow { item_code: string; resource_type: string; label_key: string | null; min_role: string; route: string | null }
+        const localResources = await localSql<ResRow[]>`SELECT item_code, resource_type, label_key, min_role, route FROM sys_application_resources WHERE deleted_at IS NULL`;
+        const remoteResources = await remoteSql<ResRow[]>`SELECT item_code, resource_type, label_key, min_role, route FROM sys_application_resources WHERE deleted_at IS NULL`;
+        const remoteResMap = new Map(remoteResources.map((r) => [r.item_code, r]));
 
         for (const lr of localResources) {
           const rr = remoteResMap.get(lr.item_code);
           if (!rr) {
             hasDrift = true;
-            missingItemsReport.push(`[sys_application_resources] Recurso "${lr.item_code}" (${lr.label_key ?? lr.resource_type}) falta no Remoto`);
+            missingItemsReport.push(`[sys_application_resources] Resource "${lr.item_code}" (${lr.label_key ?? lr.resource_type}) missing in Remote`);
           } else if (lr.route !== rr.route || lr.min_role !== rr.min_role) {
             hasDrift = true;
-            missingItemsReport.push(`[sys_application_resources] Recurso "${lr.item_code}" com divergência de rota/role: Dev=[${lr.min_role}] ${lr.route ?? ''} vs Remoto=[${rr.min_role}] ${rr.route ?? ''}`);
+            missingItemsReport.push(`[sys_application_resources] Resource "${lr.item_code}" route/role drift: Dev=[${lr.min_role}] ${lr.route ?? ''} vs Remote=[${rr.min_role}] ${rr.route ?? ''}`);
           }
         }
       } catch {
-        // Ignora
+        // Fallback
       }
     }
 
-    // 4. Análise aprofundada de tenants: sys_tenants
+    // 4. Tenant analysis: sys_tenants
     if (localTableSet.has('sys_tenants') && remoteTableSet.has('sys_tenants')) {
       try {
-        const localTenants = await localSql`SELECT slug, name FROM sys_tenants WHERE deleted_at IS NULL`;
-        const remoteTenants = await remoteSql`SELECT slug, name FROM sys_tenants WHERE deleted_at IS NULL`;
-        const remoteTenantSlugs = new Set(remoteTenants.map((t: any) => t.slug));
+        interface TenantRow { slug: string; name: string }
+        const localTenants = await localSql<TenantRow[]>`SELECT slug, name FROM sys_tenants WHERE deleted_at IS NULL`;
+        const remoteTenants = await remoteSql<TenantRow[]>`SELECT slug, name FROM sys_tenants WHERE deleted_at IS NULL`;
+        const remoteTenantSlugs = new Set(remoteTenants.map((t) => t.slug));
 
         for (const lt of localTenants) {
           if (!remoteTenantSlugs.has(lt.slug)) {
             hasDrift = true;
-            missingItemsReport.push(`[sys_tenants] Tenant "${lt.slug}" (${lt.name}) falta no Remoto`);
+            missingItemsReport.push(`[sys_tenants] Tenant "${lt.slug}" (${lt.name}) missing in Remote`);
           }
         }
       } catch {
-        // Ignora
+        // Fallback
       }
     }
 
-    // 5. Análise aprofundada de grupos: iam_groups
+    // 5. Group analysis: iam_groups
     if (localTableSet.has('iam_groups') && remoteTableSet.has('iam_groups')) {
       try {
-        const localGroups = await localSql`SELECT name FROM iam_groups WHERE deleted_at IS NULL`;
-        const remoteGroups = await remoteSql`SELECT name FROM iam_groups WHERE deleted_at IS NULL`;
-        const remoteGroupNames = new Set(remoteGroups.map((g: any) => g.name));
+        interface GroupRow { name: string }
+        const localGroups = await localSql<GroupRow[]>`SELECT name FROM iam_groups WHERE deleted_at IS NULL`;
+        const remoteGroups = await remoteSql<GroupRow[]>`SELECT name FROM iam_groups WHERE deleted_at IS NULL`;
+        const remoteGroupNames = new Set(remoteGroups.map((g) => g.name));
 
         for (const lg of localGroups) {
           if (!remoteGroupNames.has(lg.name)) {
             hasDrift = true;
-            missingItemsReport.push(`[iam_groups] Grupo "${lg.name}" falta no Remoto`);
+            missingItemsReport.push(`[iam_groups] Group "${lg.name}" missing in Remote`);
           }
         }
       } catch {
-        // Ignora
+        // Fallback
       }
     }
 
-    // 6. Análise aprofundada de usuários: iam_users
+    // 6. User analysis: iam_users
     if (localTableSet.has('iam_users') && remoteTableSet.has('iam_users')) {
       try {
-        const localUsers = await localSql`SELECT username, role FROM iam_users WHERE deleted_at IS NULL`;
-        const remoteUsers = await remoteSql`SELECT username, role FROM iam_users WHERE deleted_at IS NULL`;
-        const remoteUserMap = new Map(remoteUsers.map((u: any) => [u.username, u.role]));
+        interface UserRow { username: string; role: UserRole }
+        const localUsers = await localSql<UserRow[]>`SELECT username, role FROM iam_users WHERE deleted_at IS NULL`;
+        const remoteUsers = await remoteSql<UserRow[]>`SELECT username, role FROM iam_users WHERE deleted_at IS NULL`;
+        const remoteUserMap = new Map(remoteUsers.map((u) => [u.username, u.role]));
 
         for (const lu of localUsers) {
           if (!remoteUserMap.has(lu.username)) {
             hasDrift = true;
-            missingItemsReport.push(`[iam_users] Usuário "${lu.username}" (${lu.role}) falta no Remoto`);
+            missingItemsReport.push(`[iam_users] User "${lu.username}" (${lu.role}) missing in Remote`);
           } else if (remoteUserMap.get(lu.username) !== lu.role) {
             hasDrift = true;
-            missingItemsReport.push(`[iam_users] Role de "${lu.username}" diverge: Dev=${lu.role} vs Remoto=${remoteUserMap.get(lu.username)}`);
+            missingItemsReport.push(`[iam_users] Role for "${lu.username}" diverges: Dev=${lu.role} vs Remote=${remoteUserMap.get(lu.username)}`);
           }
         }
       } catch {
-        // Ignora
+        // Fallback
       }
     }
 
-    // Exibição da Tabela de Auditoria
-    console.log('\n=== RELATÓRIO DE AUDITORIA: DESENVOLVIMENTO vs REMOTO ===\n');
+    // Audit Table Display
+    console.log('\n=== AUDIT REPORT: DEVELOPMENT vs REMOTE ===\n');
     console.log(
-      'Tabela'.padEnd(30) +
+      'Table'.padEnd(30) +
       'Dev (Local)'.padEnd(16) +
-      'Remoto (Testes)'.padEnd(18) +
-      'Diferença'.padEnd(14) +
+      'Remote (Target)'.padEnd(18) +
+      'Difference'.padEnd(14) +
       'Status'
     );
     console.log('-'.repeat(95));
 
     for (const s of summaries) {
-      let statusText = '✅ COERENTE';
-      if (s.status === 'FALTA NO REMOTO') {
-        statusText = '❌ FALTA NO REMOTO';
-      } else if (s.status === 'FALTA NO DEV') {
-        statusText = '⚠️  FALTA NO DEV';
-      } else if (s.status === 'DIVERGENTE') {
-        statusText = '⚠️  DIVERGENTE';
+      let statusText = '✅ COHERENT';
+      if (s.status === 'MISSING_IN_REMOTE') {
+        statusText = '❌ MISSING IN REMOTE';
+      } else if (s.status === 'MISSING_IN_DEV') {
+        statusText = '⚠️  MISSING IN DEV';
+      } else if (s.status === 'DRIFT') {
+        statusText = '⚠️  DRIFT';
       }
 
       console.log(
@@ -388,12 +422,12 @@ async function runDriftAudit(localConfig: PgConnectionConfig, remoteConfig: PgCo
     console.log('-'.repeat(95));
 
     if (missingItemsReport.length > 0) {
-      console.log('\n[DETALHAMENTO DAS DIVERGÊNCIAS DETECTADAS]:');
+      console.log('\n[DETECTED DRIFT DETAILS]:');
       for (const item of missingItemsReport) {
         console.log(`  • ${item}`);
       }
     } else if (!hasDrift) {
-      console.log('\n✅ Perfeito! Todos os registros e tabelas auditados estão coerentes entre Dev e Remoto.');
+      console.log('\n✅ Perfect! All audited tables and records are coherent between Dev and Remote.');
     }
 
     return hasDrift;
@@ -408,17 +442,17 @@ async function runDriftAudit(localConfig: PgConnectionConfig, remoteConfig: PgCo
  */
 function formatElapsedTime(minutes: number | null): string {
   if (minutes === null) return 'N/A';
-  if (minutes < 1) return 'agora mesmo';
-  if (minutes < 60) return `${minutes} min atrás`;
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
   const remMinutes = minutes % 60;
-  if (hours < 24) return `${hours}h ${remMinutes}m atrás`;
+  if (hours < 24) return `${hours}h ${remMinutes}m ago`;
   const days = Math.floor(hours / 24);
-  return `${days} dia(s) atrás`;
+  return `${days}d ago`;
 }
 
 /**
- * Consulta conexões ativas no PostgreSQL, sessões em iam_sessions e última atividade no banco remoto
+ * Queries active PostgreSQL connections, iam_sessions and latest activity on remote database
  */
 async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
   activeUsers: ActiveUserInfo[];
@@ -440,10 +474,10 @@ async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
       `);
       dbConnections = connRes?.count ?? 0;
     } catch {
-      // Role pode não ter permissão para ler estatísticas globais
+      // Role may lack permissions for global stats
     }
 
-    // 1. Obter mapa de última atividade no sys_audit_logs por usuário
+    // 1. Map latest activity in sys_audit_logs per user
     const lastAuditMap = new Map<string, Date>();
     try {
       const auditRows = await remoteSql<{ username: string; max_date: Date }[]>`
@@ -457,16 +491,16 @@ async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
         }
       }
     } catch {
-      // sys_audit_logs pode não existir
+      // sys_audit_logs might not exist yet
     }
 
-    // 2. Obter sessões ativas (expires_at > NOW() AND revoked_at IS NULL)
+    // 2. Query active sessions (expires_at > NOW() AND revoked_at IS NULL)
     let totalActiveSessions = 0;
     const userGroups = new Map<string, {
       username: string;
       fullName: string;
       email: string;
-      role: string;
+      role: UserRole;
       latestIp: string | null;
       activeSessionCount: number;
       lastLoginAt: Date;
@@ -478,7 +512,7 @@ async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
         username: string;
         full_name: string;
         email: string;
-        role: string;
+        role: UserRole;
         last_access: Date | null;
         ip_address: string | null;
         user_agent: string | null;
@@ -527,10 +561,10 @@ async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
         }
       }
     } catch {
-      // Tabela iam_sessions pode não existir ainda
+      // iam_sessions might not exist yet
     }
 
-    // 3. Processar cada usuário único para definir última atividade real e presença
+    // 3. Process each user to determine true latest activity and presence
     const now = Date.now();
     const activeUsers: ActiveUserInfo[] = [];
     let onlineCount = 0;
@@ -551,15 +585,15 @@ async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
       const lastActivityAt = new Date(maxActivityTs);
       const minutesSinceLastActivity = Math.max(0, Math.floor((now - maxActivityTs) / 60000));
 
-      let presence: UserPresenceStatus = 'INACTIVE';
+      let presence: UserPresenceStatus = UserPresenceStatus.INACTIVE;
       if (minutesSinceLastActivity <= 15) {
-        presence = 'ONLINE';
+        presence = UserPresenceStatus.ONLINE;
         onlineCount += 1;
       } else if (minutesSinceLastActivity <= 60) {
-        presence = 'IDLE_RECENT';
+        presence = UserPresenceStatus.IDLE_RECENT;
         idleCount += 1;
       } else {
-        presence = 'INACTIVE';
+        presence = UserPresenceStatus.INACTIVE;
         inactiveCount += 1;
       }
 
@@ -577,16 +611,20 @@ async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
       });
     }
 
-    // Ordenar: ONLINE primeiro, depois IDLE_RECENT, depois INACTIVE (e por mais recente)
+    // Sort: ONLINE first, then IDLE_RECENT, then INACTIVE
     activeUsers.sort((a, b) => {
-      const order: Record<UserPresenceStatus, number> = { ONLINE: 0, IDLE_RECENT: 1, INACTIVE: 2 };
+      const order: Record<UserPresenceStatus, number> = {
+        [UserPresenceStatus.ONLINE]: 0,
+        [UserPresenceStatus.IDLE_RECENT]: 1,
+        [UserPresenceStatus.INACTIVE]: 2,
+      };
       if (order[a.presence] !== order[b.presence]) {
         return order[a.presence] - order[b.presence];
       }
       return (a.minutesSinceLastActivity ?? 999999) - (b.minutesSinceLastActivity ?? 999999);
     });
 
-    // 4. Últimas 5 ações de auditoria geral
+    // 4. Last 5 general audit actions
     const recentAuditLogs: { username: string; action: string; resource: string; createdAt: Date }[] = [];
     try {
       const logs = await remoteSql<{
@@ -603,14 +641,14 @@ async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
       `;
       for (const l of logs) {
         recentAuditLogs.push({
-          username: l.username || 'Desconhecido',
+          username: l.username || 'Unknown',
           action: l.action,
           resource: l.resource,
           createdAt: l.created_at,
         });
       }
     } catch {
-      // Ignora
+      // Fallback
     }
 
     return {
@@ -628,73 +666,75 @@ async function getRemoteActivity(remoteConfig: PgConnectionConfig): Promise<{
 }
 
 /**
- * Exibe relatório completo de usuários e sessões ativas no servidor remoto
+ * Displays full report of users and active sessions on remote server
  */
 async function displayRemoteUsersReport(remoteConfig: PgConnectionConfig): Promise<void> {
   console.log('\n============================================================');
-  console.log('  👥 USUÁRIOS E ATIVIDADE EM TEMPO REAL NO SERVIDOR REMOTO   ');
-  console.log(`  Servidor: ${remoteConfig.host} | Base: ${remoteConfig.database}`);
+  console.log('  👥 REAL-TIME USERS AND ACTIVITY ON REMOTE SERVER           ');
+  console.log(`  Server: ${remoteConfig.host} | Database: ${remoteConfig.database}`);
   console.log('============================================================\n');
 
   const activity = await getRemoteActivity(remoteConfig);
 
-  console.log('Resumo Operacional:');
-  console.log(`  • Conexões ativas no PostgreSQL: ${activity.dbConnections} conexão(ões)`);
-  console.log(`  • Total de sessões abertas no banco: ${activity.totalActiveSessions} (persistência padrão de 7 dias)`);
-  console.log(`  • Usuários únicos com sessão aberta: ${activity.activeUsers.length} usuário(s)\n`);
+  console.log('Operational Summary:');
+  console.log(`  • Active PostgreSQL connections: ${activity.dbConnections} connection(s)`);
+  console.log(`  • Total active sessions in database: ${activity.totalActiveSessions} (default 7-day persistence)`);
+  console.log(`  • Unique users with active sessions: ${activity.activeUsers.length} user(s)\n`);
 
-  console.log('Status de Presença em Tempo Real:');
-  console.log(`  🟢 Online Agora (ação nos últimos 15 min): ${activity.onlineCount} usuário(s)`);
-  console.log(`  🟡 Inativo Recente (ação entre 15 e 60 min): ${activity.idleCount} usuário(s)`);
-  console.log(`  ⚪ Ausente / Aba Fechada (sem ações há mais de 1h): ${activity.inactiveCount} usuário(s)\n`);
+  console.log('Real-Time Presence Status:');
+  console.log(`  🟢 Online Now (activity in last 15 min): ${activity.onlineCount} user(s)`);
+  console.log(`  🟡 Idle Recent (activity between 15 and 60 min): ${activity.idleCount} user(s)`);
+  console.log(`  ⚪ Away / Closed Tab (no activity for > 1h): ${activity.inactiveCount} user(s)\n`);
 
   if (activity.activeUsers.length > 0) {
     console.log(
       'Username'.padEnd(16) +
-      'Nome Completo'.padEnd(24) +
+      'Full Name'.padEnd(24) +
       'Role'.padEnd(12) +
-      'Sessões'.padEnd(9) +
-      'Último Login'.padEnd(16) +
-      'Última Atividade'.padEnd(20) +
-      'Presença'
+      'Sessions'.padEnd(10) +
+      'Last Login'.padEnd(20) +
+      'Last Activity'.padEnd(20) +
+      'Presence'
     );
     console.log('-'.repeat(115));
 
     for (const u of activity.activeUsers) {
-      const loginStr = u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString('pt-BR') + ' ' + new Date(u.lastLoginAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+      const loginStr = u.lastLoginAt
+        ? new Date(u.lastLoginAt).toISOString().replace('T', ' ').slice(0, 16)
+        : 'N/A';
       const elapsedStr = formatElapsedTime(u.minutesSinceLastActivity);
 
-      let statusBadge = '⚪ Ausente (>1h)';
-      if (u.presence === 'ONLINE') {
-        statusBadge = '🟢 ONLINE AGORA';
-      } else if (u.presence === 'IDLE_RECENT') {
-        statusBadge = '🟡 Inativo Recente';
+      let statusBadge = '⚪ Away (>1h)';
+      if (u.presence === UserPresenceStatus.ONLINE) {
+        statusBadge = '🟢 ONLINE NOW';
+      } else if (u.presence === UserPresenceStatus.IDLE_RECENT) {
+        statusBadge = '🟡 Idle Recent';
       }
 
       console.log(
         u.username.padEnd(16) +
         u.fullName.slice(0, 22).padEnd(24) +
         u.role.padEnd(12) +
-        String(u.activeSessionCount).padEnd(9) +
-        loginStr.padEnd(16) +
+        String(u.activeSessionCount).padEnd(10) +
+        loginStr.padEnd(20) +
         elapsedStr.padEnd(20) +
         statusBadge
       );
     }
     console.log('-'.repeat(115));
   } else {
-    console.log('✅ Nenhuma sessão encontrada no banco remoto.');
-    console.log('   O banco remoto está 100% livre para manutenção.');
+    console.log('✅ No active sessions found on the remote database.');
+    console.log('   The remote database is free for maintenance operations.');
   }
 
   if (activity.recentAuditLogs.length > 0) {
-    console.log('\nÚltimas ações registradas nos últimos 30 minutos (sys_audit_logs):');
+    console.log('\nRecent actions recorded in the last 30 minutes (sys_audit_logs):');
     for (const log of activity.recentAuditLogs) {
-      const timeStr = new Date(log.createdAt).toLocaleTimeString('pt-BR');
-      console.log(`  • [${timeStr}] ${log.username}: ${log.action} em ${log.resource}`);
+      const timeStr = new Date(log.createdAt).toISOString().replace('T', ' ').slice(11, 19);
+      console.log(`  • [${timeStr}] ${log.username}: ${log.action} on ${log.resource}`);
     }
   } else {
-    console.log('\nNenhuma ação registrada nos últimos 30 minutos (sys_audit_logs).');
+    console.log('\nNo actions recorded in the last 30 minutes (sys_audit_logs).');
   }
 }
 
@@ -702,8 +742,8 @@ async function displayRemoteUsersReport(remoteConfig: PgConnectionConfig): Promi
  * Main db:sync-remote entrypoint
  */
 export async function dbSyncRemote(options: DbSyncRemoteOptions = {}): Promise<void> {
-  if (options.mode && !['users', 'audit', 'clone'].includes(options.mode)) {
-    throw new Error('Supported modes: users, audit, clone. Reset was removed; use a reviewed maintenance clone.');
+  if (options.mode && !Object.values(DbSyncRemoteMode).includes(options.mode)) {
+    throw new Error(`Supported modes: ${Object.values(DbSyncRemoteMode).join(', ')}. Reset was removed; use a reviewed maintenance clone.`);
   }
   const remoteConfig = await promptRemoteConfig(options.remoteHost);
   const identity = remoteConfig.host + ':' + remoteConfig.port + '/' + remoteConfig.database;
@@ -711,15 +751,25 @@ export async function dbSyncRemote(options: DbSyncRemoteOptions = {}): Promise<v
   if (!remoteConnection.success) throw new Error('Remote connection failed: ' + remoteConnection.error);
   let mode = options.mode;
   if (!mode) {
-    const answer = await inquirer.prompt<{ mode: 'audit' | 'users' | 'clone' }>([{
-      type: 'list', name: 'mode', message: 'Operacao remota:', default: 'audit',
-      choices: [{ name: 'Auditoria somente leitura', value: 'audit' }, { name: 'Usuarios e atividade', value: 'users' }, { name: 'Clonagem excepcional em manutencao', value: 'clone' }],
+    const answer = await inquirer.prompt<{ mode: DbSyncRemoteMode }>([{
+      type: 'list',
+      name: 'mode',
+      message: 'Remote operation mode:',
+      default: DbSyncRemoteMode.AUDIT,
+      choices: [
+        { name: 'Read-only drift audit', value: DbSyncRemoteMode.AUDIT },
+        { name: 'Users and real-time activity', value: DbSyncRemoteMode.USERS },
+        { name: 'Exceptional maintenance clone', value: DbSyncRemoteMode.CLONE },
+      ],
     }]);
     mode = answer.mode;
   }
-  if (mode === 'users') { await displayRemoteUsersReport(remoteConfig); return; }
+  if (mode === DbSyncRemoteMode.USERS) {
+    await displayRemoteUsersReport(remoteConfig);
+    return;
+  }
   const localConfig = resolveLocalConfig();
-  if (mode === 'audit') {
+  if (mode === DbSyncRemoteMode.AUDIT) {
     const localConnection = await testPgConnection(localConfig);
     if (!localConnection.success) throw new Error('Local connection failed.');
     await runDriftAudit(localConfig, remoteConfig);
@@ -731,8 +781,10 @@ export async function dbSyncRemote(options: DbSyncRemoteOptions = {}): Promise<v
   }
   if (!options.force) {
     const { confirmed } = await inquirer.prompt<{ confirmed: boolean }>([{
-      type: 'confirm', name: 'confirmed', default: false,
-      message: 'Substituir os dados remotos pelos locais, mantendo backup e a base anterior para recuperacao?',
+      type: 'confirm',
+      name: 'confirmed',
+      default: false,
+      message: 'Replace remote data with local database snapshot, keeping backups and previous database for recovery?',
     }]);
     if (!confirmed) return;
   }

@@ -20,18 +20,6 @@ import {
 import { t, useTranslation } from '../i18n/index.js';
 import type { MenuItem, AclPermissionRecord } from '../types/auth.js';
 import { AlertBanner, AlertBannerType } from '../components/AlertBanner.js';
-import { MockDataBanner } from '../components/MockDataBanner.js';
-
-const REAL_BACKEND_TABS = new Set<string>([
-  'menu_sys_settings',
-  'menu_sys_users',
-  'menu_sys_institution',
-  'menu_sys_organization',
-  'menu_platform_settings',
-  'menu_platform_tenants',
-  'menu_profile',
-  'menu_password',
-]);
 import {
   type ResourceTreeNode,
   renderResourceIcon,
@@ -42,7 +30,7 @@ import { MainLayout } from '../arch/layout/MainLayout.js';
 import { ProfileView } from '../arch/pages/ProfileView.js';
 import { SecurityView } from '../arch/pages/SecurityView.js';
 import { UsersManagementView } from '../arch/pages/UsersManagementView.js';
-import { PermissionsMatrixModal, type PermissionTargetInfo } from '../arch/pages/PermissionsMatrixModal.js';
+import { PermissionsMatrixModal, type PermissionTargetInfo } from '../arch/components/PermissionsMatrixModal.js';
 import { AuditLogsView } from '../arch/pages/AuditLogsView.js';
 import { ApplicationSettingsView } from '../arch/pages/ApplicationSettingsView.js';
 import { PlatformSettingsView } from '../arch/pages/PlatformSettingsView.js';
@@ -66,8 +54,6 @@ import { CashFlowView, PayablesReceivablesView, BillingTissView } from '../busin
 import { MetricsView } from '../business/management/MetricsView.js';
 import { ReportsView } from '../business/management/ReportsView.js';
 
-// Re-exports for backward compatibility
-export { renderResourceIcon, type ResourceTreeNode };
 
 const ROUTE_TO_TAB: Record<string, string> = {};
 const TAB_TO_ROUTE: Record<string, string> = {};
@@ -80,48 +66,48 @@ for (const res of APP_RESOURCE_MANIFEST) {
 }
 
 export default function DashboardPage() {
-  const { locale } = useTranslation();
+  const { locale, t } = useTranslation();
   const { user, claims, error: authError, logout, fetchProfile, hasCapability } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 1. Permissões de Atendimento
+  // 1. Attendance Permissions
   const canReadOpSchedule = hasCapability('op_schedule', ResourceAction.READ);
   const canReadOpAttendance = hasCapability('op_attendance', ResourceAction.READ);
 
-  // 2. Permissões Clínicas
+  // 2. Clinical Permissions
   const canReadOpPatients = hasCapability('op_patients', ResourceAction.READ);
   const canReadOpPep = hasCapability('op_pep', ResourceAction.READ);
   const canReadOpConsultations = hasCapability('op_consultations', ResourceAction.READ);
 
-  // 3. Permissões Financeiras
+  // 3. Financial Permissions
   const canReadOpCashflow = hasCapability('op_cashflow', ResourceAction.READ);
   const canReadOpPayables = hasCapability('op_payables', ResourceAction.READ);
   const canReadOpBilling = hasCapability('op_billing', ResourceAction.READ);
 
-  // 4. Permissões de Cadastros Base
+  // 4. Base Registries Permissions
   const canReadBaseProcedures = hasCapability('base_procedures', ResourceAction.READ) || hasCapability('op_procedures', ResourceAction.READ);
   const canReadBaseHealthPlans = hasCapability('base_health_plans', ResourceAction.READ);
   const canReadBaseStaff = hasCapability('base_staff', ResourceAction.READ) || hasCapability('op_staff', ResourceAction.READ);
 
-  // 5. Permissões de Gestão (Contexto BUSINESS)
+  // 5. Management Permissions (BUSINESS Context)
   const canReadMgmtIndicators = hasCapability('menu_mgmt_indicators', ResourceAction.READ);
   const canReadMgmtReports = hasCapability('menu_mgmt_reports', ResourceAction.READ);
 
-  // 6. Permissões de Sistema (Contexto ARCH)
+  // 6. System Permissions (ARCH Context)
   const canReadSysSettings = hasCapability('menu_sys_settings', ResourceAction.READ);
   const canReadSysUsers = hasCapability('menu_sys_users', ResourceAction.READ);
   const canReadSysInstitution = hasCapability('menu_sys_institution', ResourceAction.READ);
   const canReadSysAudit = hasCapability('menu_sys_audit', ResourceAction.READ);
 
-  // 7. Permissões de Plataforma (Contexto ARCH - Exclusivo OWNER)
+  // 7. Platform Permissions (ARCH Context - Exclusive to OWNER)
   const canReadPlatformSettings = hasCapability('menu_platform_settings', ResourceAction.READ);
   const canReadPlatformTenants = hasCapability('menu_platform_tenants', ResourceAction.READ);
   const canReadPlatformApiKeys = hasCapability('menu_platform_api_keys', ResourceAction.READ);
   const canReadPlatformWebhooks = hasCapability('menu_platform_webhooks', ResourceAction.READ);
   const canReadPlatformPolicies = hasCapability('menu_platform_policies', ResourceAction.READ);
 
-  // Determinação dos itens permitidos
+  // Determine allowed navigation items
   const allowedNavItems = useMemo(() => {
     const list: string[] = [];
     if (canReadOpSchedule) list.push('op_schedule');
@@ -135,15 +121,15 @@ export default function DashboardPage() {
     if (canReadBaseStaff) list.push('base_staff');
     if (canReadBaseHealthPlans) list.push('base_health_plans');
     if (canReadBaseProcedures) list.push('base_procedures');
-    // Gestão
+    // Management
     if (canReadMgmtIndicators) list.push('menu_mgmt_indicators');
     if (canReadMgmtReports) list.push('menu_mgmt_reports');
-    // Sistema
+    // System
     if (canReadSysSettings) list.push('menu_sys_settings');
     if (canReadSysUsers) list.push('menu_sys_users');
     if (canReadSysInstitution) list.push('menu_sys_institution');
     if (canReadSysAudit) list.push('menu_sys_audit');
-    // Plataforma
+    // Platform
     if (canReadPlatformSettings) list.push('menu_platform_settings');
     if (canReadPlatformTenants) list.push('menu_platform_tenants');
     if (canReadPlatformApiKeys) list.push('menu_platform_api_keys');
@@ -167,7 +153,7 @@ export default function DashboardPage() {
   const [, setMenuItems] = useState<MenuItem[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
 
-  // Estados da Matriz de Permissões ACL
+  // ACL Permissions Matrix States
   const [permissionTarget, setPermissionTarget] = useState<PermissionTargetInfo | null>(null);
   const [resourceTree, setResourceTree] = useState<ResourceTreeNode[]>([]);
   const [currentPermissions, setCurrentPermissions] = useState<AclPermissionRecord[]>([]);
@@ -199,7 +185,7 @@ export default function DashboardPage() {
     }
   }, [allowedNavItems, activeTab]);
 
-  // Sincronização bidirecional de URL e aba ativa
+  // Bidirectional URL and active tab synchronization
   useEffect(() => {
     const currentPath = location.pathname;
     const matchedTab = ROUTE_TO_TAB[currentPath];
@@ -227,7 +213,7 @@ export default function DashboardPage() {
     navigate('/login');
   };
 
-  // Abrir Modal de Permissões para Usuário
+  // Open Permissions Modal for User
   const handleOpenUserPermissions = async (u: UserListItem) => {
     setPermissionTarget({
       type: PermissionTargetType.USER,
@@ -253,23 +239,24 @@ export default function DashboardPage() {
 
       const inheritedAcl = await getUserInheritedAcl(u.id);
       setInheritedPermissions(inheritedAcl || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : '';
       setPermissionFeedback({
         type: AlertBannerType.ERROR,
-        msg: t('ERROR_LOAD_PERMISSIONS') + ' ' + (err?.message || ''),
+        msg: t('ERROR_LOAD_PERMISSIONS') + (errMsg ? ` ${errMsg}` : ''),
       });
     } finally {
       setPermissionsLoading(false);
     }
   };
 
-  // Abrir Modal de Permissões para Grupo
+  // Open Permissions Modal for Group
   const handleOpenGroupPermissions = async (g: GroupListItem) => {
     setPermissionTarget({
       type: PermissionTargetType.GROUP,
       id: g.id,
       name: g.name,
-      subtitle: g.description || 'Grupo de Acesso Clínico',
+      subtitle: g.description || t('GROUP_DEFAULT_SUBTITLE'),
     });
     setPermissionsLoading(true);
     setPermissionFeedback(null);
@@ -284,17 +271,18 @@ export default function DashboardPage() {
       const groupAcl = await getGroupAcl(g.id);
       setCurrentPermissions(groupAcl || []);
       setInheritedPermissions([]);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : '';
       setPermissionFeedback({
         type: AlertBannerType.ERROR,
-        msg: t('ERROR_LOAD_PERMISSIONS') + ' ' + (err?.message || ''),
+        msg: t('ERROR_LOAD_PERMISSIONS') + (errMsg ? ` ${errMsg}` : ''),
       });
     } finally {
       setPermissionsLoading(false);
     }
   };
 
-  // Salvar Permissões da Matriz
+  // Save Matrix Permissions
   const handleSavePermissions = async (newPermissions: AclPermissionRecord[]) => {
     if (!permissionTarget) return;
     setPermissionsSaving(true);
@@ -319,26 +307,27 @@ export default function DashboardPage() {
       setTimeout(() => {
         setPermissionTarget(null);
       }, 1000);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : '';
       setPermissionFeedback({
         type: AlertBannerType.ERROR,
-        msg: t('ERROR_SYNC_PERMISSIONS') + ' ' + (err?.message || ''),
+        msg: t('ERROR_SYNC_PERMISSIONS') + (errMsg ? ` ${errMsg}` : ''),
       });
     } finally {
       setPermissionsSaving(false);
     }
   };
 
-  // Renderização Dinâmica do Conteúdo Ativo
+  // Dynamic Active Content Rendering
   const renderActiveContent = () => {
     switch (activeTab) {
-      // 1. Atendimento
+      // 1. Attendance
       case 'op_attendance':
         return <AttendanceQueueView />;
       case 'op_schedule':
         return <ScheduleView />;
 
-      // 2. Clínico
+      // 2. Clinical
       case 'op_patients':
         return <PatientsView />;
       case 'op_pep':
@@ -346,7 +335,7 @@ export default function DashboardPage() {
       case 'op_consultations':
         return <ConsultationsView />;
 
-      // 3. Financeiro
+      // 3. Financial
       case 'op_cashflow':
         return <CashFlowView />;
       case 'op_payables':
@@ -354,7 +343,7 @@ export default function DashboardPage() {
       case 'op_billing':
         return <BillingTissView />;
 
-      // 4. Cadastros
+      // 4. Registries
       case 'base_procedures':
       case 'op_procedures':
         return <ProceduresView />;
@@ -366,19 +355,19 @@ export default function DashboardPage() {
       case 'op_collaborators':
         return <PractitionersView />;
 
-      // 5. Perfil & Segurança
+      // 5. Profile & Security
       case 'menu_profile':
         return <ProfileView user={user} />;
       case 'menu_password':
         return <SecurityView />;
 
-      // 6. Gestão (Contexto BUSINESS)
+      // 6. Management (BUSINESS Context)
       case 'menu_mgmt_indicators':
         return <MetricsView />;
       case 'menu_mgmt_reports':
         return <ReportsView />;
 
-      // 7. Sistema (Contexto ARCH)
+      // 7. System (ARCH Context)
       case 'menu_sys_settings':
         return <ApplicationSettingsView />;
       case 'menu_sys_users':
@@ -396,7 +385,7 @@ export default function DashboardPage() {
       case 'menu_sys_audit':
         return <AuditLogsView user={user} />;
 
-      // 8. Plataforma (Contexto ARCH - Exclusivo OWNER)
+      // 8. Platform (ARCH Context - Exclusive to OWNER)
       case 'menu_platform_settings':
         return <PlatformSettingsView />;
       case 'menu_platform_tenants':
@@ -408,7 +397,7 @@ export default function DashboardPage() {
       case 'menu_platform_policies':
         return <PoliciesTermsView />;
 
-      // 9. Ajuda
+      // 9. Help
       case 'menu_help':
         return <HelpSupportView />;
 
@@ -432,17 +421,17 @@ export default function DashboardPage() {
             }}>
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
-                  Sistema de Gestão Clínica Integrada
+                  {t('DASHBOARD_WELCOME_SUBTITLE')}
                 </div>
                 <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#f8fafc' }}>
-                  Olá, {user?.full_name || user?.username}! 👋
+                  {t('DASHBOARD_WELCOME_USER', { name: user?.full_name || user?.username || '' })}
                 </h2>
                 <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: 6, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   {user?.job_title && (
                     <span style={{ color: '#bae6fd', fontWeight: 500 }}>💼 {user.job_title}</span>
                   )}
                   <span>•</span>
-                  <span>Unidade: <strong style={{ color: '#f8fafc' }}>Clínica Principal</strong></span>
+                  <span>{t('DASHBOARD_UNIT_LABEL')} <strong style={{ color: '#f8fafc' }}>{t('DASHBOARD_UNIT_MAIN')}</strong></span>
                   <span>•</span>
                   <span style={{
                     padding: '2px 8px',
@@ -454,15 +443,15 @@ export default function DashboardPage() {
                     border: '1px solid rgba(56, 189, 248, 0.3)',
                     textTransform: 'uppercase',
                   }}>
-                    Perfil {user?.role ?? 'USER'}
+                    {user?.role ?? 'USER'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Acesso Rápido aos Módulos */}
+            {/* Quick Access to Primary Modules */}
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-              ⚡ Atalhos Rápidos
+              {t('DASHBOARD_SHORTCUTS_TITLE')}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
               {canReadOpSchedule && (
@@ -481,8 +470,8 @@ export default function DashboardPage() {
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; }}
                 >
                   <div style={{ fontSize: '1.4rem', marginBottom: 6 }}>📅</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>Agenda & Marcações</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>Consultas agendadas e horários da clínica</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>{t('DASHBOARD_SCHEDULE_TITLE')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>{t('DASHBOARD_SCHEDULE_DESC')}</div>
                 </div>
               )}
 
@@ -502,8 +491,8 @@ export default function DashboardPage() {
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; }}
                 >
                   <div style={{ fontSize: '1.4rem', marginBottom: 6 }}>📋</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>Fila & Triagem</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>Gestão do fluxo e atendimento ao paciente</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>{t('DASHBOARD_QUEUE_TITLE')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>{t('DASHBOARD_QUEUE_DESC')}</div>
                 </div>
               )}
 
@@ -523,8 +512,8 @@ export default function DashboardPage() {
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; }}
                 >
                   <div style={{ fontSize: '1.4rem', marginBottom: 6 }}>🧑‍🤝‍🧑</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>Pacientes</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>Cadastro e histórico de prontuários</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>{t('DASHBOARD_PATIENTS_TITLE')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>{t('DASHBOARD_PATIENTS_DESC')}</div>
                 </div>
               )}
 
@@ -544,8 +533,8 @@ export default function DashboardPage() {
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; }}
                 >
                   <div style={{ fontSize: '1.4rem', marginBottom: 6 }}>🩺</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>Colaboradores</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>Corpo clínico, escalas e profissionais</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>{t('DASHBOARD_CLINICAL_TITLE')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>{t('DASHBOARD_CLINICAL_DESC')}</div>
                 </div>
               )}
 
@@ -565,8 +554,8 @@ export default function DashboardPage() {
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; }}
                 >
                   <div style={{ fontSize: '1.4rem', marginBottom: 6 }}>👥</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>Gestão de Usuários</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>Colaboradores, grupos e controle de acesso</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.90rem', color: '#0f172a' }}>{t('DASHBOARD_USERS_TITLE')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 3 }}>{t('DASHBOARD_USERS_DESC')}</div>
                 </div>
               )}
             </div>
@@ -620,11 +609,10 @@ export default function DashboardPage() {
             onClose={() => {}}
           />
         )}
-        {activeTab !== '' && !REAL_BACKEND_TABS.has(activeTab) && <MockDataBanner />}
         {renderActiveContent()}
       </MainLayout>
 
-      {/* Modal Matriz de Permissões ACL */}
+      {/* ACL Permissions Matrix Modal */}
       {permissionTarget && (
         <PermissionsMatrixModal
           permissionTarget={permissionTarget}

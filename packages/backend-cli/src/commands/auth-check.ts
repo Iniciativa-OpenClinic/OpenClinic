@@ -1,5 +1,14 @@
 import postgres from 'postgres';
-import { hashPassword, verifyPassword, createAccessToken, decodeToken } from '@openclinic/core';
+import {
+  hashPassword,
+  verifyPassword,
+  createAccessToken,
+  decodeToken,
+  AUTH_SECURITY_DEFAULTS,
+  UserRole,
+  resolveDatabaseUrl,
+  resolveDatabaseOwnerUrl,
+} from '@openclinic/core';
 import type { JwtConfig } from '@openclinic/core';
 
 export async function authCheck(): Promise<void> {
@@ -7,9 +16,9 @@ export async function authCheck(): Promise<void> {
   console.log('');
 
   // 1. Database connection
-  const dbUrl = process.env['DATABASE_URL'] ?? process.env['DATABASE_OWNER_URL'];
+  const dbUrl = resolveDatabaseUrl() ?? resolveDatabaseOwnerUrl();
   if (!dbUrl) {
-    console.error('[FAIL] DATABASE_URL is not set');
+    console.error('[FAIL] Database connection credentials are not set (DATABASE_URL or DB_* atomic variables)');
     process.exit(1);
   }
 
@@ -18,15 +27,15 @@ export async function authCheck(): Promise<void> {
     const [result] = await sql`SELECT NOW() as now, current_database() as db`;
     console.log(`[OK] Database connection: ${result?.db ?? 'connected'} - Server time: ${result?.now ?? 'ok'}`);
 
-    console.log('\n--- Usuários cadastrados no banco ---');
+    console.log('\n--- Registered Users in Database ---');
     const users = await sql`SELECT id, username, email, role, job_title, is_active, access_count, last_access, substring(hashed_password from 1 for 10) as hash_sample FROM iam_users`;
     console.table(users);
 
-    console.log('\n--- Tentativas de Lockout ---');
+    console.log('\n--- Lockout Attempts ---');
     const lockouts = await sql`SELECT identifier, attempt_count, locked_until FROM iam_lockouts`;
     console.table(lockouts);
 
-    console.log('\n--- Últimos logs de auditoria ---');
+    console.log('\n--- Recent Audit Logs ---');
     const logs = await sql`SELECT user_id, username, action, status, created_at FROM sys_audit_logs ORDER BY created_at DESC LIMIT 5`;
     console.table(logs);
   } catch (error) {
@@ -50,13 +59,17 @@ export async function authCheck(): Promise<void> {
   }
 
   // 3. JWT sign + decode
-  const jwtSecret = process.env['JWT_SECRET_KEY'] ?? 'test-secret-at-least-16-chars-long';
-  const jwtConfig: JwtConfig = { secretKey: jwtSecret, algorithm: 'HS256', accessTokenExpireMinutes: 15 };
+  const jwtSecret = process.env['JWT_KEY'] ?? 'test-secret-at-least-16-chars-long';
+  const jwtConfig: JwtConfig = {
+    secretKey: jwtSecret,
+    algorithm: AUTH_SECURITY_DEFAULTS.JWT_ALGORITHM,
+    accessTokenExpireMinutes: AUTH_SECURITY_DEFAULTS.ACCESS_TOKEN_EXPIRE_MINUTES
+  };
 
-  const token = createAccessToken({ sub: 'test-user-id', role: 'ADMIN', email: 'test@openclinic.local' }, jwtConfig);
+  const token = createAccessToken({ sub: 'test-user-id', role: UserRole.ADMIN, email: 'test@acme.com' }, jwtConfig);
   const decoded = decodeToken(token, jwtConfig);
 
-  if (decoded.sub === 'test-user-id' && decoded.role === 'ADMIN') {
+  if (decoded.sub === 'test-user-id' && decoded.role === UserRole.ADMIN) {
     console.log('[OK] JWT sign + decode: PASSED');
   } else {
     console.error('[FAIL] JWT decode returned unexpected payload');

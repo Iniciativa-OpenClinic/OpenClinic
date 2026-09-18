@@ -1,5 +1,12 @@
-import type { BaseEntity } from '../../shared/domain/base-entity.js';
-import type { UserRole, TenantStatus } from '../../shared/domain/enums.js';
+import type {
+  BaseEntity,
+  UserRole,
+  TenantStatus,
+  ResourceType,
+  ApplicationContext,
+  ResourceAction,
+  PermissionEffect,
+} from '@openclinic/core';
 
 export interface TenantEntity extends BaseEntity {
   name: string;
@@ -49,10 +56,10 @@ export interface UserEntity extends BaseEntity {
 export interface SessionEntity extends BaseEntity {
   user_id: string;
   token_hash: string;
-  user_agent: string | null;
-  ip_address: string | null;
+  user_agent?: string | null;
+  ip_address?: string | null;
   expires_at: Date;
-  revoked_at: Date | null;
+  revoked_at?: Date | null;
 }
 
 export interface LockoutEntity extends BaseEntity {
@@ -87,4 +94,48 @@ export interface AuditLogEntry {
   user_agent?: string | null;
   details?: Record<string, unknown> | null;
   tenant_id?: string | null;
+}
+
+export interface ApplicationResourceEntity {
+  id: string;
+  item_code: string;
+  resource_type: ResourceType;
+  context: ApplicationContext;
+  description: string | null;
+  parent_id: string | null;
+  path: string | null;
+  label_key: string | null;
+  icon: string | null;
+  route: string | null;
+  sort_order: number;
+  min_role: UserRole;
+  is_active: boolean;
+  application_id: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface ResourceTreeNodeEntity extends ApplicationResourceEntity {
+  children?: ResourceTreeNodeEntity[];
+}
+
+export interface ApplicationPermissionEntity {
+  id: string;
+  user_id: string | null;
+  group_id: string | null;
+  resource_id: string;
+  action: ResourceAction;
+  effect: PermissionEffect;
+  is_active: boolean;
+  tenant_id: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface PermissionAclTupleEntity {
+  resource_id: string;
+  action: ResourceAction;
+  effect: PermissionEffect;
+  user_id: string | null;
+  group_id: string | null;
 }

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import {
   type JwtConfig,
   UserRole,
@@ -19,13 +19,8 @@ import { SecurityBearer, StandardErrorResponses } from './openapi.schemas.js';
 
 export const APPLICATION_ROUTES = {
   PUBLIC_CONFIG: '/api/v1/public/config',
-  PUBLIC_APPLICATION: '/api/v1/arch/public/application',
   PLATFORM_APPLICATION: '/api/v1/arch/platform/application',
   TENANT_CURRENT_CONFIG: '/api/v1/arch/application-configs/current',
-  // Backward compatibility aliases
-  LEGACY_PUBLIC_APPLICATION: '/api/v1/system/public/application',
-  LEGACY_PLATFORM_APPLICATION: '/api/v1/system/platform/application',
-  LEGACY_TENANT_CURRENT_CONFIG: '/api/v1/system/application-configs/current',
 } as const;
 
 export const APPLICATION_SWAGGER_TAG = 'Architecture & Platform';
@@ -35,11 +30,11 @@ export function registerApplicationRoutes(
   uow: IAMUnitOfWork,
   jwtConfig: JwtConfig
 ): void {
-  const authenticateJwt = createAuthenticateJwt(jwtConfig);
+  const authenticateJwt = createAuthenticateJwt(jwtConfig, uow);
 
   // ── 0. PUBLIC BRANDING & APP METADATA (Public / Unauthenticated Bootstrap) ──
 
-  const publicConfigHandler = async (_request: any, reply: any) => {
+  const publicConfigHandler = async (_request: FastifyRequest, reply: FastifyReply) => {
     const defaultApp = await uow.applications.getDefaultApplication();
     if (!defaultApp) {
       throw new EntityNotFoundError('Application', 'default');
@@ -58,26 +53,14 @@ export function registerApplicationRoutes(
       appLogoUrl: defaultApp.appLogoUrl,
       appFaviconUrl: defaultApp.appFaviconUrl,
       appDescription: defaultApp.appDescription,
-      tenantName: defaultTenant?.name ?? 'OpenClinic System',
+      tenantName: defaultTenant?.name ?? defaultApp.appName,
       defaultLocale: defaultApp.defaultLocale,
-      defaultSupportedLocales: defaultApp.defaultSupportedLocales,
+      supportedLocales: defaultApp.defaultSupportedLocales,
       defaultTimezone: defaultApp.defaultTimezone,
       defaultDialingCode: defaultApp.defaultDialingCode,
       acceptedLoginMethods: defaultApp.defaultAcceptedLoginMethods,
       primaryLoginIdentifier: defaultApp.primaryLoginIdentifier ?? LoginIdentifierType.CPF,
-      // snake_case aliases for legacy client parity
-      app_name: defaultApp.appName,
-      app_subtitle: defaultApp.appSubtitle,
-      app_version: defaultApp.appVersion,
-      app_logo_url: defaultApp.appLogoUrl,
-      app_favicon_url: defaultApp.appFaviconUrl,
-      tenant_name: defaultTenant?.name ?? 'OpenClinic System',
-      default_locale: defaultApp.defaultLocale,
-      supported_locales: defaultApp.defaultSupportedLocales,
-      default_timezone: defaultApp.defaultTimezone,
-      default_dialing_code: defaultApp.defaultDialingCode,
-      accepted_login_methods: defaultApp.defaultAcceptedLoginMethods,
-      primary_login_identifier: defaultApp.primaryLoginIdentifier ?? LoginIdentifierType.CPF,
+      sessionTimeoutMinutes: defaultApp.defaultSessionTimeoutMinutes,
     });
   };
 
@@ -99,23 +82,12 @@ export function registerApplicationRoutes(
             appDescription: { type: ['string', 'null'] },
             tenantName: { type: 'string' },
             defaultLocale: { type: 'string' },
-            defaultSupportedLocales: { type: 'array', items: { type: 'string' } },
+            supportedLocales: { type: 'array', items: { type: 'string' } },
             defaultTimezone: { type: 'string' },
             defaultDialingCode: { type: 'string' },
             acceptedLoginMethods: { type: 'array', items: { type: 'string' } },
             primaryLoginIdentifier: { type: 'string', enum: Object.values(LoginIdentifierType) },
-            app_name: { type: 'string' },
-            app_subtitle: { type: ['string', 'null'] },
-            app_version: { type: 'string' },
-            app_logo_url: { type: ['string', 'null'] },
-            app_favicon_url: { type: ['string', 'null'] },
-            tenant_name: { type: 'string' },
-            default_locale: { type: 'string' },
-            supported_locales: { type: 'array', items: { type: 'string' } },
-            default_timezone: { type: 'string' },
-            default_dialing_code: { type: 'string' },
-            accepted_login_methods: { type: 'array', items: { type: 'string' } },
-            primary_login_identifier: { type: 'string', enum: Object.values(LoginIdentifierType) },
+            sessionTimeoutMinutes: { type: 'number' },
           },
         },
         ...StandardErrorResponses,
@@ -126,15 +98,9 @@ export function registerApplicationRoutes(
   // GET /api/v1/public/config (Public standard endpoint)
   app.get(APPLICATION_ROUTES.PUBLIC_CONFIG, publicConfigSchema, publicConfigHandler);
 
-  // GET /api/v1/arch/public/application (canonical)
-  app.get(APPLICATION_ROUTES.PUBLIC_APPLICATION, publicConfigSchema, publicConfigHandler);
-
-  // GET /api/v1/system/public/application (legacy alias)
-  app.get(APPLICATION_ROUTES.LEGACY_PUBLIC_APPLICATION, publicConfigSchema, publicConfigHandler);
-
   // ── 1. PLATFORM SETTINGS (Exclusive to OWNER) ──
 
-  // GET /api/v1/system/platform/application
+  // GET /api/v1/arch/platform/application
   app.get(
     APPLICATION_ROUTES.PLATFORM_APPLICATION,
     {
@@ -191,13 +157,8 @@ export function registerApplicationRoutes(
       return reply.status(200).send(defaultApp);
     }
   );
-  app.get(APPLICATION_ROUTES.LEGACY_PLATFORM_APPLICATION, { preHandler: [authenticateJwt, requireRole(UserRole.OWNER)] }, async (_request, reply) => {
-    const defaultApp = await uow.applications.getDefaultApplication();
-    if (!defaultApp) throw new EntityNotFoundError('Application', 'default');
-    return reply.status(200).send(defaultApp);
-  });
 
-  // PUT /api/v1/system/platform/application
+  // PUT /api/v1/arch/platform/application
   app.put(
     APPLICATION_ROUTES.PLATFORM_APPLICATION,
     {
@@ -264,17 +225,10 @@ export function registerApplicationRoutes(
       });
     }
   );
-  app.put(APPLICATION_ROUTES.LEGACY_PLATFORM_APPLICATION, { preHandler: [authenticateJwt, requireRole(UserRole.OWNER)] }, async (request, reply) => {
-    const defaultApp = await uow.applications.getDefaultApplication();
-    if (!defaultApp) throw new EntityNotFoundError('Application', 'default');
-    const parsedBody = UpdatePlatformApplicationSchema.parse(request.body);
-    const updated = await uow.applications.updateApplication(defaultApp.id, parsedBody);
-    return reply.status(200).send({ code: 'OK', message: 'Platform application updated successfully', data: updated });
-  });
 
   // ── 2. TENANT APPLICATION CONFIGURATION (ADMIN & OWNER) ──
 
-  // GET /api/v1/system/application-configs/current
+  // GET /api/v1/arch/application-configs/current
   app.get(
     APPLICATION_ROUTES.TENANT_CURRENT_CONFIG,
     {
@@ -363,32 +317,8 @@ export function registerApplicationRoutes(
       return reply.status(200).send(responsePayload);
     }
   );
-  app.get(APPLICATION_ROUTES.LEGACY_TENANT_CURRENT_CONFIG, { preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)] }, async (request, reply) => {
-    const user = request.user;
-    if (!user) throw new AuthenticationError(ErrorCode.AUTH_FAILED);
-    const defaultApp = await uow.applications.getDefaultApplication();
-    if (!defaultApp) throw new EntityNotFoundError('Application', 'default');
-    const tenantConfig = await uow.applications.getTenantApplicationConfig(defaultApp.id, user.tenant_id);
-    return reply.status(200).send({
-      application: {
-        id: defaultApp.id,
-        code: defaultApp.code,
-        appName: defaultApp.appName,
-        appVersion: defaultApp.appVersion,
-        appSubtitle: defaultApp.appSubtitle,
-        appDescription: defaultApp.appDescription,
-        appLogoUrl: defaultApp.appLogoUrl,
-        appFaviconUrl: defaultApp.appFaviconUrl,
-        defaultLocale: defaultApp.defaultLocale,
-        defaultSupportedLocales: defaultApp.defaultSupportedLocales,
-        defaultTimezone: defaultApp.defaultTimezone,
-        isMultiTenant: defaultApp.isMultiTenant,
-      },
-      config: tenantConfig,
-    });
-  });
 
-  // PUT /api/v1/system/application-configs/current
+  // PUT /api/v1/arch/application-configs/current
   app.put(
     APPLICATION_ROUTES.TENANT_CURRENT_CONFIG,
     {
@@ -445,13 +375,4 @@ export function registerApplicationRoutes(
       });
     }
   );
-  app.put(APPLICATION_ROUTES.LEGACY_TENANT_CURRENT_CONFIG, { preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)] }, async (request, reply) => {
-    const user = request.user;
-    if (!user) throw new AuthenticationError(ErrorCode.AUTH_FAILED);
-    const defaultApp = await uow.applications.getDefaultApplication();
-    if (!defaultApp) throw new EntityNotFoundError('Application', 'default');
-    const parsedBody = UpdateTenantApplicationConfigSchema.parse(request.body);
-    const updatedConfig = await uow.applications.upsertTenantApplicationConfig(defaultApp.id, user.tenant_id, parsedBody);
-    return reply.status(200).send({ code: 'OK', message: 'Tenant application configuration updated successfully', data: updatedConfig });
-  });
 }

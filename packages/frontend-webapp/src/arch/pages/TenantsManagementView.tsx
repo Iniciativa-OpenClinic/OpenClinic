@@ -55,8 +55,9 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
     try {
       const data = await listTenants();
       setTenants(data);
-    } catch (err: any) {
-      setActionError(err?.detail || err?.message || t('TENANTS_LOAD_ERROR'));
+    } catch (err: unknown) {
+      const errObj = err as { detail?: string; message?: string } | undefined;
+      setActionError(errObj?.detail || errObj?.message || t('TENANTS_LOAD_ERROR'));
     } finally {
       setLoadingTenants(false);
     }
@@ -107,7 +108,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
   const isCurrentTenantBrazil = formData.country === 'BRA';
 
   // Validation function matching UsersManagementView standard
-  const validateTenantField = (field: string, val: any): string => {
+  const validateTenantField = (field: string, val: unknown): string => {
     switch (field) {
       case 'name': {
         const trimmed = typeof val === 'string' ? Name.clean(val) : '';
@@ -235,7 +236,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
 
   const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    const val = (formData as any)[field];
+    const val = (formData as Record<string, unknown>)[field];
     const err = validateTenantField(field, val);
     setErrors((prev) => {
       const next = { ...prev };
@@ -353,8 +354,9 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
 
       await loadTenants();
       setIsModalOpen(false);
-    } catch (err: any) {
-      setActionError(err?.detail || err?.message || t('TENANTS_SAVE_ERROR'));
+    } catch (err: unknown) {
+      const errObj = err as { detail?: string; message?: string } | undefined;
+      setActionError(errObj?.detail || errObj?.message || t('TENANTS_SAVE_ERROR'));
     } finally {
       setIsSaving(false);
     }
@@ -816,7 +818,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                           {tenant.cnpj ? Cnpj.format(tenant.cnpj) : <span style={{ color: '#94a3b8' }}>-</span>}
                         </td>
 
-                        {/* Contato / Responsável Column */}
+                        {/* Contact Person / Responsible Column */}
                         <td style={{ padding: '12px 16px' }}>
                           {tenant.contactName ? (
                             <div>
@@ -841,7 +843,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                           )}
                         </td>
 
-                        {/* Sede / Município Column */}
+                        {/* Headquarters / City Column */}
                         <td style={{ padding: '12px 16px', color: '#475569' }}>
                           {tenant.city || tenant.state || tenant.country ? (
                             <div>
@@ -919,7 +921,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
         )}
       </div>
 
-      {/* ── MODAL DE CADASTRO / EDIÇÃO PADRONIZADO COM USERS & GROUPS ── */}
+      {/* ── CREATE / EDIT MODAL STANDARDIZED WITH USERS & GROUPS ── */}
       {isModalOpen && (
         <div
           style={{
@@ -980,7 +982,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
             {/* Modal Form */}
             <form onSubmit={handleSaveTenant} style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 18 }}>
               
-              {/* Seção 1: Identificação Institucional */}
+              {/* Section 1: Institutional Identification */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('TENANTS_SECTION_INSTITUTIONAL')}
@@ -1015,7 +1017,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                     {renderFieldError(errors.name)}
                   </div>
 
-                  {/* Slug da Instância (hover icon para explicar o identificador de routing/tenancy) */}
+                  {/* Instance Slug (hover tooltip explaining routing/tenancy identifier) */}
                   <div style={{ gridColumn: 'span 5' }}>
                     <FieldLabelWithTooltip
                       label={t('TENANTS_FIELD_SLUG_LABEL')}
@@ -1059,7 +1061,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                     </div>
                   </div>
 
-                  {/* Tenant Padrão */}
+                  {/* Default Tenant Flag */}
                   <div style={{ gridColumn: 'span 6', display: 'flex', alignItems: 'center', paddingTop: 18 }}>
                     <label
                       title={t('TENANTS_FIELD_IS_DEFAULT_TOOLTIP')}
@@ -1098,14 +1100,14 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
               {/* Divisor */}
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 2: Responsável Institucional / Contato */}
+              {/* Section 2: Institutional Contact / Manager */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('TENANTS_SECTION_CONTACT')}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14 }}>
-                  {/* Nome do Responsável */}
+                  {/* Manager Full Name */}
                   <div style={{ gridColumn: 'span 6' }}>
                     <FieldLabelWithTooltip
                       label={t('TENANTS_FIELD_CONTACT_NAME_LABEL')}
@@ -1132,7 +1134,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                     {renderFieldError(errors.contactName)}
                   </div>
 
-                  {/* Cargo / Função */}
+                  {/* Job Title / Role */}
                   <div style={{ gridColumn: 'span 6' }}>
                     <FieldLabelWithTooltip
                       label={t('TENANTS_FIELD_CONTACT_TITLE_LABEL')}
@@ -1172,7 +1174,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                     {renderFieldError(errors.contactEmail)}
                   </div>
 
-                  {/* Telefone do Responsável */}
+                  {/* Contact Phone */}
                   <div style={{ gridColumn: 'span 6' }}>
                     <FieldLabelWithTooltip
                       label={t('TENANTS_FIELD_CONTACT_PHONE_LABEL')}
@@ -1205,14 +1207,14 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
               {/* Divisor */}
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 3: Dados Fiscais & Registro */}
+              {/* Section 3: Tax & Registration Records */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('TENANTS_SECTION_FISCAL')}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14 }}>
-                  {/* CNPJ (com máscara e validação Value Object, sem hover icon pois é óbvio) */}
+                  {/* CNPJ (masked with Value Object validation) */}
                   <div style={{ gridColumn: 'span 6' }}>
                     <FieldLabelWithTooltip
                       label={t('TENANTS_FIELD_CNPJ_LABEL')}
@@ -1274,18 +1276,17 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
               {/* Divisor */}
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 4: Endereço Corporativo */}
+              {/* Section 4: Corporate Address */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('TENANTS_SECTION_ADDRESS')}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14 }}>
-                  {/* CEP / Código Postal (com máscara no Brasil e livre internacional) */}
+                  {/* Postal Code / CEP (masked in Brazil, freeform international) */}
                   <div style={{ gridColumn: 'span 4' }}>
                     <FieldLabelWithTooltip
                       label={isCurrentTenantBrazil ? t('TENANTS_FIELD_POSTAL_CODE_BRAZIL_LABEL') : t('TENANTS_FIELD_POSTAL_CODE_INTL_LABEL')}
-                      tooltip={isCurrentTenantBrazil ? t('TENANTS_FIELD_POSTAL_CODE_BRAZIL_TOOLTIP') : t('TENANTS_FIELD_POSTAL_CODE_INTL_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1324,7 +1325,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                     />
                   </div>
 
-                  {/* Número */}
+                  {/* Street Number */}
                   <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('TENANTS_FIELD_NUMBER_LABEL')}
@@ -1382,7 +1383,6 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                       <>
                         <FieldLabelWithTooltip
                           label={t('TENANTS_FIELD_STATE_BRAZIL_LABEL')}
-                          tooltip={t('TENANTS_FIELD_STATE_BRAZIL_TOOLTIP')}
                         />
                         <select
                           value={formData.state || ''}
@@ -1414,7 +1414,6 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                       <>
                         <FieldLabelWithTooltip
                           label={t('TENANTS_FIELD_STATE_INTL_LABEL')}
-                          tooltip={t('TENANTS_FIELD_STATE_INTL_TOOLTIP')}
                         />
                         <input
                           type="text"
@@ -1441,7 +1440,7 @@ export const TenantsManagementView: React.FC<TenantsManagementViewProps> = ({ on
                     {renderFieldError(errors.state)}
                   </div>
 
-                  {/* País via Select descritivo padronizado com Value Object Country */}
+                  {/* Country selection standardized with Country Value Object */}
                   <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('TENANTS_FIELD_COUNTRY_LABEL')}

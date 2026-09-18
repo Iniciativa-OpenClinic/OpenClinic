@@ -2,7 +2,7 @@ import { ValueObject } from './value-object.base.js';
 import { ValidationError, ErrorCode } from '../../errors/index.js';
 
 /**
- * Value Object representing a Brazilian RG (Registro Geral de Identificação Civil).
+ * Value Object representing a Brazilian General Registry / ID (RG - Registro Geral de Identificação Civil).
  * Normalizes alphanumeric characters, strips formatting, and enforces length constraints.
  */
 export class Rg extends ValueObject<string> {

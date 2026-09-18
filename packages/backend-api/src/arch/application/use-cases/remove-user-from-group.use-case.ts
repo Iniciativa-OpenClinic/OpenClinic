@@ -1,5 +1,6 @@
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO } from '../../domain/dtos.js';
+import type { IpAddress } from '@openclinic/core';
 import { RemoveGroupMemberUseCase } from './remove-group-member.use-case.js';
 
 export class RemoveUserFromGroupUseCase {
@@ -9,7 +10,7 @@ export class RemoveUserFromGroupUseCase {
     this.removeGroupMemberUseCase = new RemoveGroupMemberUseCase(uow);
   }
 
-  async execute(userId: string, groupId: string, ipAddress?: string, username?: string): Promise<ActionResponseDTO<{ userId: string; groupId: string }>> {
+  async execute(userId: string, groupId: string, ipAddress?: string | IpAddress, username?: string): Promise<ActionResponseDTO<{ userId: string; groupId: string }>> {
     const res = await this.removeGroupMemberUseCase.execute(groupId, userId, ipAddress, username);
     return {
       code: res.code,

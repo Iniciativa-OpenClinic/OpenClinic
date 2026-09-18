@@ -3,15 +3,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 import { buildApp } from '../app.js';
+import { env } from '../config/env.js';
 import { normalizeOpenApi30 } from '../config/openapi-normalizer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function exportOpenApi(): Promise<void> {
-  // Use mock or dummy connection string for spec generation if DB is not reachable
+  // Use resolved database URL from env config
   const app = await buildApp({
-    dbUrl: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/openclinic',
+    dbUrl: env.DATABASE_URL,
   });
 
   await app.ready();
@@ -37,7 +38,7 @@ async function exportOpenApi(): Promise<void> {
   const rootYamlPath = path.join(rootOpenApiDir, 'openapi.yaml');
   fs.writeFileSync(rootYamlPath, yamlContent, 'utf-8');
 
-  console.log(`✅ Contrato OpenAPI exportado com sucesso:`);
+  console.log(`✅ OpenAPI contract exported successfully:`);
   console.log(`   📄 JSON: ${rootJsonPath}`);
   console.log(`   📄 YAML: ${rootYamlPath}`);
 
@@ -45,6 +46,6 @@ async function exportOpenApi(): Promise<void> {
 }
 
 exportOpenApi().catch((err) => {
-  console.error('❌ Erro ao exportar contrato OpenAPI:', err);
+  console.error('❌ Error exporting OpenAPI contract:', err);
   process.exit(1);
 });

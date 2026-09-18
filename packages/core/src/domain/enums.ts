@@ -38,6 +38,40 @@ export const AuditStatus = {
 export type AuditStatus = (typeof AuditStatus)[keyof typeof AuditStatus];
 export type AuditStatusType = AuditStatus;
 
+export const AuditResource = {
+  IAM_USERS: 'iam_users',
+  IAM_GROUPS: 'iam_groups',
+  IAM_USER_GROUPS: 'iam_user_groups',
+  IAM_LOCKOUTS: 'iam_lockouts',
+  AUTH: 'auth',
+} as const;
+export type AuditResource = (typeof AuditResource)[keyof typeof AuditResource];
+export type AuditResourceType = AuditResource;
+
+export const AuditAction = {
+  USER_CREATED_BY_ADMIN: 'user_created_by_admin',
+  USER_UPDATED_BY_ADMIN: 'user_updated_by_admin',
+  USER_DELETED_BY_ADMIN: 'user_deleted_by_admin',
+  USER_UNLOCKED_BY_ADMIN: 'user_unlocked_by_admin',
+  USER_ACTIVATED: 'user_activated',
+  USER_DEACTIVATED: 'user_deactivated',
+  LOGIN: 'login',
+  LOGOUT: 'logout',
+  REGISTER: 'register',
+  PASSWORD_CHANGED_SUCCESS: 'change_password_success',
+  PASSWORD_CHANGED_FAILED: 'change_password_failed',
+  PASSWORD_RESET_SUCCESS: 'reset_password_success',
+  ADMIN_RESET_PASSWORD_SUCCESS: 'admin_reset_password_success',
+  FORGOT_PASSWORD_REQUESTED: 'forgot_password_requested',
+  GROUP_CREATED: 'group_created',
+  GROUP_UPDATED: 'group_updated',
+  GROUP_DELETED: 'group_deleted',
+  GROUP_MEMBER_ADDED: 'group_member_added',
+  GROUP_MEMBER_REMOVED: 'group_member_removed',
+} as const;
+export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
+export type AuditActionType = AuditAction;
+
 export const TenantStatus = {
   ACTIVE: 'ACTIVE',
   SUSPENDED: 'SUSPENDED',
@@ -96,3 +130,35 @@ export const LoginIdentifierType = {
 export type LoginIdentifierType = (typeof LoginIdentifierType)[keyof typeof LoginIdentifierType];
 export type LoginIdentifierTypeType = LoginIdentifierType;
 
+export const NodeEnvironment = {
+  DEVELOPMENT: 'development',
+  STAGING: 'staging',
+  PRODUCTION: 'production',
+  TEST: 'test',
+} as const;
+export type NodeEnvironment = (typeof NodeEnvironment)[keyof typeof NodeEnvironment];
+export type NodeEnvironmentType = NodeEnvironment;
+
+export const Environment = NodeEnvironment;
+export type Environment = NodeEnvironment;
+export type EnvironmentType = NodeEnvironment;
+
+export const LogLevel = {
+  FATAL: 'fatal',
+  ERROR: 'error',
+  WARN: 'warn',
+  INFO: 'info',
+  DEBUG: 'debug',
+  TRACE: 'trace',
+} as const;
+export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
+export type LogLevelType = LogLevel;
+
+export const SecretsProvider = {
+  ENV: 'env',
+  FILE: 'file',
+  GSM: 'gsm',
+  AWS: 'aws',
+} as const;
+export type SecretsProvider = (typeof SecretsProvider)[keyof typeof SecretsProvider];
+export type SecretsProviderType = SecretsProvider;

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { LoginIdentifierType } from '@openclinic/core';
 import { ApplicationRepository } from '../../src/arch/infrastructure/database/application.repository.js';
 import type { PlatformApplicationEntity, TenantApplicationConfigEntity } from '../../src/arch/domain/application.dto.js';
 
@@ -29,6 +30,7 @@ describe('ApplicationRepository & Application Settings', () => {
     defaultAuditRetentionDays: 365,
     defaultAcceptedLoginMethods: ['PASSWORD'],
     defaultExtraSettings: {},
+    primaryLoginIdentifier: LoginIdentifierType.CPF,
     isMultiTenant: false,
     isDefaultApplication: true,
     isActive: true,

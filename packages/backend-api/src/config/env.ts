@@ -1,38 +1,25 @@
 import { z } from 'zod';
-import dotenv from 'dotenv';
-import path from 'node:path';
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { AUTH_SECURITY_DEFAULTS, NodeEnvironment, SYSTEM_DEFAULTS, LogLevel, SecretsProvider, resolveDatabaseUrl } from '@openclinic/core';
+import { loadEnvironment } from '@openclinic/core/server';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Tenta carregar .env de multiplos caminhos possíveis no monorepo
-const candidates = [
-  path.resolve(process.cwd(), '.env'),
-  path.resolve(process.cwd(), '../../.env'),
-  path.resolve(process.cwd(), '../.env'),
-  path.resolve(__dirname, '../../../.env'),
-  path.resolve(__dirname, '../../../../.env'),
-];
-
-for (const p of candidates) {
-  if (fs.existsSync(p)) {
-    dotenv.config({ path: p });
-    break;
-  }
-}
+loadEnvironment();
 
 const EnvSchema = z.object({
-  DATABASE_URL: z.string().url().startsWith('postgresql://'),
-  JWT_SECRET_KEY: z.string().min(16, 'JWT secret must be at least 16 characters'),
-  JWT_ALGORITHM: z.enum(['HS256', 'HS384', 'HS512']).default('HS256'),
-  ACCESS_TOKEN_EXPIRE_MINUTES: z.coerce.number().int().positive().default(15),
-  REFRESH_TOKEN_EXPIRE_DAYS: z.coerce.number().int().positive().default(7),
-  APP_HOST: z.string().default('0.0.0.0'),
-  APP_PORT: z.coerce.number().int().positive().default(3000),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .startsWith(SYSTEM_DEFAULTS.DATABASE_PROTOCOL_PREFIX)
+    .default(() => resolveDatabaseUrl(process.env) ?? ''),
+  JWT_KEY: z.string().min(AUTH_SECURITY_DEFAULTS.JWT_MIN_KEY_LENGTH),
+  JWT_ALGORITHM: z.enum(AUTH_SECURITY_DEFAULTS.SUPPORTED_JWT_ALGORITHMS).default(AUTH_SECURITY_DEFAULTS.JWT_ALGORITHM),
+  ACCESS_TOKEN_EXPIRE_MINUTES: z.coerce.number().int().positive().default(AUTH_SECURITY_DEFAULTS.ACCESS_TOKEN_EXPIRE_MINUTES),
+  REFRESH_TOKEN_EXPIRE_DAYS: z.coerce.number().int().positive().default(AUTH_SECURITY_DEFAULTS.REFRESH_TOKEN_EXPIRE_DAYS),
+  APP_HOST: z.string().default(SYSTEM_DEFAULTS.DEFAULT_APP_HOST),
+  APP_PORT: z.coerce.number().int().positive().default(SYSTEM_DEFAULTS.DEFAULT_APP_PORT),
+  CORS_ALLOWED_ORIGINS: z.string().default(SYSTEM_DEFAULTS.DEFAULT_CORS_ALLOWED_ORIGINS),
+  NODE_ENV: z.nativeEnum(NodeEnvironment).default(NodeEnvironment.DEVELOPMENT),
+  LOG_LEVEL: z.nativeEnum(LogLevel).default(SYSTEM_DEFAULTS.DEFAULT_LOG_LEVEL),
+  SECRETS_PROVIDER: z.nativeEnum(SecretsProvider).default(SecretsProvider.ENV),
 });
 
 export type EnvConfig = z.infer<typeof EnvSchema>;

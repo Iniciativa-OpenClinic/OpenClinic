@@ -31,6 +31,12 @@ jobs:
       - name: Run Strict Typecheck
         run: npm run typecheck
 
+      - name: Validate Compliance Catalog
+        run: npm run compliance:catalog
+
+      - name: Test Compliance Runner
+        run: npm run compliance:test
+
       - name: Run Test Suite
         run: npm test
 

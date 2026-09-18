@@ -38,7 +38,7 @@ Evidências principais: [logout HTTP](../packages/backend-api/src/arch/presentat
 
 | ID | Comportamento-alvo local | Alternativa e consequência |
 | :--- | :--- | :--- |
-| D01 | Uma organização por instalação no MVP; várias unidades futuras; escopo institucional obrigatório. | Organizações em banco compartilhado exigem isolamento completo desde o início. Evolução futura exige decisão própria. |
+| D01 | **Isolamento institucional estrito:** Papel ADMIN restrito exclusivamente à sua própria organização (`tenant_id`), tanto para visualização/edição de organizações quanto para usuários (gestão, desbloqueio, status, exclusão e reset). Apenas OWNER possui autoridade multi-tenant/cross-tenant. | Acesso cross-tenant de ADMIN vazaria dados e gestão administrativa entre diferentes instituições. |
 | D02 | OWNER governa sua organização; BUSINESS, inclusive conteúdo clínico, exige concessão explícita. | Bypass global simplifica gestão, mas mistura autoridade técnica e acesso aos dados. |
 | D03 | CPF identifica a pessoa na organização; UUID identifica a conta; username/e-mail continuam aliases de login. | CPF como login principal muda UX e exposição de identificadores sem ser necessário para identidade única. |
 | D04 | Sessão persistida e JWT associado à sessão; estado consultado a cada requisição protegida. | JWT inteiramente stateless mantém acesso até expirar após revogação. |

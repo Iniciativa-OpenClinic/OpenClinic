@@ -2,7 +2,7 @@ import { ValueObject } from './value-object.base.js';
 import { ValidationError, ErrorCode } from '../../errors/index.js';
 
 /**
- * Cadastro Nacional da Pessoa Jurídica (CNPJ) Value Object.
+ * Brazilian Legal Entity Registry (CNPJ - Cadastro Nacional da Pessoa Jurídica) Value Object.
  * Conforms to Receita Federal do Brasil standards and SBIS ECF.17.16 requirement.
  * 14 numeric digits with two Modulo 11 check digits.
  */

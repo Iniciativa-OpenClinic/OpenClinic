@@ -132,74 +132,9 @@ export function signatureDifferences(expected: Record<string, unknown>, actual: 
   return differences;
 }
 
-type ColumnSignature = { table_name: string; name: string; type: string; not_null: boolean; default_value?: string | null };
 
-/** Explicit, data-preserving bridge for the pre-versioned schema observed on 2026-09-09. */
-async function legacyPreparation(sql: postgres.TransactionSql, expected: Record<string, unknown>, actual: Record<string, unknown>) {
-  const projected = structuredClone(actual);
-  const statements: string[] = [];
-  const columns = projected['columns'] as ColumnSignature[];
-  const allowedLengths = new Set(['app_patients.cpf', 'app_patients.phone', 'app_practitioners.cpf',
-    'app_practitioners.phone', 'app_practitioners.council_number', 'app_practitioners.job_title']);
-  const obsoleteDefaults = new Set([
-    'app_practitioners.practitioner_type',
-    'app_appointments.duration_minutes',
-    'app_appointments.type',
-    'app_encounters.status',
-    'app_medical_records.record_type',
-  ]);
-  for (const desired of expected['columns'] as ColumnSignature[]) {
-    const current = columns.find(column => column.table_name === desired.table_name && column.name === desired.name);
-    if (!current) continue;
-    const table = sql(desired.table_name);
-    const column = sql(desired.name);
-    const length = desired.type.match(/^character varying\((\d+)\)$/)?.[1];
-    if (current.type !== desired.type && length && allowedLengths.has(`${desired.table_name}.${desired.name}`)
-      && /^character varying\(\d+\)$/.test(current.type)) {
-      const [row] = await sql`SELECT count(*)::int AS count FROM ${table} WHERE length(${column}) > ${Number(length)}`;
-      if (row!.count) throw new Error(`Legacy preparation refused: ${desired.table_name}.${desired.name} has ${row!.count} oversized values. No truncation is permitted.`);
-      statements.push(`ALTER TABLE "${desired.table_name}" ALTER COLUMN "${desired.name}" TYPE VARCHAR(${length});`);
-      current.type = desired.type;
-    }
-    if (desired.table_name === 'sys_applications' && desired.not_null && !current.not_null) {
-      const [row] = await sql`SELECT count(*)::int AS count FROM ${table} WHERE ${column} IS NULL`;
-      if (row!.count) throw new Error(`Legacy preparation refused: ${desired.name} has NULL values. Resolve them explicitly first.`);
-      statements.push(`ALTER TABLE sys_applications ALTER COLUMN "${desired.name}" SET NOT NULL;`);
-      current.not_null = true;
-    }
-    if (!desired.default_value && current.default_value && obsoleteDefaults.has(`${desired.table_name}.${desired.name}`)) {
-      statements.push(`ALTER TABLE "${desired.table_name}" ALTER COLUMN "${desired.name}" DROP DEFAULT;`);
-      current.default_value = null;
-    }
-  }
-  const title = columns.findIndex(column => column.table_name === 'sys_applications' && column.name === 'app_title');
-  if (title >= 0) {
-    const [conflict] = await sql`SELECT count(*)::int AS count FROM sys_applications WHERE app_title IS NOT NULL
-      AND (jsonb_typeof(default_extra_settings) IS DISTINCT FROM 'object'
-        OR (default_extra_settings ? 'legacy_app_title' AND default_extra_settings->>'legacy_app_title' IS DISTINCT FROM app_title))`;
-    if (conflict!.count) throw new Error('Cannot preserve app_title: legacy_app_title conflicts or extra settings is not an object.');
-    statements.push("UPDATE sys_applications SET default_extra_settings = jsonb_set(default_extra_settings, '{legacy_app_title}', to_jsonb(app_title), true) WHERE app_title IS NOT NULL;");
-    statements.push('ALTER TABLE sys_applications DROP COLUMN app_title;');
-    columns.splice(title, 1);
-  }
-  for (const suffix of ['pkey', 'check']) {
-    const oldName = `iam_application_permissions_${suffix}`;
-    const newName = `iam_permissions_${suffix}`;
-    const constraint = (projected['constraints'] as { table_name: string; name: string }[])
-      .find(row => row.table_name === 'iam_permissions' && row.name === oldName);
-    if (constraint) {
-      constraint.name = newName;
-      statements.push(`ALTER TABLE iam_permissions RENAME CONSTRAINT ${oldName} TO ${newName};`);
-      const index = (projected['indexes'] as { name: string; definition: string }[]).find(row => row.name === oldName);
-      if (index) { index.name = newName; index.definition = index.definition.replace(oldName, newName); }
-    }
-  }
-  const unexplained = signatureDifferences(expected, projected);
-  if (unexplained.length) throw new Error(`Unsupported legacy differences; no automatic changes allowed:\n${unexplained.join('\n')}`);
-  return statements;
-}
-
-export async function baselineDatabase(url: string, apply = false, reconcileLegacy = false) {
+/** Adopts an unversioned database only when it exactly matches the current baseline. */
+export async function baselineDatabase(url: string, apply = false) {
   const baseline = loadMigrations()[0]!;
   const expected = JSON.parse(fs.readFileSync(path.join(databaseDirectory, 'baseline-schema.json'), 'utf8')) as {
     hash: string; signature: Record<string, unknown>;
@@ -214,11 +149,6 @@ export async function baselineDatabase(url: string, apply = false, reconcileLega
       if (apply) {
         const tables = await sql`SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`;
         for (const table of tables) await sql`LOCK TABLE ${sql('public')}.${sql(table.tablename)} IN SHARE ROW EXCLUSIVE MODE`;
-      }
-      if (reconcileLegacy) {
-        const statements = await legacyPreparation(sql, expected.signature, await schemaSignature(sql));
-        if (!apply) { console.log('Reviewed legacy transition (not executed):\n' + statements.join('\n')); return []; }
-        for (const statement of statements) await sql.unsafe(statement);
       }
       const differences = signatureDifferences(expected.signature, await schemaSignature(sql));
       if (apply && differences.length) throw new Error(`Baseline refused: schema mismatch.\n${differences.join('\n')}`);

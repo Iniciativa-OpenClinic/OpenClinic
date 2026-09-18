@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { getPublicConfig, applyDocumentBranding, type PublicConfig } from '../services/api.js';
-import { DEFAULT_PUBLIC_CONFIG_FALLBACKS } from '../constants/config.constants.js';
+import { DEFAULT_PUBLIC_CONFIG_FALLBACKS } from '../config/config.constants.js';
 import { LoginIdentifierType } from '@openclinic/core/shared';
 
 export interface ConfigContextValue {
@@ -29,7 +29,7 @@ export function ConfigProvider({ children }: { children: ReactNode }): React.Rea
     try {
       const data = await getPublicConfig();
       setConfig(data);
-      const sub = data.appSubtitle || data.app_subtitle;
+      const sub = data.appSubtitle;
       const effectiveTitle = data.appName && sub
         ? `${data.appName} - ${sub}`
         : (data.appName || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_NAME);
@@ -56,16 +56,16 @@ export function ConfigProvider({ children }: { children: ReactNode }): React.Rea
   }, [refreshConfig]);
 
   const value = useMemo<ConfigContextValue>(() => {
-    const appName = config?.appName || config?.app_name || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_NAME;
-    const appSubtitle = config?.appSubtitle || config?.app_subtitle || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_SUBTITLE;
-    const appDescription = config?.appDescription || config?.app_description || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_DESCRIPTION;
-    const appVersion = config?.appVersion || config?.app_version || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_VERSION;
-    const appLogoUrl = config?.appLogoUrl || config?.app_logo_url || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_LOGO_URL;
-    const appFaviconUrl = config?.appFaviconUrl || config?.app_favicon_url || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_FAVICON_URL;
-    const tenantName = config?.tenantName || config?.tenant_name || DEFAULT_PUBLIC_CONFIG_FALLBACKS.TENANT_NAME;
-    const defaultLocale = config?.defaultLocale || config?.default_locale || DEFAULT_PUBLIC_CONFIG_FALLBACKS.DEFAULT_LOCALE;
-    const supportedLocales = config?.supportedLocales || config?.supported_locales || (DEFAULT_PUBLIC_CONFIG_FALLBACKS.SUPPORTED_LOCALES as unknown as string[]);
-    const primaryLoginIdentifier = config?.primaryLoginIdentifier || config?.primary_login_identifier || LoginIdentifierType.CPF;
+    const appName = config?.appName || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_NAME;
+    const appSubtitle = config?.appSubtitle || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_SUBTITLE;
+    const appDescription = config?.appDescription || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_DESCRIPTION;
+    const appVersion = config?.appVersion || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_VERSION;
+    const appLogoUrl = config?.appLogoUrl || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_LOGO_URL;
+    const appFaviconUrl = config?.appFaviconUrl || DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_FAVICON_URL;
+    const tenantName = config?.tenantName || DEFAULT_PUBLIC_CONFIG_FALLBACKS.TENANT_NAME;
+    const defaultLocale = config?.defaultLocale || DEFAULT_PUBLIC_CONFIG_FALLBACKS.DEFAULT_LOCALE;
+    const supportedLocales = config?.supportedLocales || (DEFAULT_PUBLIC_CONFIG_FALLBACKS.SUPPORTED_LOCALES as unknown as string[]);
+    const primaryLoginIdentifier = config?.primaryLoginIdentifier || LoginIdentifierType.CPF;
 
     return {
       config,

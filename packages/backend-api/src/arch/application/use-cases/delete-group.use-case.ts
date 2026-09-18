@@ -1,15 +1,28 @@
-import { EntityNotFoundError, AccessDeniedError, ErrorCode, SuccessCode, getSuccessMessage, logger, SupportedLocales } from '@openclinic/core';
+import {
+  EntityNotFoundError,
+  AccessDeniedError,
+  ErrorCode,
+  SuccessCode,
+  getSuccessMessage,
+  logger,
+  SupportedLocales,
+  AUDIT_CONSTANTS,
+  IpAddress,
+  AuditStatus,
+  AuditAction,
+  AuditResource,
+} from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO } from '../../domain/dtos.js';
-import { AuditStatus } from '../../../shared/domain/enums.js';
 
 export class DeleteGroupUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(id: string, ipAddress?: string, username?: string): Promise<ActionResponseDTO<{ id: string; name: string }>> {
+  async execute(id: string, ipAddress?: string | IpAddress, username?: string): Promise<ActionResponseDTO<{ id: string; name: string }>> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     const existingGroup = await this.uow.groups.getById(id);
     if (!existingGroup) {
-      throw new EntityNotFoundError('Grupo', id, ErrorCode.GROUP_NOT_FOUND);
+      throw new EntityNotFoundError('Group', id, ErrorCode.GROUP_NOT_FOUND);
     }
 
     if (existingGroup.is_default) {
@@ -21,11 +34,11 @@ export class DeleteGroupUseCase {
 
     await this.uow.auditLogs.create({
       user_id: null,
-      username: username ?? 'admin',
-      action: 'group_deleted',
-      resource: 'iam_groups',
+      username: username ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR,
+      action: AuditAction.GROUP_DELETED,
+      resource: AuditResource.IAM_GROUPS,
       status: AuditStatus.SUCCESS,
-      ip_address: ipAddress ?? null,
+      ip_address: validatedIp?.value ?? null,
       user_agent: null,
       details: { groupId: id, name: groupName },
     });

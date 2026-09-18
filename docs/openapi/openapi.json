@@ -3,7 +3,7 @@
   "info": {
     "title": "OpenClinic — Electronic Health Record (EHR) & Governance API",
     "description": "Open, modular, and auditable Electronic Health Record (EHR) and Clinical Management API with hybrid access control (RBAC + ACL), multi-tenancy, dynamic capabilities resolution, and enterprise security (Argon2id + in-memory JWT).",
-    "version": "1.0.0",
+    "version": "0.1.1",
     "contact": {
       "name": "Iniciativa OpenClinic",
       "url": "https://github.com/Iniciativa-OpenClinic/OpenClinic"
@@ -76,35 +76,35 @@
       },
       "def-0": {
         "type": "object",
-        "description": "Estrutura padronizada de erros da aplicação no padrão RFC 7807",
+        "description": "Standardized application error structure adhering to RFC 7807",
         "properties": {
           "type": {
             "type": "string",
-            "description": "URI identificadora do tipo de erro"
+            "description": "URI identifier for the error type"
           },
           "title": {
             "type": "string",
-            "description": "Resumo legível do erro"
+            "description": "Human-readable summary of the error"
           },
           "status": {
             "type": "integer",
-            "description": "Código de status HTTP"
+            "description": "HTTP status code"
           },
           "detail": {
             "type": "string",
-            "description": "Descrição detalhada e traduzida do erro"
+            "description": "Detailed and localized error description"
           },
           "code": {
             "type": "string",
-            "description": "Código unívoco de erro da aplicação (ex: ERR_AUTH_INVALID_CREDENTIALS)"
+            "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
           },
           "instance": {
             "type": "string",
-            "description": "URI do endpoint onde ocorreu o erro"
+            "description": "URI of the endpoint where the error occurred"
           },
           "invalid_params": {
             "type": "array",
-            "description": "Lista de parâmetros com falha de validação",
+            "description": "List of parameters that failed validation",
             "items": {
               "type": "object",
               "properties": {
@@ -129,20 +129,20 @@
     }
   },
   "paths": {
-    "/health": {
+    "/health/live": {
       "get": {
-        "summary": "API Health Check",
+        "summary": "Liveness Probe",
         "tags": [
           "Health & Monitoring"
         ],
-        "description": "Checks the operational status and connectivity of the API",
+        "description": "Checks if the API process is alive",
         "responses": {
           "200": {
-            "description": "Service is operational",
+            "description": "Process is alive",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Service is operational",
+                  "description": "Process is alive",
                   "type": "object",
                   "properties": {
                     "status": {
@@ -161,13 +161,77 @@
         }
       }
     },
+    "/health/ready": {
+      "get": {
+        "summary": "Readiness Probe",
+        "tags": [
+          "Health & Monitoring"
+        ],
+        "description": "Checks if the API and database dependency are ready to accept traffic",
+        "responses": {
+          "200": {
+            "description": "Service and database are operational",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Service and database are operational",
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "database": {
+                      "type": "string",
+                      "example": "connected"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Database check failed",
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "database": {
+                      "type": "string",
+                      "example": "disconnected"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
-        "summary": "Login do Usuário",
+        "summary": "User Login",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Autentica um usuário via username ou e-mail com senha protegida por Argon2id. Retorna o access token JWT em memória e define o refresh token em cookie HttpOnly seguro.",
+        "description": "Authenticates a user via username or email with Argon2id-protected password. Returns short-lived JWT access token and sets secure HttpOnly refresh token cookie.",
         "requestBody": {
           "required": true,
           "content": {
@@ -181,13 +245,13 @@
                 "properties": {
                   "identifier": {
                     "type": "string",
-                    "description": "Username ou e-mail do usuário",
+                    "description": "User username or email",
                     "example": "owner.silva"
                   },
                   "password": {
                     "type": "string",
                     "format": "password",
-                    "description": "Senha de acesso",
+                    "description": "Access password",
                     "example": "temp1234"
                   }
                 }
@@ -197,16 +261,16 @@
         },
         "responses": {
           "200": {
-            "description": "Autenticação realizada com sucesso",
+            "description": "Authentication successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Autenticação realizada com sucesso",
+                  "description": "Authentication successful",
                   "type": "object",
                   "properties": {
                     "access_token": {
                       "type": "string",
-                      "description": "Token JWT de acesso com validade curta"
+                      "description": "Short-lived JWT access token"
                     },
                     "token_type": {
                       "type": "string",
@@ -214,12 +278,12 @@
                     },
                     "expires_in": {
                       "type": "integer",
-                      "description": "Tempo de expiração em segundos",
+                      "description": "Expiration time in seconds",
                       "example": 900
                     },
                     "refresh_token": {
                       "type": "string",
-                      "description": "Token de renovação"
+                      "description": "Refresh token"
                     },
                     "user": {
                       "type": "object",
@@ -257,7 +321,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -267,7 +331,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -277,7 +341,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -287,7 +351,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -297,7 +361,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -311,11 +375,11 @@
     },
     "/api/v1/auth/register": {
       "post": {
-        "summary": "Auto-Cadastro de Usuário",
+        "summary": "User Self-Registration",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Registra um novo usuário no sistema quando o auto-cadastro estiver habilitado.",
+        "description": "Registers a new user into the system when self-registration is enabled.",
         "requestBody": {
           "required": true,
           "content": {
@@ -360,11 +424,11 @@
         },
         "responses": {
           "201": {
-            "description": "Usuário cadastrado com sucesso",
+            "description": "User registered successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Usuário cadastrado com sucesso",
+                  "description": "User registered successfully",
                   "type": "object",
                   "properties": {
                     "id": {
@@ -386,7 +450,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -396,7 +460,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -406,7 +470,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -416,7 +480,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -426,7 +490,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -440,11 +504,11 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "summary": "Renovação de Access Token (Refresh)",
+        "summary": "Refresh Access Token",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Gera um novo token de acesso utilizando o refresh token presente no cookie HttpOnly ou no corpo da requisição.",
+        "description": "Generates a new access token using the refresh token from HttpOnly cookie or request body.",
         "requestBody": {
           "required": true,
           "content": {
@@ -454,7 +518,7 @@
                 "properties": {
                   "refresh_token": {
                     "type": "string",
-                    "description": "Refresh token opcional no body caso não use cookie"
+                    "description": "Optional refresh token in body if not using cookie"
                   }
                 }
               }
@@ -463,11 +527,11 @@
         },
         "responses": {
           "200": {
-            "description": "Token renovado com sucesso",
+            "description": "Token renewed successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Token renovado com sucesso",
+                  "description": "Token renewed successfully",
                   "type": "object",
                   "properties": {
                     "access_token": {
@@ -489,7 +553,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -499,7 +563,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -509,7 +573,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -519,7 +583,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -529,7 +593,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -543,11 +607,11 @@
     },
     "/api/v1/auth/profile": {
       "get": {
-        "summary": "Obter Perfil do Usuário Autenticado",
+        "summary": "Get Authenticated User Profile",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Retorna os dados cadastrais, cargo, papel e grupos do usuário autenticado.",
+        "description": "Returns profile data, title, role, and groups of the authenticated user.",
         "security": [
           {
             "BearerAuth": []
@@ -555,11 +619,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Perfil do usuário",
+            "description": "User profile",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Perfil do usuário",
+                  "description": "User profile",
                   "type": "object",
                   "properties": {
                     "id": {
@@ -602,7 +666,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -612,7 +676,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -622,7 +686,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -632,7 +696,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -642,7 +706,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -656,11 +720,11 @@
     },
     "/api/v1/auth/me": {
       "get": {
-        "summary": "Obter Perfil do Usuário Autenticado",
+        "summary": "Get Authenticated User Profile",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Retorna os dados cadastrais, cargo, papel e grupos do usuário autenticado.",
+        "description": "Returns profile data, title, role, and groups of the authenticated user.",
         "security": [
           {
             "BearerAuth": []
@@ -668,11 +732,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Perfil do usuário",
+            "description": "User profile",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Perfil do usuário",
+                  "description": "User profile",
                   "type": "object",
                   "properties": {
                     "id": {
@@ -715,7 +779,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -725,7 +789,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -735,7 +799,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -745,7 +809,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -755,7 +819,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -769,11 +833,11 @@
     },
     "/api/v1/auth/menu": {
       "get": {
-        "summary": "Obter Menu de Navegação",
+        "summary": "Get Navigation Menu",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Retorna a estrutura de menus dinâmicos com base no papel e permissões ativas.",
+        "description": "Returns dynamic navigation menu structure based on active role and permissions.",
         "security": [
           {
             "BearerAuth": []
@@ -832,7 +896,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -842,7 +906,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -852,7 +916,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -862,7 +926,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -872,7 +936,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -886,11 +950,11 @@
     },
     "/api/v1/auth/change-password": {
       "post": {
-        "summary": "Alteração de Senha do Próprio Usuário",
+        "summary": "Change Own Password",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Permite ao usuário autenticado alterar sua própria senha mediante fornecimento da senha atual.",
+        "description": "Allows the authenticated user to change their own password by providing their current password.",
         "requestBody": {
           "required": true,
           "content": {
@@ -923,11 +987,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Senha alterada com sucesso",
+            "description": "Password successfully changed",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Senha alterada com sucesso",
+                  "description": "Password successfully changed",
                   "type": "object",
                   "properties": {
                     "code": {
@@ -935,14 +999,27 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -952,7 +1029,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -962,7 +1039,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -972,7 +1049,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -982,7 +1059,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -996,11 +1073,11 @@
     },
     "/api/v1/auth/forgot-password": {
       "post": {
-        "summary": "Solicitação de Recuperação de Senha",
+        "summary": "Forgot Password Request",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Dispara o fluxo de recuperação gerando token temporal de redefinição.",
+        "description": "Triggers password recovery workflow and generates temporary reset token.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1022,10 +1099,11 @@
         },
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Forgot password request processed",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Forgot password request processed",
                   "type": "object",
                   "properties": {
                     "code": {
@@ -1033,14 +1111,26 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "expires_in_minutes": {
+                          "type": "integer"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1050,7 +1140,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1060,7 +1150,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1070,7 +1160,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1080,7 +1170,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1094,11 +1184,11 @@
     },
     "/api/v1/auth/reset-password": {
       "post": {
-        "summary": "Redefinição de Senha via Token",
+        "summary": "Reset Password via Token",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Redefine a senha do usuário utilizando o token de recuperação enviado por e-mail.",
+        "description": "Resets user password using the recovery token.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1125,10 +1215,11 @@
         },
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Password reset successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Password reset successfully",
                   "type": "object",
                   "properties": {
                     "code": {
@@ -1136,14 +1227,27 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1153,7 +1257,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1163,7 +1267,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1173,7 +1277,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1183,7 +1287,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1197,11 +1301,11 @@
     },
     "/api/v1/auth/logout": {
       "post": {
-        "summary": "Encerramento de Sessão (Logout)",
+        "summary": "User Logout",
         "tags": [
-          "Autenticação (Auth)"
+          "Authentication & Session"
         ],
-        "description": "Invalida a sessão ativa e limpa o cookie HttpOnly de refresh token.",
+        "description": "Terminates active session and clears the HttpOnly refresh token cookie.",
         "security": [
           {
             "BearerAuth": []
@@ -1209,26 +1313,30 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "User logged out successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "User logged out successfully",
                   "type": "object",
                   "properties": {
                     "code": {
-                      "type": "string",
-                      "example": "MSG_LOGOUT_SUCCESS"
+                      "type": "string"
                     },
                     "message": {
                       "type": "string"
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1238,7 +1346,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1248,7 +1356,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1258,7 +1366,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1268,7 +1376,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1282,11 +1390,11 @@
     },
     "/api/v1/iam/users": {
       "get": {
-        "summary": "Listar Todos os Usuários",
+        "summary": "List All Users",
         "tags": [
-          "Gestão de Usuários (IAM)"
+          "User Management (IAM)"
         ],
-        "description": "Retorna a lista completa de usuários cadastrados com seus papéis, status de atividade e bloqueio.",
+        "description": "Returns list of registered users with roles, active status, and lockout state.",
         "security": [
           {
             "BearerAuth": []
@@ -1294,11 +1402,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Lista de usuários",
+            "description": "Users list",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Lista de usuários",
+                  "description": "Users list",
                   "type": "array",
                   "items": {
                     "type": "object",
@@ -1349,7 +1457,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1359,7 +1467,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1369,7 +1477,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1379,7 +1487,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1389,7 +1497,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1401,11 +1509,11 @@
         }
       },
       "post": {
-        "summary": "Cadastrar Novo Usuário (Admin)",
+        "summary": "Create New User (Admin)",
         "tags": [
-          "Gestão de Usuários (IAM)"
+          "User Management (IAM)"
         ],
-        "description": "Cria um novo usuário na clínica com papel e senha inicial definidos.",
+        "description": "Creates a new user in the clinic with designated role and initial password.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1474,37 +1582,66 @@
         ],
         "responses": {
           "201": {
-            "description": "Usuário criado com sucesso",
+            "description": "User created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Usuário criado com sucesso",
+                  "description": "User created successfully",
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "username": {
+                    "code": {
                       "type": "string"
                     },
-                    "email": {
+                    "message": {
                       "type": "string"
                     },
-                    "cpf": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "role": {
-                      "type": "string"
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "cpf": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "display_name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "job_title": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1514,7 +1651,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1524,7 +1661,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1534,7 +1671,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1544,7 +1681,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1558,11 +1695,11 @@
     },
     "/api/v1/iam/users/{id}": {
       "put": {
-        "summary": "Atualizar Dados do Usuário",
+        "summary": "Update User Details",
         "tags": [
-          "Gestão de Usuários (IAM)"
+          "User Management (IAM)"
         ],
-        "description": "Atualiza informações cadastrais e papel RBAC de um usuário existente.",
+        "description": "Updates profile information and RBAC role of an existing user.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1621,7 +1758,7 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "description": "ID do usuário"
+            "description": "User ID"
           }
         ],
         "security": [
@@ -1631,37 +1768,66 @@
         ],
         "responses": {
           "200": {
-            "description": "Usuário atualizado com sucesso",
+            "description": "User updated successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Usuário atualizado com sucesso",
+                  "description": "User updated successfully",
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "username": {
+                    "code": {
                       "type": "string"
                     },
-                    "email": {
+                    "message": {
                       "type": "string"
                     },
-                    "cpf": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "role": {
-                      "type": "string"
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "cpf": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "display_name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "job_title": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1671,7 +1837,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1681,7 +1847,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1691,7 +1857,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1701,7 +1867,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1713,11 +1879,11 @@
         }
       },
       "delete": {
-        "summary": "Excluir Usuário",
+        "summary": "Delete User",
         "tags": [
-          "Gestão de Usuários (IAM)"
+          "User Management (IAM)"
         ],
-        "description": "Remove um usuário do sistema (com proteção contra auto-exclusão e exclusão de Owners).",
+        "description": "Deletes a user from the system (with protections against self-deletion and owner deletion).",
         "parameters": [
           {
             "schema": {
@@ -1736,10 +1902,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "User deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "User deleted successfully",
                   "type": "object",
                   "properties": {
                     "code": {
@@ -1747,14 +1914,27 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1764,7 +1944,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1774,7 +1954,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1784,7 +1964,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1794,7 +1974,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1808,11 +1988,11 @@
     },
     "/api/v1/iam/users/{id}/reset-password": {
       "post": {
-        "summary": "Redefinição Administrativa de Senha",
+        "summary": "Admin Reset User Password",
         "tags": [
-          "Gestão de Usuários (IAM)"
+          "User Management (IAM)"
         ],
-        "description": "Permite ao Administrador/Owner definir uma nova senha direta para outro usuário.",
+        "description": "Allows Administrator/Owner to set a new password directly for another user.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1851,10 +2031,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "User password reset by administrator",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "User password reset by administrator",
                   "type": "object",
                   "properties": {
                     "code": {
@@ -1862,14 +2043,27 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1879,7 +2073,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1889,7 +2083,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1899,7 +2093,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1909,7 +2103,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1923,11 +2117,11 @@
     },
     "/api/v1/iam/users/{id}/status": {
       "patch": {
-        "summary": "Alternar Status Ativo/Inativo do Usuário",
+        "summary": "Toggle User Active Status",
         "tags": [
-          "Gestão de Usuários (IAM)"
+          "User Management (IAM)"
         ],
-        "description": "Ativa ou desativa o acesso de um usuário ao sistema.",
+        "description": "Activates or deactivates user system access.",
         "parameters": [
           {
             "schema": {
@@ -1946,26 +2140,42 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "User active status toggled successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "User active status toggled successfully",
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
+                    "code": {
+                      "type": "string"
                     },
-                    "is_active": {
-                      "type": "boolean"
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1975,7 +2185,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1985,7 +2195,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1995,7 +2205,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2005,7 +2215,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2019,11 +2229,11 @@
     },
     "/api/v1/iam/users/{id}/unlock": {
       "post": {
-        "summary": "Desbloquear Conta de Usuário",
+        "summary": "Unlock User Account",
         "tags": [
-          "Gestão de Usuários (IAM)"
+          "User Management (IAM)"
         ],
-        "description": "Remove o bloqueio de segurança (lockout) aplicado após tentativas repetidas de falha de login.",
+        "description": "Clears security lockout applied after repeated failed login attempts.",
         "parameters": [
           {
             "schema": {
@@ -2042,27 +2252,39 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "User account unlocked successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "User account unlocked successfully",
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
+                    "code": {
+                      "type": "string"
                     },
-                    "is_locked": {
-                      "type": "boolean",
-                      "example": false
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2072,7 +2294,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2082,7 +2304,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2092,7 +2314,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2102,7 +2324,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2116,11 +2338,11 @@
     },
     "/api/v1/iam/groups": {
       "get": {
-        "summary": "Listar Todos os Grupos",
+        "summary": "List All Groups",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Retorna a lista de grupos cadastrados na clínica com a contagem de membros vinculados.",
+        "description": "Returns list of registered groups with count of linked members.",
         "security": [
           {
             "BearerAuth": []
@@ -2128,11 +2350,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Lista de grupos",
+            "description": "Groups list",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Lista de grupos",
+                  "description": "Groups list",
                   "type": "array",
                   "items": {
                     "type": "object",
@@ -2171,7 +2393,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2181,7 +2403,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2191,7 +2413,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2201,7 +2423,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2211,7 +2433,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2223,11 +2445,11 @@
         }
       },
       "post": {
-        "summary": "Criar Grupo Clínico / Funcional",
+        "summary": "Create Clinical/Functional Group",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Cadastra um novo grupo para agrupamento de usuários e herança de permissões (ACL).",
+        "description": "Registers a new group for user aggregation and ACL permissions inheritance.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2242,12 +2464,12 @@
                   "name": {
                     "type": "string",
                     "minLength": 2,
-                    "example": "Corpo Clínico - Cardiologia"
+                    "example": "Clinical Staff - Cardiology"
                   },
                   "description": {
                     "type": "string",
                     "minLength": 1,
-                    "example": "Médicos especialistas com acesso a laudos cardiológicos"
+                    "example": "Specialist physicians with access to cardiology reports"
                   },
                   "is_active": {
                     "type": "boolean",
@@ -2265,33 +2487,67 @@
         ],
         "responses": {
           "201": {
-            "description": "Grupo criado com sucesso",
+            "description": "Group created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Grupo criado com sucesso",
+                  "description": "Group created successfully",
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "name": {
+                    "code": {
                       "type": "string"
                     },
-                    "description": {
+                    "message": {
                       "type": "string"
                     },
-                    "is_active": {
-                      "type": "boolean"
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        },
+                        "is_default": {
+                          "type": "boolean"
+                        },
+                        "member_count": {
+                          "type": "integer"
+                        },
+                        "tenant_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "nullable": true
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2301,7 +2557,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2311,7 +2567,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2321,7 +2577,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2331,7 +2587,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2345,11 +2601,11 @@
     },
     "/api/v1/iam/groups/{id}": {
       "put": {
-        "summary": "Atualizar Grupo",
+        "summary": "Update Group",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Atualiza o nome, descrição e status ativo de um grupo existente.",
+        "description": "Updates name, description, and active status of an existing group.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2390,33 +2646,67 @@
         ],
         "responses": {
           "200": {
-            "description": "Grupo atualizado com sucesso",
+            "description": "Group updated successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "Grupo atualizado com sucesso",
+                  "description": "Group updated successfully",
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "name": {
+                    "code": {
                       "type": "string"
                     },
-                    "description": {
+                    "message": {
                       "type": "string"
                     },
-                    "is_active": {
-                      "type": "boolean"
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        },
+                        "is_default": {
+                          "type": "boolean"
+                        },
+                        "member_count": {
+                          "type": "integer"
+                        },
+                        "tenant_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "nullable": true
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2426,7 +2716,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2436,7 +2726,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2446,7 +2736,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2456,7 +2746,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2468,11 +2758,11 @@
         }
       },
       "delete": {
-        "summary": "Excluir Grupo",
+        "summary": "Delete Group",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Remove um grupo de usuários e desvincula suas permissões associadas.",
+        "description": "Deletes a user group and unbinds its associated permissions.",
         "parameters": [
           {
             "schema": {
@@ -2491,10 +2781,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Group deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Group deleted successfully",
                   "type": "object",
                   "properties": {
                     "code": {
@@ -2502,14 +2793,30 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2519,7 +2826,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2529,7 +2836,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2539,7 +2846,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2549,7 +2856,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2563,11 +2870,11 @@
     },
     "/api/v1/iam/groups/{id}/members": {
       "get": {
-        "summary": "Listar Membros do Grupo",
+        "summary": "List Group Members",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Retorna a lista de usuários que pertencem ao grupo e a lista de usuários disponíveis para vinculação.",
+        "description": "Returns users belonging to the group and users available for association.",
         "parameters": [
           {
             "schema": {
@@ -2708,7 +3015,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2718,7 +3025,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2728,7 +3035,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2738,7 +3045,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2748,7 +3055,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2760,11 +3067,11 @@
         }
       },
       "post": {
-        "summary": "Adicionar Usuário ao Grupo",
+        "summary": "Add User to Group",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Associa um usuário existente ao grupo para conceder as permissões herdadas.",
+        "description": "Associates an existing user with the group to grant inherited permissions.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2803,23 +3110,43 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Member added to group successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Member added to group successfully",
                   "type": "object",
                   "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "ok"
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "groupId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2829,7 +3156,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2839,7 +3166,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2849,7 +3176,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2859,7 +3186,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2873,11 +3200,11 @@
     },
     "/api/v1/iam/groups/{id}/members/{userId}": {
       "delete": {
-        "summary": "Remover Usuário do Grupo",
+        "summary": "Remove User from Group",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Desassocia um usuário do grupo.",
+        "description": "Disassociates a user from the group.",
         "parameters": [
           {
             "schema": {
@@ -2905,23 +3232,43 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Member removed from group successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "Member removed from group successfully",
                   "type": "object",
                   "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "ok"
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "groupId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2931,7 +3278,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2941,7 +3288,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2951,7 +3298,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2961,7 +3308,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2975,11 +3322,11 @@
     },
     "/api/v1/iam/users/{id}/groups": {
       "get": {
-        "summary": "Listar Grupos do Usuário",
+        "summary": "List User Groups",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Retorna a lista de grupos aos quais o usuário pertence e a lista de grupos disponíveis.",
+        "description": "Returns list of groups the user belongs to and available groups.",
         "parameters": [
           {
             "schema": {
@@ -3112,7 +3459,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3122,7 +3469,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3132,7 +3479,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3142,7 +3489,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3152,7 +3499,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3164,11 +3511,11 @@
         }
       },
       "post": {
-        "summary": "Vincular Usuário a um Grupo",
+        "summary": "Bind User to Group",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Adiciona um grupo à lista de grupos do usuário.",
+        "description": "Adds a group to the user groups list.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3206,23 +3553,43 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "User added to group successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "User added to group successfully",
                   "type": "object",
                   "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "ok"
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "groupId": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3232,7 +3599,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3242,7 +3609,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3252,7 +3619,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3262,7 +3629,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3276,11 +3643,11 @@
     },
     "/api/v1/iam/users/{id}/groups/{groupId}": {
       "delete": {
-        "summary": "Desvincular Usuário de um Grupo",
+        "summary": "Unbind User from Group",
         "tags": [
-          "Grupos Clínicos (IAM)"
+          "Clinical Groups (IAM)"
         ],
-        "description": "Remove o vínculo entre o usuário e o grupo indicado.",
+        "description": "Removes the binding between user and group.",
         "parameters": [
           {
             "schema": {
@@ -3308,23 +3675,43 @@
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "User removed from group successfully",
             "content": {
               "application/json": {
                 "schema": {
+                  "description": "User removed from group successfully",
                   "type": "object",
                   "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "ok"
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "userId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "groupId": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3334,7 +3721,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3344,7 +3731,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3354,7 +3741,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3364,7 +3751,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3405,7 +3792,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3415,7 +3802,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3425,7 +3812,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3435,7 +3822,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3445,7 +3832,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3486,7 +3873,7 @@
                       },
                       "label": {
                         "type": "string",
-                        "example": "Agenda & Marcações"
+                        "example": "Appointments & Scheduling"
                       },
                       "icon": {
                         "type": "string",
@@ -3522,7 +3909,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3532,7 +3919,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3542,7 +3929,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3552,7 +3939,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3562,7 +3949,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3666,7 +4053,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3676,7 +4063,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3686,7 +4073,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3696,7 +4083,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3706,7 +4093,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3792,7 +4179,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3802,7 +4189,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3812,7 +4199,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3822,7 +4209,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3832,7 +4219,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3941,7 +4328,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3951,7 +4338,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3961,7 +4348,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3971,7 +4358,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3981,7 +4368,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4049,7 +4436,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4059,7 +4446,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4069,7 +4456,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4079,7 +4466,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4089,7 +4476,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4157,7 +4544,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4167,7 +4554,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4177,7 +4564,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4187,7 +4574,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4197,7 +4584,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4265,7 +4652,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4275,7 +4662,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4285,7 +4672,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4295,7 +4682,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4305,7 +4692,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4401,7 +4788,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4411,7 +4798,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4421,7 +4808,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4431,7 +4818,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4441,7 +4828,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4497,7 +4884,7 @@
                     "defaultLocale": {
                       "type": "string"
                     },
-                    "defaultSupportedLocales": {
+                    "supportedLocales": {
                       "type": "array",
                       "items": {
                         "type": "string"
@@ -4523,55 +4910,8 @@
                         "EMAIL"
                       ]
                     },
-                    "app_name": {
-                      "type": "string"
-                    },
-                    "app_subtitle": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "app_version": {
-                      "type": "string"
-                    },
-                    "app_logo_url": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "app_favicon_url": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "tenant_name": {
-                      "type": "string"
-                    },
-                    "default_locale": {
-                      "type": "string"
-                    },
-                    "supported_locales": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "default_timezone": {
-                      "type": "string"
-                    },
-                    "default_dialing_code": {
-                      "type": "string"
-                    },
-                    "accepted_login_methods": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "primary_login_identifier": {
-                      "type": "string",
-                      "enum": [
-                        "CPF",
-                        "USERNAME",
-                        "EMAIL"
-                      ]
+                    "sessionTimeoutMinutes": {
+                      "type": "number"
                     }
                   }
                 }
@@ -4579,7 +4919,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4589,7 +4929,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4599,7 +4939,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4609,7 +4949,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4619,363 +4959,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/arch/public/application": {
-      "get": {
-        "summary": "Get Public Application Branding and Settings",
-        "tags": [
-          "Architecture & Platform"
-        ],
-        "description": "Returns publicly accessible application branding (appSubtitle, appLogoUrl, appFaviconUrl, locales) from database for unauthenticated bootstrap.",
-        "responses": {
-          "200": {
-            "description": "Public application branding parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Public application branding parameters",
-                  "type": "object",
-                  "properties": {
-                    "appName": {
-                      "type": "string"
-                    },
-                    "appSubtitle": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "appVersion": {
-                      "type": "string"
-                    },
-                    "appLogoUrl": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "appFaviconUrl": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "appDescription": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "tenantName": {
-                      "type": "string"
-                    },
-                    "defaultLocale": {
-                      "type": "string"
-                    },
-                    "defaultSupportedLocales": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "defaultTimezone": {
-                      "type": "string"
-                    },
-                    "defaultDialingCode": {
-                      "type": "string"
-                    },
-                    "acceptedLoginMethods": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "primaryLoginIdentifier": {
-                      "type": "string",
-                      "enum": [
-                        "CPF",
-                        "USERNAME",
-                        "EMAIL"
-                      ]
-                    },
-                    "app_name": {
-                      "type": "string"
-                    },
-                    "app_subtitle": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "app_version": {
-                      "type": "string"
-                    },
-                    "app_logo_url": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "app_favicon_url": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "tenant_name": {
-                      "type": "string"
-                    },
-                    "default_locale": {
-                      "type": "string"
-                    },
-                    "supported_locales": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "default_timezone": {
-                      "type": "string"
-                    },
-                    "default_dialing_code": {
-                      "type": "string"
-                    },
-                    "accepted_login_methods": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "primary_login_identifier": {
-                      "type": "string",
-                      "enum": [
-                        "CPF",
-                        "USERNAME",
-                        "EMAIL"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/system/public/application": {
-      "get": {
-        "summary": "Get Public Application Branding and Settings",
-        "tags": [
-          "Architecture & Platform"
-        ],
-        "description": "Returns publicly accessible application branding (appSubtitle, appLogoUrl, appFaviconUrl, locales) from database for unauthenticated bootstrap.",
-        "responses": {
-          "200": {
-            "description": "Public application branding parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Public application branding parameters",
-                  "type": "object",
-                  "properties": {
-                    "appName": {
-                      "type": "string"
-                    },
-                    "appSubtitle": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "appVersion": {
-                      "type": "string"
-                    },
-                    "appLogoUrl": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "appFaviconUrl": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "appDescription": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "tenantName": {
-                      "type": "string"
-                    },
-                    "defaultLocale": {
-                      "type": "string"
-                    },
-                    "defaultSupportedLocales": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "defaultTimezone": {
-                      "type": "string"
-                    },
-                    "defaultDialingCode": {
-                      "type": "string"
-                    },
-                    "acceptedLoginMethods": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "primaryLoginIdentifier": {
-                      "type": "string",
-                      "enum": [
-                        "CPF",
-                        "USERNAME",
-                        "EMAIL"
-                      ]
-                    },
-                    "app_name": {
-                      "type": "string"
-                    },
-                    "app_subtitle": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "app_version": {
-                      "type": "string"
-                    },
-                    "app_logo_url": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "app_favicon_url": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "tenant_name": {
-                      "type": "string"
-                    },
-                    "default_locale": {
-                      "type": "string"
-                    },
-                    "supported_locales": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "default_timezone": {
-                      "type": "string"
-                    },
-                    "default_dialing_code": {
-                      "type": "string"
-                    },
-                    "accepted_login_methods": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "primary_login_identifier": {
-                      "type": "string",
-                      "enum": [
-                        "CPF",
-                        "USERNAME",
-                        "EMAIL"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/def-0"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5116,7 +5100,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5126,7 +5110,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5136,7 +5120,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5146,7 +5130,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5156,7 +5140,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5299,7 +5283,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5309,7 +5293,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5319,7 +5303,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5329,7 +5313,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5339,7 +5323,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5347,22 +5331,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/v1/system/platform/application": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "Default Response"
-          }
-        }
-      },
-      "put": {
-        "responses": {
-          "200": {
-            "description": "Default Response"
           }
         }
       }
@@ -5478,7 +5446,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5488,7 +5456,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5498,7 +5466,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5508,7 +5476,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5518,7 +5486,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5589,7 +5557,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5599,7 +5567,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5609,7 +5577,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5619,7 +5587,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5629,7 +5597,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5637,22 +5605,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/v1/system/application-configs/current": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "Default Response"
-          }
-        }
-      },
-      "put": {
-        "responses": {
-          "200": {
-            "description": "Default Response"
           }
         }
       }
@@ -5773,7 +5725,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5783,7 +5735,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5793,7 +5745,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5803,7 +5755,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5813,7 +5765,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6061,7 +6013,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6071,7 +6023,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6081,7 +6033,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6091,7 +6043,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6101,7 +6053,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6237,7 +6189,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6247,7 +6199,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6257,7 +6209,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6267,7 +6219,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6277,7 +6229,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6529,7 +6481,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6539,7 +6491,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6549,7 +6501,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6559,7 +6511,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6569,7 +6521,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6625,7 +6577,7 @@
             }
           },
           "400": {
-            "description": "Requisição inválida ou erro de validação (RFC 7807)",
+            "description": "Bad request or validation failure (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6635,7 +6587,7 @@
             }
           },
           "401": {
-            "description": "Não autenticado ou token inválido/expirado (RFC 7807)",
+            "description": "Unauthenticated or invalid/expired token (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6645,7 +6597,7 @@
             }
           },
           "403": {
-            "description": "Acesso negado — Permissão ou Role insuficiente (RFC 7807)",
+            "description": "Forbidden — Insufficient role or permissions (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6655,7 +6607,7 @@
             }
           },
           "404": {
-            "description": "Recurso não encontrado (RFC 7807)",
+            "description": "Resource not found (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6665,7 +6617,7 @@
             }
           },
           "500": {
-            "description": "Erro interno do servidor (RFC 7807)",
+            "description": "Internal server error (RFC 7807)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6680,8 +6632,12 @@
   },
   "servers": [
     {
+      "url": "/",
+      "description": "Current Origin (Domain / Reverse Proxy)"
+    },
+    {
       "url": "http://localhost:3000",
-      "description": "Local Development Server"
+      "description": "Local Direct Server"
     }
   ],
   "tags": [

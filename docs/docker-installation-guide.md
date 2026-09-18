@@ -108,29 +108,55 @@ Copy-Item .env.example .env
 copy .env.example .env
 ```
 
-### Detalhamento das Variáveis do `.env`
+### Detalhamento das Variáveis do `.env` & Arquitetura de Secrets
+
+O OpenClinic adota uma arquitetura agnóstica de **Secrets Provider** com estrita observância ao Princípio do Menor Privilégio (**PoLP**):
 
 ```env
-# Conexão da aplicação backend em tempo de execução (role com permissões DML)
-DATABASE_URL=postgresql://openclinic_app:temp1234@localhost:5432/openclinic
+# ============================================================
+# 🐘 1. CONFIGURAÇÃO DIRETA ATÔMICA (SECRETS_PROVIDER=env)
+# ============================================================
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=openclinic
+DB_USER=openclinic_app
+DB_PASS="sua-senha-de-desenvolvimento"
 
-# Conexão de governança/migrações (role com privilégios DDL)
-DATABASE_OWNER_URL=postgresql://openclinic_owner:temp1234@localhost:5432/openclinic
+# Chave criptográfica de assinatura dos tokens JWT (mínimo de 32 caracteres)
+JWT_KEY="gere-uma-chave-aleatoria-criptograficamente-segura-min-32-chars"
 
-# Chave secreta de assinatura dos tokens JWT (mínimo de 32 caracteres)
-JWT_SECRET_KEY=openclinic-dev-only-secret-key-change-in-production
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=15
-REFRESH_TOKEN_EXPIRE_DAYS=7
+# ============================================================
+# 🔐 2. ARQUITETURA DE PROVEDOR DE SECRETS (Provider Pattern)
+# ============================================================
+# Provedor ativo: 'env', 'file', 'gsm' (Google Secret Manager) ou 'aws' (AWS Secrets Manager)
+SECRETS_PROVIDER=env
 
-# Parâmetros de rede do servidor HTTP da API
+# Identificadores lógicos de secrets (resolvidos em 'file', 'gsm' ou 'aws'):
+DB_APP_SECRET_NAME=database-secret-app
+DB_OWNER_SECRET_NAME=database-secret-owner
+JWT_SECRET_NAME=jwt-secret
+SECRETS_DIR=./secrets
+
+# ============================================================
+# 🌐 3. PARÂMETROS DO SERVIDOR HTTP (API)
+# ============================================================
 APP_HOST=0.0.0.0
 APP_PORT=3000
 NODE_ENV=development
 LOG_LEVEL=info
 ```
 
-> ⚠️ **Atenção (Segurança P0):** Em ambientes compartilhados ou produtivos, altere obrigatoriamente a chave `JWT_SECRET_KEY` e a senha do banco `temp1234`!
+#### 🛡 Invariantes de Segurança nas Credenciais
+
+1. **Zero Hardcoded `DATABASE_URL`**: A string de conexão completa `DATABASE_URL` **nunca** é persistida no arquivo `.env`. A aplicação e o CLI a sintetizam dinamicamente em memória a partir dos componentes atômicos.
+2. **Isolamento de Roles de Banco (PoLP)**:
+   - **Runtime da API (`openclinic_app`)**: Permissões estritamente restritas a DML (`SELECT`, `INSERT`, `UPDATE`, `DELETE`). Sem privilégios de DDL ou superuser.
+   - **Migrações e Governança (`openclinic_owner`)**: Permissões de DDL para criação/alteração de tabelas e schemas. Utilizado exclusivamente pelo container de migrações ou tarefas CLI administrativas via `DB_OWNER_SECRET_NAME`.
+3. **Modo Arquivos Locais (`SECRETS_PROVIDER=file`)**:
+
+   Para simular o ambiente de containers ou orquestradores (Swarm/K8s), copie os templates de `secrets/*.credentials.example.json` para `secrets/*.credentials.json`. Consulte a especificação completa em [**`secrets/README.md`**](../secrets/README.md).
+
+> ⚠️ **Atenção (Segurança P0):** Em ambientes de homologação ou produção, altere obrigatoriamente a `JWT_KEY` e as senhas das roles `openclinic_app` e `openclinic_owner`!
 
 ---
 
@@ -145,8 +171,8 @@ docker compose up --build -d
 O Docker realizará:
 
 1. Download da imagem oficial do `postgres:17-alpine`.
-2. Compilação multi-stage da API Backend (`docker/Dockerfile`).
-3. Compilação multi-stage do Frontend Webapp (`docker/Dockerfile.webapp`).
+2. Compilação multi-stage da API Backend (`infra/docker/Dockerfile`).
+3. Compilação multi-stage do Frontend Webapp (`infra/docker/Dockerfile.webapp`).
 4. Criação da rede virtual `openclinic_network` e do volume persistente `openclinic_data`.
 5. Inicialização ordenada e monitorada por healthchecks.
 
@@ -169,7 +195,7 @@ openclinic-webapp     openclinic-webapp:latest "/docker-entrypoint.…"   webapp
 
 ## 🗄 Passo 4: Provisionamento Automatizado do Banco de Dados
 
-Na inicialização de um volume vazio, o PostgreSQL executa apenas `000-roles.sql` para provisionar roles e grants. O serviço separado `migrate` aplica as migrations de estrutura e catálogo, e a API aguarda sua conclusão bem-sucedida.
+Na inicialização de um volume vazio, o PostgreSQL executa `000-roles.sh` para provisionar roles e grants dinamicamente com base nas variáveis do `.env`. O serviço separado `migrate` aplica as migrations de estrutura e catálogo, e a API aguarda sua conclusão bem-sucedida.
 
 As contas e os dados de demonstração são opcionais: em uma base sem dados operacionais, execute `npm run db:seed -- --demo` com a conexão local configurada. Para uma instalação sem demonstração, crie a conta inicial com `npm run user:create-admin`.
 
@@ -186,7 +212,9 @@ Após a subida dos containers, acesse os serviços pelo navegador:
 | **Frontend Webapp** | [**`http://localhost`**](http://localhost) | Interface gráfica completa do sistema clínico e administrativo |
 | **Backend REST API** | [**`http://localhost:3000`**](http://localhost:3000) | Endpoints REST da API Fastify |
 | **Swagger UI Interativo** | [**`http://localhost:3000/docs`**](http://localhost:3000/docs) | Documentação interativa OpenAPI 3.0 / 3.1 com teste de endpoints |
-| **Healthcheck da API** | [**`http://localhost:3000/health`**](http://localhost:3000/health) | Endpoint de diagnóstico e monitoramento do status da API |
+| **Healthcheck da API** | [**`http://localhost:3000/health/live`**](http://localhost:3000/health/live) | Endpoint de diagnóstico e monitoramento do status da API |
+
+> 📖 **Guia do Swagger UI**: Para instruções detalhadas sobre como autenticar via Bearer Token JWT e testar rotas protegidas diretamente no navegador, consulte o [**Guia do Swagger UI Interativo**](./openapi/swagger.md) e o [**Hub de Contratos OpenAPI**](./openapi/README.md).
 
 ---
 
@@ -263,8 +291,8 @@ docker compose exec db psql -U openclinic_owner -d openclinic
 
 Para ambientes de produção com suporte a alta disponibilidade, terminação TLS/HTTPS automática com Let's Encrypt e orquestração Docker Swarm, o OpenClinic disponibiliza uma stack dedicada:
 
-- **Arquivo da Stack:** [`stacks/openclinic-production.yml`](../stacks/openclinic-production.yml)
-- **Variáveis da Stack:** [`stacks/openclinic-production.env.example`](../stacks/openclinic-production.env.example)
+- **Arquivo da Stack:** [`infra/stacks/openclinic-production.yml`](../infra/stacks/openclinic-production.yml)
+- **Variáveis da Stack:** [`infra/stacks/openclinic-production.env.example`](../infra/stacks/openclinic-production.env.example)
 - **Imagens Oficiais no Docker Hub:**
   - `openclinic/openclinic-webapp:latest`
   - `openclinic/openclinic-api:latest`
@@ -272,8 +300,8 @@ Para ambientes de produção com suporte a alta disponibilidade, terminação TL
 ### Passos de Instalação no Portainer
 
 1. Acesse o **Portainer** → **Stacks** → **Add Stack**.
-2. Cole o conteúdo de `stacks/openclinic-production.yml`.
-3. Defina as variáveis de ambiente utilizando o modelo `stacks/openclinic-production.env.example`.
+2. Cole o conteúdo de `infra/stacks/openclinic-production.yml`.
+3. Defina as variáveis de ambiente utilizando o modelo `infra/stacks/openclinic-production.env.example`.
 4. Clique em **Deploy the stack**.
 
 ---
@@ -316,3 +344,7 @@ Para ambientes de produção com suporte a alta disponibilidade, terminação TL
 
 O OpenClinic é um software livre distribuído sob a licença **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 Dúvidas e contribuições podem ser enviadas abrindo uma *Issue* ou *Pull Request* no repositório oficial.
+
+## Docker Swarm Secrets
+
+O template aceita secrets montados por arquivo para API e CLI. A stack de produção usa `SECRETS_PROVIDER=file`; seus parâmetros recebem nomes de secrets externos, sem os valores de senha ou JWT. Antes de atualizar, construa a imagem compatível e siga o [contrato, ensaio local e procedimento de operação](../infra/secrets/secrets-architecture.md).

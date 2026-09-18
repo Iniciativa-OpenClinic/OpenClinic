@@ -68,7 +68,7 @@ A base regulatória atual é a **RDC nº 751/2022** (que revogou a antiga RDC n�
 
 Um software se torna **SaMD** (sujeito a notificação/registro na ANVISA conforme sua classe de risco) quando tem **finalidade médica** — destinado a diagnóstico, prevenção, monitoramento ou tratamento de doenças, ou a apoiar decisão clínica. O próprio material de Perguntas e Respostas da ANVISA sobre a RDC 657/2022 esclarece que um software que apenas registra dados em prontuário, para verificação posterior por um profissional de saúde, **não** se enquadra como SaMD.
 
-**Posição do OpenClinic — núcleo deliberadamente neutro**: o núcleo do projeto é desenhado para **armazenar, organizar e expor dados via API**, sem nenhuma finalidade médica autônoma. Concretamente, o núcleo **não terá**:
+### Posição do OpenClinic — núcleo deliberadamente neutro**: o núcleo do projeto é desenhado para **armazenar, organizar e expor dados via API**, sem nenhuma finalidade médica autônoma. Concretamente, o núcleo **não terá
 
 - alertas clínicos automatizados;
 - escores ou cálculos de risco clínico;

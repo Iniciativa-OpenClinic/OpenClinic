@@ -19,7 +19,7 @@ export interface ResourceManifestItem {
  * Single Source of Truth for all Clinical, Financial, Operational, and Architecture resources.
  */
 export const APP_RESOURCE_MANIFEST = [
-  // ── 1. Contexto BUSINESS: ATENDIMENTO ──
+  // ── 1. BUSINESS Context: Attendance ──
   {
     code: 'op_schedule',
     section: 'attendance',
@@ -31,7 +31,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/attendance/schedule',
     sortOrder: 10,
     minRole: UserRole.USER,
-    description: 'Agendamento de consultas, calendário clínico e marcações',
+    description: 'Scheduling consultations, clinical calendar, and appointments',
   },
   {
     code: 'op_attendance',
@@ -44,10 +44,10 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/attendance/queue',
     sortOrder: 20,
     minRole: UserRole.USER,
-    description: 'Recepção, fila de espera e triagem de pacientes',
+    description: 'Reception, waiting queue, and patient triage',
   },
 
-  // ── 2. Contexto BUSINESS: CLÍNICO ──
+  // ── 2. BUSINESS Context: Clinical ──
   {
     code: 'op_patients',
     section: 'clinical',
@@ -59,7 +59,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/clinical/patients',
     sortOrder: 30,
     minRole: UserRole.USER,
-    description: 'Cadastro geral de pacientes, histórico e documentos',
+    description: 'General patient registry, medical history, and documents',
   },
   {
     code: 'op_consultations',
@@ -72,7 +72,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/clinical/consultations',
     sortOrder: 40,
     minRole: UserRole.USER,
-    description: 'Atendimento médico ambulatorial, receitas e solicitações de exames',
+    description: 'Outpatient medical consultations, prescriptions, and lab test requests',
   },
   {
     code: 'op_pep',
@@ -85,10 +85,10 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/clinical/records',
     sortOrder: 50,
     minRole: UserRole.USER,
-    description: 'Prontuário Eletrônico do Paciente, histórico clínico e evoluções',
+    description: 'Electronic Health Records (EHR), clinical timeline, and evolutions',
   },
 
-  // ── 3. Contexto BUSINESS: FINANCEIRO ──
+  // ── 3. BUSINESS Context: Financial ──
   {
     code: 'op_billing',
     section: 'financial',
@@ -100,7 +100,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/financial/billing',
     sortOrder: 60,
     minRole: UserRole.USER,
-    description: 'Fechamento de faturas, guias TISS/TUSS e repasses médicos',
+    description: 'Invoice billing, TISS/TUSS claims, and medical fees',
   },
   {
     code: 'op_cashflow',
@@ -113,7 +113,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/financial/cash-flow',
     sortOrder: 70,
     minRole: UserRole.USER,
-    description: 'Caixa diário, movimentações financeiras e fluxo de caixa',
+    description: 'Daily cash management, financial transactions, and cash flow',
   },
   {
     code: 'op_payables',
@@ -126,10 +126,10 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/financial/payables',
     sortOrder: 80,
     minRole: UserRole.USER,
-    description: 'Gestão de contas a pagar, títulos a receber e conciliação',
+    description: 'Accounts payable, accounts receivable, and bank reconciliation',
   },
 
-  // ── 4. Contexto BUSINESS: CADASTROS ──
+  // ── 4. BUSINESS Context: Registries ──
   {
     code: 'base_staff',
     section: 'registries',
@@ -141,7 +141,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/registries/staff',
     sortOrder: 90,
     minRole: UserRole.USER,
-    description: 'Cadastro de colaboradores, equipe assistencial e administrativa',
+    description: 'Staff directory, clinical team, and administrative employees',
   },
   {
     code: 'base_health_plans',
@@ -154,7 +154,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/registries/health-plans',
     sortOrder: 100,
     minRole: UserRole.USER,
-    description: 'Operadoras de saúde, planos credenciados e regras de autorização',
+    description: 'Health insurance operators, accredited plans, and coverage rules',
   },
   {
     code: 'base_procedures',
@@ -167,7 +167,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/registries/procedures',
     sortOrder: 110,
     minRole: UserRole.USER,
-    description: 'Catálogo de procedimentos, tabela TUSS e valores',
+    description: 'Procedures catalog, TUSS table, and medical pricing',
   },
   {
     code: 'base_shifts',
@@ -180,10 +180,10 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/registries/shifts',
     sortOrder: 115,
     minRole: UserRole.USER,
-    description: 'Escalas de trabalho, plantões assistenciais e turnos de atendimento',
+    description: 'Work shifts, duty rosters, and care schedules',
   },
 
-  // ── 5. Contexto BUSINESS: GESTÃO ──
+  // ── 5. BUSINESS Context: Management ──
   {
     code: 'menu_mgmt_indicators',
     section: 'management',
@@ -195,7 +195,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/management/metrics',
     sortOrder: 120,
     minRole: UserRole.USER,
-    description: 'Painel executivo de indicadores, taxa de ocupação e métricas clínicas',
+    description: 'Executive dashboard, clinic occupancy rate, and clinical metrics',
   },
   {
     code: 'menu_mgmt_reports',
@@ -208,10 +208,10 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/management/reports',
     sortOrder: 130,
     minRole: UserRole.USER,
-    description: 'Relatórios gerenciais analíticos, faturamento e produtividade',
+    description: 'Analytical management reports, revenue, and clinical productivity',
   },
 
-  // ── 6. Contexto ARCH: SISTEMA ──
+  // ── 6. ARCH Context: System ──
   {
     code: 'menu_sys_settings',
     section: 'system',
@@ -223,7 +223,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/system/settings',
     sortOrder: 200,
     minRole: UserRole.ADMIN,
-    description: 'Regras de funcionamento, agendamentos, horários operacionais e preferências',
+    description: 'System preferences, scheduling rules, operating hours, and operational policies',
   },
   {
     code: 'menu_sys_users',
@@ -236,7 +236,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/system/users',
     sortOrder: 210,
     minRole: UserRole.ADMIN,
-    description: 'Gestão de contas, colaboradores, perfis de acesso e matriz RBAC',
+    description: 'User accounts management, access profiles, and RBAC matrix',
   },
   {
     code: 'menu_sys_institution',
@@ -249,7 +249,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/system/organizations',
     sortOrder: 220,
     minRole: UserRole.ADMIN,
-    description: 'Dados cadastrais da clínica, CNPJ, CNES, logotipo e responsáveis técnicos',
+    description: 'Clinic organizational details, fiscal registration, logo, and technical leads',
   },
   {
     code: 'menu_sys_audit',
@@ -262,10 +262,10 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/system/audit-logs',
     sortOrder: 230,
     minRole: UserRole.ADMIN,
-    description: 'Trilha de auditoria imutável, logs de acesso aos prontuários e LGPD',
+    description: 'Immutable audit trail, EHR access logs, and compliance records',
   },
 
-  // ── 7. Contexto ARCH: PLATAFORMA (Exclusivo OWNER) ──
+  // ── 7. ARCH Context: Platform (Exclusive to OWNER) ──
   {
     code: 'menu_platform_settings',
     section: 'platform',
@@ -277,7 +277,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/platform/settings',
     sortOrder: 300,
     minRole: UserRole.OWNER,
-    description: 'Parâmetros globais de infraestrutura, autenticação e segurança',
+    description: 'Global infrastructure parameters, authentication, and security governance',
   },
   {
     code: 'menu_platform_tenants',
@@ -290,7 +290,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/platform/tenants',
     sortOrder: 310,
     minRole: UserRole.OWNER,
-    description: 'Gestão multi-tenant de contratantes, instâncias e isolamento',
+    description: 'Multi-tenant organization management, instance isolation, and provisioning',
   },
   {
     code: 'menu_platform_api_keys',
@@ -303,7 +303,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/platform/api-keys',
     sortOrder: 320,
     minRole: UserRole.OWNER,
-    description: 'Gestão de chaves de API para integrações e credenciais M2M',
+    description: 'API keys management for integrations and M2M credentials',
   },
   {
     code: 'menu_platform_webhooks',
@@ -316,7 +316,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/platform/integrations',
     sortOrder: 330,
     minRole: UserRole.OWNER,
-    description: 'Conectores externos, filas de eventos, orquestração e webhooks',
+    description: 'External connectors, event queues, orchestration, and webhooks',
   },
   {
     code: 'menu_platform_policies',
@@ -329,10 +329,10 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/platform/policies',
     sortOrder: 340,
     minRole: UserRole.OWNER,
-    description: 'Termos de uso, políticas de privacidade e acordos DPA/LGPD',
+    description: 'Terms of service, privacy policies, and compliance agreements',
   },
 
-  // ── 8. Contexto ARCH: CONTA DO USUÁRIO ──
+  // ── 8. ARCH Context: User Account ──
   {
     code: 'menu_profile',
     section: 'account',
@@ -344,7 +344,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/account/profile',
     sortOrder: 400,
     minRole: UserRole.USER,
-    description: 'Visualização e edição dos dados cadastrais do perfil do usuário',
+    description: 'Viewing and editing user account profile details',
   },
   {
     code: 'menu_password',
@@ -357,7 +357,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/account/security',
     sortOrder: 410,
     minRole: UserRole.USER,
-    description: 'Alteração de credenciais e senha de acesso',
+    description: 'Credential management and password reset',
   },
   {
     code: 'menu_help',
@@ -370,7 +370,7 @@ export const APP_RESOURCE_MANIFEST = [
     route: '/help',
     sortOrder: 420,
     minRole: UserRole.USER,
-    description: 'Central de ajuda, documentação e abertura de chamados',
+    description: 'Help center, technical documentation, and support tickets',
   },
 ] as const satisfies readonly ResourceManifestItem[];
 

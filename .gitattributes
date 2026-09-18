@@ -1,3 +1,4 @@
-# Migration hashes must be identical on Windows, Linux, CI and containers.
+# Migration hashes and shell scripts must have identical LF endings on Windows, Linux, CI and containers.
 infra/database/migrations/** text eol=lf
 infra/database/baseline-schema.json text eol=lf
+*.sh text eol=lf

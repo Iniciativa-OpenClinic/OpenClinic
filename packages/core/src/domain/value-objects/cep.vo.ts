@@ -2,7 +2,7 @@ import { ValueObject } from './value-object.base.js';
 import { ValidationError, ErrorCode } from '../../errors/index.js';
 
 /**
- * Código de Endereçamento Postal (CEP) Value Object.
+ * Brazilian Postal Code (CEP - Código de Endereçamento Postal) Value Object.
  * Conforms to Correios standards and FHIR Address specification.
  * Composed of exactly 8 numeric digits, formatted as "00000-000".
  */

@@ -23,7 +23,18 @@ export interface PgRestoreConfig extends PgConnectionConfig {
 }
 
 /**
- * Procura container Docker ativo do Postgres na máquina
+ * Formats a date into a clean, human-readable ISO-like timestamp for backup filenames (YYYYMMDD_HHmmss).
+ */
+export function formatBackupTimestamp(date: Date = new Date()): string {
+  return date
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace('T', '_')
+    .split('.')[0]!;
+}
+
+/**
+ * Searches for an active Docker container running Postgres on the host
  */
 export function getRunningPostgresContainer(): string | null {
   if (process.env['PG_CLIENT_CONTAINER']) return process.env['PG_CLIENT_CONTAINER'];
@@ -37,19 +48,19 @@ export function getRunningPostgresContainer(): string | null {
       const [name, image] = line.split('\t');
       if (
         (image && (image.includes('postgres') || image.includes('pgvector'))) ||
-        (name && (name.includes('postgres') || name.includes('openclinic-postgres')))
+        (name && (name.includes('postgres') || name === process.env['PG_CLIENT_CONTAINER']))
       ) {
         return name?.trim() ?? null;
       }
     }
   } catch {
-    // Docker não disponível ou não executando
+    // Docker is not available or not running
   }
   return null;
 }
 
 /**
- * Localiza binários pg_dump e pg_restore no sistema host Windows/Linux
+ * Resolves host binaries for pg_dump and pg_restore on Windows/Linux
  */
 export function resolveHostBinary(binaryName: 'pg_dump' | 'pg_restore'): string | null {
   try {
@@ -60,10 +71,10 @@ export function resolveHostBinary(binaryName: 'pg_dump' | 'pg_restore'): string 
       return firstLine;
     }
   } catch {
-    // Não encontrado no PATH
+    // Not found in PATH
   }
 
-  // Busca em locais comuns de instalação do PostgreSQL no Windows
+  // Search common PostgreSQL installation locations on Windows
   if (process.platform === 'win32') {
     const baseDir = 'C:\\Program Files\\PostgreSQL';
     if (fs.existsSync(baseDir)) {
@@ -81,7 +92,7 @@ export function resolveHostBinary(binaryName: 'pg_dump' | 'pg_restore'): string 
 }
 
 /**
- * Testa conectividade direta com o banco de dados
+ * Tests direct connectivity to the PostgreSQL database
  */
 export async function testPgConnection(config: PgConnectionConfig): Promise<{ success: boolean; error?: string }> {
   const connString = config.connectionUrl ?? `postgresql://${encodeURIComponent(config.user)}:${encodeURIComponent(config.password || '')}@${config.host}:${config.port}/${config.database}`;
@@ -128,7 +139,7 @@ export async function executePgDump(config: PgDumpConfig): Promise<void> {
   } else {
     const container = getRunningPostgresContainer();
     if (!container) throw new Error('Install PostgreSQL client tools or set PG_CLIENT_CONTAINER.');
-    const temporary = '/tmp/openclinic_dump_' + Date.now() + '.dump';
+    const temporary = '/tmp/pg_dump_' + Date.now() + '.dump';
     try {
       await runClient('docker', ['exec', '-e', 'PGPASSWORD', container, 'pg_dump', ...connectionArgs(config, true), '-Fc', '-f', temporary], config);
       execFileSync('docker', ['cp', container + ':' + temporary, partial], { stdio: 'inherit' });
@@ -152,7 +163,7 @@ export async function executePgRestore(config: PgRestoreConfig): Promise<void> {
   }
   const container = getRunningPostgresContainer();
   if (!container) throw new Error('Install PostgreSQL client tools or set PG_CLIENT_CONTAINER.');
-  const temporary = '/tmp/openclinic_restore_' + Date.now() + '.dump';
+  const temporary = '/tmp/pg_restore_' + Date.now() + '.dump';
   try {
     execFileSync('docker', ['cp', input, container + ':' + temporary], { stdio: 'inherit' });
     await runClient('docker', ['exec', '-e', 'PGPASSWORD', container, 'pg_restore', ...connectionArgs(config, true), ...flags, temporary], config);

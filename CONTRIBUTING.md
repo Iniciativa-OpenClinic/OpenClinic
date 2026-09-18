@@ -95,7 +95,7 @@ flowchart TD
 ### Os portões, um a um
 
 | # | Portão | Quem segura a chave | O que é checado |
-| :-- | :-- | :-- | :-- |
+| :--- | :--- | :--- | :--- |
 | 1 | **Decisão antes de código** | Conselho fundador | Mudança de arquitetura, escopo ou stack não entra por PR direto: nasce como registro em [`docs/decisions/`](./docs/decisions/) |
 | 2 | **Descrição completa** | Quem revisa | O que muda (arquivo por arquivo), por quê, como testou. Sem isso, devolvido sem revisão de código |
 | 3 | **Revisão técnica** | Líder da Equipe responsável (PR externo: um líder de projeto) | Correção, padrão de código, encaixe no módulo. É a aprovação obrigatória (CODEOWNERS), e termina de um de três jeitos: aprova, pede ajustes ou recusa com observações. É esse filtro que poupa o líder de projeto |
@@ -105,7 +105,7 @@ flowchart TD
 ### O que cada papel pode fazer
 
 | Ação | Externo | Membro de Equipe | Líder de Equipe | Líder de projeto |
-| :-- | :--: | :--: | :--: | :--: |
+| :--- | :---: | :---: | :---: | :---: |
 | Abrir Issue e discutir | ✅ | ✅ | ✅ | ✅ |
 | Abrir pull request | ✅ (via fork) | ✅ | ✅ | ✅ |
 | Criar branch no repositório | ❌ | ✅ | ✅ | ✅ |

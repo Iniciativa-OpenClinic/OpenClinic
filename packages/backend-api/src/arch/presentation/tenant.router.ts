@@ -4,6 +4,8 @@ import {
   UserRole,
   EntityNotFoundError,
   EntityAlreadyExistsError,
+  AccessDeniedError,
+  ErrorCode,
   ValidationError,
   TenantStatus,
   Cnpj,
@@ -112,7 +114,7 @@ export function registerTenantRoutes(
   uow: IAMUnitOfWork,
   jwtConfig: JwtConfig
 ): void {
-  const authenticateJwt = createAuthenticateJwt(jwtConfig);
+  const authenticateJwt = createAuthenticateJwt(jwtConfig, uow);
 
   // ── GET /api/v1/arch/tenants ──
   app.get(
@@ -137,9 +139,17 @@ export function registerTenantRoutes(
         },
       },
     },
-    async (_request, reply) => {
-      const tenants = await uow.tenants.listAll();
-      return reply.status(200).send(tenants.map(toTenantResponseDTO));
+    async (request, reply) => {
+      const user = request.user!;
+      if (user.role === UserRole.OWNER) {
+        const tenants = await uow.tenants.listAll();
+        return reply.status(200).send(tenants.map(toTenantResponseDTO));
+      }
+      if (user.tenant_id) {
+        const tenant = await uow.tenants.getById(user.tenant_id);
+        return reply.status(200).send(tenant ? [toTenantResponseDTO(tenant)] : []);
+      }
+      return reply.status(200).send([]);
     }
   );
 
@@ -171,6 +181,10 @@ export function registerTenantRoutes(
       },
     },
     async (request, reply) => {
+      const user = request.user!;
+      if (user.role !== UserRole.OWNER && user.tenant_id !== request.params.id) {
+        throw new AccessDeniedError(ErrorCode.FORBIDDEN);
+      }
       const tenant = await uow.tenants.getById(request.params.id);
       if (!tenant) {
         throw new EntityNotFoundError('Tenant', request.params.id);
@@ -183,7 +197,7 @@ export function registerTenantRoutes(
   app.post(
     TENANT_ROUTES.CREATE,
     {
-      preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
+      preHandler: [authenticateJwt, requireRole(UserRole.OWNER)],
       schema: {
         tags: [TENANT_SWAGGER_TAG],
         summary: 'Create New Tenant',
@@ -309,7 +323,11 @@ export function registerTenantRoutes(
       },
     },
     async (request, reply) => {
+      const user = request.user!;
       const { id } = request.params;
+      if (user.role !== UserRole.OWNER && user.tenant_id !== id) {
+        throw new AccessDeniedError(ErrorCode.FORBIDDEN);
+      }
       const existing = await uow.tenants.getById(id);
       if (!existing) {
         throw new EntityNotFoundError('Tenant', id);
@@ -339,7 +357,7 @@ export function registerTenantRoutes(
   app.delete<{ Params: { id: string } }>(
     TENANT_ROUTES.DELETE,
     {
-      preHandler: [authenticateJwt, requireRole(UserRole.ADMIN)],
+      preHandler: [authenticateJwt, requireRole(UserRole.OWNER)],
       schema: {
         tags: [TENANT_SWAGGER_TAG],
         summary: 'Delete Tenant (Soft Delete)',

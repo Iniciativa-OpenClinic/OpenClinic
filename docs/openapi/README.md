@@ -120,11 +120,11 @@ A API adota uma arquitetura rigorosa de **Defesa em Profundidade**:
 
 ---
 
-### 🩺 4.5 Monitoramento & Telemetria (`/health`)
+### 🩺 4.5 Monitoramento & Telemetria (`/health/live`)
 
 | Método | Endpoint | Descrição | Autenticação |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/health` | Verifica a conectividade e integridade do serviço | Pública |
+| `GET` | `/health/live` | Verifica a conectividade e integridade do serviço | Pública |
 
 ---
 

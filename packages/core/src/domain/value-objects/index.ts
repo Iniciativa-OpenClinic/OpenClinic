@@ -13,3 +13,7 @@ export { Username } from './username.vo.js';
 export { Name } from './name.vo.js';
 export { HashedPassword, PasswordPolicy, type PasswordValidationResult } from './password.vo.js';
 export { Country, type CountryCode, STANDARD_COUNTRIES, type CountryOption } from './country.vo.js';
+export { Website } from './website.vo.js';
+export { IPv4Address } from './ipv4-address.vo.js';
+export { IPv6Address } from './ipv6-address.vo.js';
+export { IpAddress, type IpVersion } from './ip-address.vo.js';

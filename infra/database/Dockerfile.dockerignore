@@ -2,6 +2,8 @@
 **/dist
 .git
 .env
+**/.env
+**/.env.*
 **/*.env
 backups
 .temp

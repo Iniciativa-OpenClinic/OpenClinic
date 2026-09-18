@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Cnpj, Cnes, Cep, Phone, Email, Name, Uf, BRAZILIAN_UFS } from '@openclinic/core/shared';
+import { Cnpj, Cnes, Cep, Phone, Email, Name, Uf, BRAZILIAN_UFS, Website } from '@openclinic/core/shared';
 
 describe('Organizations and Units Value Objects Validation', () => {
   describe('Cnpj Value Object', () => {
@@ -43,7 +43,7 @@ describe('Organizations and Units Value Objects Validation', () => {
 
   describe('Name Value Object in Organization & Units', () => {
     it('should trim and clean redundant whitespaces', () => {
-      expect(Name.clean('   OpenClinic   Ltda   ')).toBe('OpenClinic Ltda');
+      expect(Name.clean('   Clínica Exemplo Ltda   ')).toBe('Clínica Exemplo Ltda');
       expect(Name.clean('Unidade   Centro   ')).toBe('Unidade Centro');
     });
 
@@ -79,9 +79,17 @@ describe('Organizations and Units Value Objects Validation', () => {
     });
 
     it('should validate institutional email formats', () => {
-      expect(Email.isValid('diretoria@openclinic.local')).toBe(true);
-      expect(Email.isValid('atendimento.paulista@openclinic.local')).toBe(true);
+      expect(Email.isValid('diretoria@exemplo.com.br')).toBe(true);
+      expect(Email.isValid('atendimento.matriz@exemplo.com.br')).toBe(true);
       expect(Email.isValid('invalid-email')).toBe(false);
+    });
+
+    it('should validate and clean institutional website URLs', () => {
+      expect(Website.isValid('www.exemplo.com.br')).toBe(true);
+      expect(Website.isValid('https://exemplo.com.br')).toBe(true);
+      expect(Website.clean('  www.exemplo.com.br/  ')).toBe('https://www.exemplo.com.br');
+      expect(Website.isValid('invalid-site')).toBe(false);
+      expect(Website.isValid('javascript:alert(1)')).toBe(false);
     });
   });
 });

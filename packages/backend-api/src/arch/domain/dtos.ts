@@ -1,4 +1,4 @@
-import type { UserRole } from '../../shared/domain/enums.js';
+import type { UserRole } from '@openclinic/core';
 
 export interface LoginRequestDTO {
   identifier: string;
@@ -11,6 +11,7 @@ export interface RegisterRequestDTO {
   password: string;
   full_name: string;
   display_name?: string;
+  tenant_id?: string;
 }
 
 export interface LoginResponseDTO {
@@ -104,4 +105,15 @@ export interface UserGroupsResponseDTO {
   user: UserListItemDTO;
   groups: GroupListItemDTO[];
   available_groups: GroupListItemDTO[];
+}
+
+export interface MenuItemDTO {
+  id: string;
+  item_code: string;
+  label: string;
+  icon: string | null;
+  route: string | null;
+  sort_order: number;
+  min_role: UserRole;
+  description: string | null;
 }

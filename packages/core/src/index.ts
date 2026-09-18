@@ -2,11 +2,6 @@ export { hashPassword, verifyPassword, hashToken, timingSafeEqual } from './cryp
 export { createAccessToken, createRefreshToken, decodeToken } from './jwt/index.js';
 export type { TokenPayload, JwtConfig } from './jwt/index.js';
 export {
-  getErrorMessage,
-  getSuccessMessage,
-  formatTemplate,
-  ErrorMessages,
-  SuccessMessages,
   AppError,
   DomainError,
   AuthenticationError,
@@ -16,9 +11,19 @@ export {
   ValidationError,
   BruteForceError,
   ErrorCode,
-  SuccessCode,
 } from './errors/index.js';
-export type { ProblemDetail, ErrorCodeValue, SuccessCodeValue } from './errors/index.js';
+export type { ProblemDetail, ErrorCodeValue } from './errors/index.js';
+
+export {
+  SuccessCode,
+  type SuccessCodeValue,
+  getErrorMessage,
+  getSuccessMessage,
+  formatTemplate,
+  catalogs,
+  localePtBr,
+  localeEnUs,
+} from './i18n/index.js';
 export {
   SupportedLocales,
   DEFAULT_LOCALE,
@@ -27,6 +32,20 @@ export {
   type LocaleMetadata,
   getLocaleMetadata,
 } from './domain/locales.js';
+export {
+  AUTH_SECURITY_DEFAULTS,
+  type AuthSecurityDefaults,
+  SUPPORTED_JWT_ALGORITHMS,
+  type SupportedJwtAlgorithm,
+  AUDIT_CONSTANTS,
+  type AuditConstants,
+  BOOTSTRAP_DEFAULTS,
+  type BootstrapDefaults,
+  SYSTEM_DEFAULTS,
+  type SystemDefaults,
+  TIME_CONSTANTS,
+  type TimeConstants,
+} from './constants/index.js';
 export {
   UserRole,
   type UserRoleType,
@@ -37,6 +56,10 @@ export {
   type PermissionEffectType,
   AuditStatus,
   type AuditStatusType,
+  AuditResource,
+  type AuditResourceType,
+  AuditAction,
+  type AuditActionType,
   TenantStatus,
   type TenantStatusType,
   AlertBannerType,
@@ -51,6 +74,14 @@ export {
   type PermissionTargetTypeType,
   LoginIdentifierType,
   type LoginIdentifierTypeType,
+  NodeEnvironment,
+  type NodeEnvironmentType,
+  Environment,
+  type EnvironmentType,
+  LogLevel,
+  type LogLevelType,
+  SecretsProvider,
+  type SecretsProviderType,
 } from './domain/enums.js';
 export type {
   IAMCapabilityDTO,
@@ -105,9 +136,14 @@ export {
   type CountryCode,
   STANDARD_COUNTRIES,
   type CountryOption,
+  Website,
+  IPv4Address,
+  IPv6Address,
+  IpAddress,
+  type IpVersion,
 } from './domain/value-objects/index.js';
 export * as shared from './shared/index.js';
 export { createLogger, logger } from './logger/index.js';
-export type { LogLevel, LoggerConfig, Logger } from './logger/index.js';
-export { createPool, withTransaction } from './database/index.js';
-export type { DbConfig, Pool, PoolClient } from './database/index.js';
+export type { LoggerConfig, Logger } from './logger/index.js';
+export { createPool, withTransaction, getDatabaseEnv, resolveDatabaseUrl, resolveDatabaseOwnerUrl, parseDatabaseUrl, isDdlRole } from './database/index.js';
+export type { DbConfig, DatabaseEnvironment, Pool, PoolClient } from './database/index.js';

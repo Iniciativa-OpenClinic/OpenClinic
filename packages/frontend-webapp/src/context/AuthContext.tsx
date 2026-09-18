@@ -9,10 +9,11 @@ import {
   getAccessToken,
   clearTokens,
   setOnSessionExpired,
+  getPublicConfig,
 } from '../services/api.js';
 import { t } from '../i18n/index.js';
 import type { UserProfile, TokenPayload, IAMCapability } from '../types/auth.js';
-import { ResourceAction, UserRole } from '@openclinic/core/shared';
+import { ResourceAction, UserRole, AUTH_SECURITY_DEFAULTS } from '@openclinic/core/shared';
 
 function decodeJwtPayload(token: string): TokenPayload | null {
   try {
@@ -31,6 +32,8 @@ interface AuthContextType {
   permissions: string[];
   error: string | null;
   isLoading: boolean;
+  isInitializing: boolean;
+  expiredCountdown: number | null;
   login: (identifier: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refresh: () => Promise<boolean>;
@@ -50,7 +53,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [expiredCountdown, setExpiredCountdown] = useState<number | null>(null);
+
+  // Silent asynchronous session bootstrap: validates session via HttpOnly cookie on initial page load (F5)
+  useEffect(() => {
+    let isMounted = true;
+
+    async function bootstrapSession() {
+      try {
+        const refreshResponse = await apiRefresh();
+        if (!isMounted) return;
+
+        setAccessToken(refreshResponse.access_token);
+        setClaims(decodeJwtPayload(refreshResponse.access_token));
+
+        try {
+          const profile = await apiGetProfile();
+          if (isMounted) setUser(profile);
+
+          const [caps, perms] = await Promise.all([
+            apiGetCapabilities(),
+            apiGetPermissions(),
+          ]);
+          if (isMounted) {
+            setCapabilities(caps);
+            setPermissions(perms);
+          }
+        } catch {
+          // Graceful fallback if reading profile or permissions fails
+        }
+      } catch {
+        // Silent: unauthenticated visitor or expired cookie
+        if (isMounted) {
+          setAccessToken(null);
+          setUser(null);
+          setClaims(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsInitializing(false);
+        }
+      }
+    }
+
+    bootstrapSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -64,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Registrar callback de sessão expirada do apiFetch
+  // Register apiFetch expired session callback
   useEffect(() => {
     setOnSessionExpired(() => {
       setExpiredCountdown((prev) => (prev === null ? 3 : prev));
@@ -74,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Timer regressivo de 3 segundos para logout automático
+  // 3-second countdown timer for automatic logout
   useEffect(() => {
     if (expiredCountdown === null) return;
 
@@ -90,6 +142,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [expiredCountdown, logout]);
 
+  // Session Idle Timeout (governed by DB platform settings)
+  useEffect(() => {
+    if (!accessToken) return;
+
+    let timeoutMinutes: number = AUTH_SECURITY_DEFAULTS.DEFAULT_SESSION_TIMEOUT_MINUTES;
+    let isCancelled = false;
+
+    getPublicConfig().then((cfg) => {
+      if (!isCancelled && cfg.sessionTimeoutMinutes && cfg.sessionTimeoutMinutes > 0) {
+        timeoutMinutes = cfg.sessionTimeoutMinutes;
+      }
+    }).catch(() => {});
+
+    let lastActivity = Date.now();
+    const updateActivity = () => {
+      lastActivity = Date.now();
+    };
+
+    const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'];
+    events.forEach((evt) => window.addEventListener(evt, updateActivity, { passive: true }));
+
+    const checkInterval = setInterval(() => {
+      if (Date.now() - lastActivity > timeoutMinutes * 60 * 1000) {
+        setExpiredCountdown((prev) => (prev === null ? 3 : prev));
+      }
+    }, 15000);
+
+    return () => {
+      isCancelled = true;
+      events.forEach((evt) => window.removeEventListener(evt, updateActivity));
+      clearInterval(checkInterval);
+    };
+  }, [accessToken]);
+
   const login = useCallback(async (identifier: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
@@ -99,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.user);
       setClaims(decodeJwtPayload(response.access_token));
 
-      // Carregar permissions e capabilities
+      // Load permissions and capabilities
       try {
         const [caps, perms] = await Promise.all([
           apiGetCapabilities(),
@@ -108,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCapabilities(caps);
         setPermissions(perms);
       } catch {
-        // Fallback silencioso
+        // Silent fallback
       }
 
       return true;
@@ -147,7 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCapabilities(caps);
         setPermissions(perms);
       } catch {
-        // Fallback silencioso
+        // Silent fallback
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('ERROR_COMMUNICATION'));
@@ -191,6 +277,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         permissions,
         error,
         isLoading,
+        isInitializing,
+        expiredCountdown,
         login,
         logout,
         refresh,
@@ -202,7 +290,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     >
       {children}
 
-      {/* POPUP MODAL: Sessão Expirada com Contagem Regressiva de 3s */}
+      {/* MODAL POPUP: Expired Session with 3s Countdown */}
       {expiredCountdown !== null && (
         <div
           style={{
@@ -234,7 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               boxSizing: 'border-box',
             }}
           >
-            {/* Ícone de Alerta Animado */}
+            {/* Animated Alert Icon */}
             <div
               style={{
                 width: 56,
@@ -283,7 +371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-            {/* Botão para Redirecionamento Imediato */}
+            {/* Immediate Redirect Button */}
             <button
               onClick={() => logout()}
               style={{

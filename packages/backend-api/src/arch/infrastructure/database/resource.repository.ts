@@ -1,52 +1,19 @@
 import { eq, and, asc } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { sysApplicationResources } from './drizzle-schema.js';
-import type { UserRole, ApplicationContext, ResourceType } from '@openclinic/core';
+import { ROLE_HIERARCHY, type UserRole, type ApplicationContext } from '@openclinic/core';
+import type { IResourceRepository } from '../../domain/repositories.js';
+import type {
+  ApplicationResourceEntity,
+  ResourceTreeNodeEntity,
+} from '../../domain/entities.js';
+import type { MenuItemDTO } from '../../domain/dtos.js';
 
-export interface ApplicationResourceRecord {
-  id: string;
-  item_code: string;
-  resource_type: ResourceType;
-  context: ApplicationContext;
-  description: string | null;
-  parent_id: string | null;
-  path: string | null;
-  label_key: string | null;
-  icon: string | null;
-  route: string | null;
-  sort_order: number;
-  min_role: UserRole;
-  is_active: boolean;
-  application_id: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
 
-export interface MenuItemDTO {
-  id: string;
-  item_code: string;
-  label: string;
-  icon: string | null;
-  route: string | null;
-  sort_order: number;
-  min_role: UserRole;
-  description: string | null;
-}
-
-export interface ResourceTreeNode extends ApplicationResourceRecord {
-  children?: ResourceTreeNode[];
-}
-
-const ROLE_LEVEL: Record<string, number> = {
-  USER: 1,
-  ADMIN: 2,
-  OWNER: 3,
-};
-
-export class ResourceRepository {
+export class ResourceRepository implements IResourceRepository {
   constructor(private readonly db: PostgresJsDatabase) {}
 
-  async listAll(limit = 1000): Promise<ApplicationResourceRecord[]> {
+  async listAll(limit = 1000): Promise<ApplicationResourceEntity[]> {
     const results = await this.db
       .select()
       .from(sysApplicationResources)
@@ -54,10 +21,10 @@ export class ResourceRepository {
       .orderBy(asc(sysApplicationResources.sort_order))
       .limit(limit);
 
-    return results as ApplicationResourceRecord[];
+    return results as ApplicationResourceEntity[];
   }
 
-  async listByContext(context: ApplicationContext): Promise<ApplicationResourceRecord[]> {
+  async listByContext(context: ApplicationContext): Promise<ApplicationResourceEntity[]> {
     const results = await this.db
       .select()
       .from(sysApplicationResources)
@@ -69,36 +36,36 @@ export class ResourceRepository {
       )
       .orderBy(asc(sysApplicationResources.sort_order));
 
-    return results as ApplicationResourceRecord[];
+    return results as ApplicationResourceEntity[];
   }
 
-  async getById(id: string): Promise<ApplicationResourceRecord | null> {
+  async getById(id: string): Promise<ApplicationResourceEntity | null> {
     const [result] = await this.db
       .select()
       .from(sysApplicationResources)
       .where(eq(sysApplicationResources.id, id))
       .limit(1);
 
-    return (result as ApplicationResourceRecord) ?? null;
+    return (result as ApplicationResourceEntity) ?? null;
   }
 
-  async getByItemCode(itemCode: string): Promise<ApplicationResourceRecord | null> {
+  async getByItemCode(itemCode: string): Promise<ApplicationResourceEntity | null> {
     const [result] = await this.db
       .select()
       .from(sysApplicationResources)
       .where(eq(sysApplicationResources.item_code, itemCode))
       .limit(1);
 
-    return (result as ApplicationResourceRecord) ?? null;
+    return (result as ApplicationResourceEntity) ?? null;
   }
 
-  async getTree(context?: ApplicationContext): Promise<ResourceTreeNode[]> {
+  async getTree(context?: ApplicationContext): Promise<ResourceTreeNodeEntity[]> {
     const resources = context
       ? await this.listByContext(context)
       : await this.listAll();
 
-    const nodeMap = new Map<string, ResourceTreeNode>();
-    const roots: ResourceTreeNode[] = [];
+    const nodeMap = new Map<string, ResourceTreeNodeEntity>();
+    const roots: ResourceTreeNodeEntity[] = [];
 
     for (const r of resources) {
       nodeMap.set(r.id, { ...r, children: [] });
@@ -128,9 +95,9 @@ export class ResourceRepository {
       )
       .orderBy(asc(sysApplicationResources.sort_order));
 
-    const userLevel = ROLE_LEVEL[role] ?? 1;
+    const userLevel = ROLE_HIERARCHY[role] ?? 1;
 
-    // Deduplica por item_code mantendo a primeira ocorrência
+    // Deduplicate by item_code preserving the first occurrence
     const seen = new Set<string>();
     const uniqueMenus: typeof allMenus = [];
     for (const m of allMenus) {
@@ -140,9 +107,9 @@ export class ResourceRepository {
       }
     }
 
-    // Filtra pelo nível de role RBAC
+    // Filter by RBAC role level
     const allowed = uniqueMenus.filter((m) => {
-      const requiredLevel = ROLE_LEVEL[m.min_role as string] ?? 1;
+      const requiredLevel = ROLE_HIERARCHY[m.min_role as UserRole] ?? 1;
       return userLevel >= requiredLevel;
     });
 

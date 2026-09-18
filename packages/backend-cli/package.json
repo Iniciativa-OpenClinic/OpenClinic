@@ -1,6 +1,7 @@
 {
   "name": "@openclinic/backend-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "description": "OpenClinic CLI - Administrative and Database Management Tools",
   "private": true,
   "type": "module",
   "bin": {
@@ -9,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "@openclinic/core": "*",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   }
 }

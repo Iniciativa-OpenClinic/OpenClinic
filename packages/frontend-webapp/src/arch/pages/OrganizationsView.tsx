@@ -9,6 +9,7 @@ import {
   Name,
   Uf,
   Country,
+  Website,
   BRAZILIAN_UFS,
   BRAZILIAN_UF_NAMES,
 } from '@openclinic/core/shared';
@@ -61,15 +62,15 @@ export interface OrganizationUnitData {
 
 const INITIAL_ORGANIZATION: OrganizationData = {
   id: 'org-001',
-  legalName: 'OpenClinic Serviços Médicos e Hospitalares Ltda.',
-  tradeName: 'OpenClinic Centro Médico & Diagnóstico',
+  legalName: 'Clínica Exemplo Serviços Médicos e Hospitalares Ltda.',
+  tradeName: 'Centro Médico Exemplo & Diagnóstico',
   taxId: 'BR-12345678000190',
   cnpj: '12345678000190',
   stateRegistration: '110.220.330.440',
   municipalRegistration: '987654-1',
-  email: 'diretoria@openclinic.local',
+  email: 'diretoria@exemplo.com.br',
   phone: '(11) 3000-0000',
-  website: 'https://openclinic.local',
+  website: 'https://www.exemplo.com.br',
   postalCode: '01310100',
   street: 'Av. Paulista',
   number: '1000',
@@ -86,12 +87,12 @@ const INITIAL_UNITS: OrganizationUnitData[] = [
     id: 'unit-001',
     organizationId: 'org-001',
     name: 'Unidade Principal Paulista (Sede)',
-    tradeName: 'OpenClinic Matriz Paulista',
+    tradeName: 'Unidade Matriz Exemplo Paulista',
     cnesCode: '9876543',
     taxId: 'BR-12345678000190',
     cnpj: '12345678000190',
     phone: '(11) 3000-0001',
-    email: 'atendimento.paulista@openclinic.local',
+    email: 'atendimento.matriz@exemplo.com.br',
     postalCode: '01310100',
     street: 'Av. Paulista',
     number: '1000',
@@ -107,12 +108,12 @@ const INITIAL_UNITS: OrganizationUnitData[] = [
     id: 'unit-002',
     organizationId: 'org-001',
     name: 'Unidade Avançada Jardins (Filial)',
-    tradeName: 'OpenClinic Diagnóstico & Saúde Jardins',
+    tradeName: 'Unidade Filial Exemplo Jardins',
     cnesCode: '8765432',
     taxId: 'BR-12345678000271',
     cnpj: '12345678000271',
     phone: '(11) 3100-0002',
-    email: 'recepcao.jardins@openclinic.local',
+    email: 'recepcao.filial@exemplo.com.br',
     postalCode: '01423000',
     street: 'Rua Oscar Freire',
     number: '450',
@@ -166,7 +167,7 @@ export const OrganizationsView: React.FC = () => {
 
   // ── Validation Helpers ──
 
-  const validateOrgField = (field: string, val: any): string => {
+  const validateOrgField = (field: string, val: unknown): string => {
     switch (field) {
       case 'legalName': {
         const trimmed = typeof val === 'string' ? val.trim() : '';
@@ -207,14 +208,7 @@ export const OrganizationsView: React.FC = () => {
       }
       case 'website': {
         const trimmed = typeof val === 'string' ? val.trim() : '';
-        if (trimmed) {
-          try {
-            const url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
-            if (!url.hostname.includes('.')) return t('VALIDATION_ERROR_URL_INVALID');
-          } catch {
-            return t('VALIDATION_ERROR_URL_INVALID');
-          }
-        }
+        if (trimmed && !Website.isValid(trimmed)) return t('VALIDATION_ERROR_URL_INVALID');
         return '';
       }
       case 'postalCode': {
@@ -279,7 +273,7 @@ export const OrganizationsView: React.FC = () => {
     return errors;
   };
 
-  const validateUnitField = (field: string, val: any): string => {
+  const validateUnitField = (field: string, val: unknown): string => {
     switch (field) {
       case 'name': {
         const trimmed = typeof val === 'string' ? val.trim() : '';
@@ -418,7 +412,7 @@ export const OrganizationsView: React.FC = () => {
 
   const handleOrgBlur = (field: string) => {
     setOrgTouched((prev) => ({ ...prev, [field]: true }));
-    const val = (orgFormData as any)[field];
+    const val = (orgFormData as unknown as Record<string, unknown>)[field];
     const err = validateOrgField(field, val);
     setOrgErrors((prev) => {
       const next = { ...prev };
@@ -428,7 +422,7 @@ export const OrganizationsView: React.FC = () => {
     });
   };
 
-  const handleOrgChange = (field: string, val: any) => {
+  const handleOrgChange = (field: string, val: unknown) => {
     setOrgFormData((prev) => ({ ...prev, [field]: val }));
     if (orgTouched[field] || orgErrors[field]) {
       const err = validateOrgField(field, val);
@@ -471,6 +465,7 @@ export const OrganizationsView: React.FC = () => {
         cnpj: Cnpj.clean(orgFormData.cnpj),
         postalCode: orgFormData.postalCode ? Cep.clean(orgFormData.postalCode) : undefined,
         phone: orgFormData.phone ? Phone.clean(orgFormData.phone) : undefined,
+        website: orgFormData.website ? Website.clean(orgFormData.website) : undefined,
       });
       setOrgSaving(false);
       setIsOrgModalOpen(false);
@@ -522,7 +517,7 @@ export const OrganizationsView: React.FC = () => {
 
   const handleUnitBlur = (field: string) => {
     setUnitTouched((prev) => ({ ...prev, [field]: true }));
-    const val = (unitFormData as any)[field];
+    const val = (unitFormData as unknown as Record<string, unknown>)[field];
     const err = validateUnitField(field, val);
     setUnitErrors((prev) => {
       const next = { ...prev };
@@ -532,7 +527,7 @@ export const OrganizationsView: React.FC = () => {
     });
   };
 
-  const handleUnitChange = (field: string, val: any) => {
+  const handleUnitChange = (field: string, val: unknown) => {
     setUnitFormData((prev) => ({ ...prev, [field]: val }));
     if (unitTouched[field] || unitErrors[field]) {
       const err = validateUnitField(field, val);
@@ -708,7 +703,7 @@ export const OrganizationsView: React.FC = () => {
           </div>
         </div>
 
-        {/* ── TAB 1: Organização ── */}
+        {/* ── TAB 1: Organization ── */}
         {activeTab === 'ORGANIZATION' && (
           <div>
             <div
@@ -748,7 +743,7 @@ export const OrganizationsView: React.FC = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
-              {/* Card 1: Identificação Jurídica */}
+              {/* Card 1: Legal Identification */}
               <div style={{ background: '#f8fafc', padding: 18, borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', marginBottom: 10, letterSpacing: '0.04em' }}>
                   {t('ORG_SECTION_LEGAL')}
@@ -781,7 +776,7 @@ export const OrganizationsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card 2: Registros Fiscais & Regulatórios */}
+              {/* Card 2: Tax & Regulatory Records */}
               <div style={{ background: '#f8fafc', padding: 18, borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', marginBottom: 10, letterSpacing: '0.04em' }}>
                   {t('ORG_SECTION_REGULATORY')}
@@ -808,7 +803,7 @@ export const OrganizationsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card 3: Endereço da Sede */}
+              {/* Card 3: Headquarters Address */}
               <div style={{ background: '#f8fafc', padding: 18, borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', marginBottom: 10, letterSpacing: '0.04em' }}>
                   {t('ORG_SECTION_ADDRESS')}
@@ -824,7 +819,7 @@ export const OrganizationsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card 4: Canais de Comunicação */}
+              {/* Card 4: Communication Channels */}
               <div style={{ background: '#f8fafc', padding: 18, borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', marginBottom: 10, letterSpacing: '0.04em' }}>
                   {t('ORG_SECTION_CONTACT')}
@@ -970,7 +965,7 @@ export const OrganizationsView: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Endereço */}
+                      {/* Address */}
                       <div style={{ fontSize: '0.82rem', color: '#334155', marginBottom: 10 }}>
                         <div style={{ fontWeight: 600 }}>
                           📍 {unit.street || '-'}, {unit.number || 'S/N'} {unit.complement ? `(${unit.complement})` : ''}
@@ -1017,7 +1012,7 @@ export const OrganizationsView: React.FC = () => {
         )}
       </div>
 
-      {/* ── MODAL 1: EDITAR DADOS DA ORGANIZAÇÃO ── */}
+      {/* ── MODAL 1: EDIT ORGANIZATION DATA ── */}
       {isOrgModalOpen && (
         <div
           style={{
@@ -1036,7 +1031,7 @@ export const OrganizationsView: React.FC = () => {
               background: '#ffffff',
               borderRadius: 14,
               width: '100%',
-              maxWidth: 740,
+              maxWidth: 820,
               maxHeight: '90vh',
               overflowY: 'auto',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
@@ -1084,7 +1079,7 @@ export const OrganizationsView: React.FC = () => {
             {/* Modal Form */}
             <form onSubmit={handleSaveOrg} style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 18 }}>
               
-              {/* Seção 1: Identificação Jurídica */}
+              {/* Section 1: Legal Identification */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('ORG_SECTION_LEGAL')}
@@ -1093,7 +1088,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 7' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_LEGAL_NAME_LABEL')}
-                      tooltip={t('ORG_FIELD_LEGAL_NAME_TOOLTIP')}
                       required
                     />
                     <input
@@ -1109,7 +1103,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 5' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_TRADE_NAME_LABEL')}
-                      tooltip={t('ORG_FIELD_TRADE_NAME_TOOLTIP')}
                       required
                     />
                     <input
@@ -1126,16 +1119,15 @@ export const OrganizationsView: React.FC = () => {
 
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 2: Registros Fiscais & Regulatórios */}
+              {/* Section 2: Tax & Regulatory Records */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('ORG_SECTION_REGULATORY')}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14 }}>
-                  <div style={{ gridColumn: 'span 4' }}>
+                  <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_CNPJ_LABEL')}
-                      tooltip={t('ORG_FIELD_CNPJ_TOOLTIP')}
                       required
                     />
                     <input
@@ -1144,12 +1136,12 @@ export const OrganizationsView: React.FC = () => {
                       value={orgFormData.cnpj}
                       onBlur={() => handleOrgBlur('cnpj')}
                       onChange={(e) => handleOrgChange('cnpj', Cnpj.format(e.target.value))}
-                      style={{ ...getInputStyle(!!orgErrors.cnpj), fontFamily: 'monospace' }}
+                      style={{ ...getInputStyle(!!orgErrors.cnpj), fontFamily: 'monospace', maxWidth: 175 }}
                     />
                     {renderFieldError(orgErrors.cnpj)}
                   </div>
 
-                  <div style={{ gridColumn: 'span 4' }}>
+                  <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_TAX_ID_LABEL')}
                       tooltip={t('ORG_FIELD_TAX_ID_TOOLTIP')}
@@ -1164,10 +1156,9 @@ export const OrganizationsView: React.FC = () => {
                     {renderFieldError(orgErrors.taxId)}
                   </div>
 
-                  <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_STATE_REG_LABEL')}
-                      tooltip={t('ORG_FIELD_STATE_REG_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1177,10 +1168,9 @@ export const OrganizationsView: React.FC = () => {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_MUNICIPAL_REG_LABEL')}
-                      tooltip={t('ORG_FIELD_MUNICIPAL_REG_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1194,7 +1184,7 @@ export const OrganizationsView: React.FC = () => {
 
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 3: Endereço da Sede */}
+              {/* Section 3: Headquarters Address */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('ORG_SECTION_ADDRESS')}
@@ -1203,7 +1193,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_POSTAL_CODE_LABEL')}
-                      tooltip={t('ORG_FIELD_POSTAL_CODE_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1219,7 +1208,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 7' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_STREET_LABEL')}
-                      tooltip={t('ORG_FIELD_STREET_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1232,7 +1220,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 2' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_NUMBER_LABEL')}
-                      tooltip={t('ORG_FIELD_NUMBER_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1245,7 +1232,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 4' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_COMPLEMENT_LABEL')}
-                      tooltip={t('ORG_FIELD_COMPLEMENT_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1255,10 +1241,9 @@ export const OrganizationsView: React.FC = () => {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 4' }}>
+                  <div style={{ gridColumn: 'span 8' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_NEIGHBORHOOD_LABEL')}
-                      tooltip={t('ORG_FIELD_NEIGHBORHOOD_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1268,10 +1253,9 @@ export const OrganizationsView: React.FC = () => {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 4' }}>
+                  <div style={{ gridColumn: 'span 5' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_CITY_LABEL')}
-                      tooltip={t('ORG_FIELD_CITY_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1281,10 +1265,9 @@ export const OrganizationsView: React.FC = () => {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 4' }}>
+                  <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_STATE_LABEL')}
-                      tooltip={t('ORG_FIELD_STATE_TOOLTIP')}
                     />
                     <select
                       value={orgFormData.state || ''}
@@ -1302,10 +1285,9 @@ export const OrganizationsView: React.FC = () => {
                     {renderFieldError(orgErrors.state)}
                   </div>
 
-                  <div style={{ gridColumn: 'span 8' }}>
+                  <div style={{ gridColumn: 'span 4' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_COUNTRY_LABEL')}
-                      tooltip={t('ORG_FIELD_COUNTRY_TOOLTIP')}
                     />
                     <select
                       value={orgFormData.country || 'BRA'}
@@ -1324,7 +1306,7 @@ export const OrganizationsView: React.FC = () => {
 
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 4: Canais de Comunicação */}
+              {/* Section 4: Communication Channels */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('ORG_SECTION_CONTACT')}
@@ -1333,7 +1315,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 4' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_PHONE_LABEL')}
-                      tooltip={t('ORG_FIELD_PHONE_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1349,7 +1330,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 4' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_EMAIL_LABEL')}
-                      tooltip={t('ORG_FIELD_EMAIL_TOOLTIP')}
                     />
                     <input
                       type="email"
@@ -1364,14 +1344,13 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 4' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_WEBSITE_LABEL')}
-                      tooltip={t('ORG_FIELD_WEBSITE_TOOLTIP')}
                     />
                     <input
                       type="text"
                       value={orgFormData.website || ''}
                       onBlur={() => handleOrgBlur('website')}
                       onChange={(e) => handleOrgChange('website', e.target.value)}
-                      placeholder="https://..."
+                      placeholder={t('ORG_FIELD_WEBSITE_PLACEHOLDER')}
                       style={getInputStyle(!!orgErrors.website)}
                     />
                     {renderFieldError(orgErrors.website)}
@@ -1440,7 +1419,7 @@ export const OrganizationsView: React.FC = () => {
               background: '#ffffff',
               borderRadius: 14,
               width: '100%',
-              maxWidth: 740,
+              maxWidth: 820,
               maxHeight: '90vh',
               overflowY: 'auto',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
@@ -1488,7 +1467,7 @@ export const OrganizationsView: React.FC = () => {
             {/* Modal Form */}
             <form onSubmit={handleSaveUnit} style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 18 }}>
               
-              {/* Seção 1: Identificação da Unidade */}
+              {/* Section 1: Facility Identification */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('UNIT_SECTION_IDENTIFICATION')}
@@ -1497,7 +1476,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 7' }}>
                     <FieldLabelWithTooltip
                       label={t('UNIT_FIELD_NAME_LABEL')}
-                      tooltip={t('UNIT_FIELD_NAME_TOOLTIP')}
                       required
                     />
                     <input
@@ -1513,7 +1491,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 5' }}>
                     <FieldLabelWithTooltip
                       label={t('UNIT_FIELD_TRADE_NAME_LABEL')}
-                      tooltip={t('UNIT_FIELD_TRADE_NAME_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1562,7 +1539,7 @@ export const OrganizationsView: React.FC = () => {
 
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 2: Registros Sanitários & Fiscais */}
+              {/* Section 2: Sanitary & Tax Records */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('UNIT_SECTION_REGULATORY')}
@@ -1588,7 +1565,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 6' }}>
                     <FieldLabelWithTooltip
                       label={t('UNIT_FIELD_CNPJ_LABEL')}
-                      tooltip={t('UNIT_FIELD_CNPJ_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1596,7 +1572,7 @@ export const OrganizationsView: React.FC = () => {
                       value={unitFormData.cnpj || ''}
                       onBlur={() => handleUnitBlur('cnpj')}
                       onChange={(e) => handleUnitChange('cnpj', Cnpj.format(e.target.value))}
-                      style={{ ...getInputStyle(!!unitErrors.cnpj), fontFamily: 'monospace' }}
+                      style={{ ...getInputStyle(!!unitErrors.cnpj), fontFamily: 'monospace', maxWidth: 175 }}
                     />
                     {renderFieldError(unitErrors.cnpj)}
                   </div>
@@ -1605,7 +1581,7 @@ export const OrganizationsView: React.FC = () => {
 
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 3: Endereço Físico */}
+              {/* Section 3: Physical Address */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('UNIT_SECTION_ADDRESS')}
@@ -1614,7 +1590,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_POSTAL_CODE_LABEL')}
-                      tooltip={t('ORG_FIELD_POSTAL_CODE_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1630,7 +1605,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 7' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_STREET_LABEL')}
-                      tooltip={t('ORG_FIELD_STREET_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1643,7 +1617,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 2' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_NUMBER_LABEL')}
-                      tooltip={t('ORG_FIELD_NUMBER_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1656,7 +1629,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 4' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_COMPLEMENT_LABEL')}
-                      tooltip={t('ORG_FIELD_COMPLEMENT_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1666,10 +1638,9 @@ export const OrganizationsView: React.FC = () => {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 4' }}>
+                  <div style={{ gridColumn: 'span 8' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_NEIGHBORHOOD_LABEL')}
-                      tooltip={t('ORG_FIELD_NEIGHBORHOOD_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1679,10 +1650,9 @@ export const OrganizationsView: React.FC = () => {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 4' }}>
+                  <div style={{ gridColumn: 'span 5' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_CITY_LABEL')}
-                      tooltip={t('ORG_FIELD_CITY_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1692,10 +1662,9 @@ export const OrganizationsView: React.FC = () => {
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 4' }}>
+                  <div style={{ gridColumn: 'span 3' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_STATE_LABEL')}
-                      tooltip={t('ORG_FIELD_STATE_TOOLTIP')}
                     />
                     <select
                       value={unitFormData.state || ''}
@@ -1713,10 +1682,9 @@ export const OrganizationsView: React.FC = () => {
                     {renderFieldError(unitErrors.state)}
                   </div>
 
-                  <div style={{ gridColumn: 'span 8' }}>
+                  <div style={{ gridColumn: 'span 4' }}>
                     <FieldLabelWithTooltip
                       label={t('ORG_FIELD_COUNTRY_LABEL')}
-                      tooltip={t('ORG_FIELD_COUNTRY_TOOLTIP')}
                     />
                     <select
                       value={unitFormData.country || 'BRA'}
@@ -1735,7 +1703,7 @@ export const OrganizationsView: React.FC = () => {
 
               <div style={{ borderTop: '1px solid #f1f5f9', margin: '2px 0' }} />
 
-              {/* Seção 4: Contatos */}
+              {/* Section 4: Contacts */}
               <div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                   {t('UNIT_SECTION_CONTACT')}
@@ -1744,7 +1712,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 6' }}>
                     <FieldLabelWithTooltip
                       label={t('UNIT_FIELD_PHONE_LABEL')}
-                      tooltip={t('UNIT_FIELD_PHONE_TOOLTIP')}
                     />
                     <input
                       type="text"
@@ -1760,7 +1727,6 @@ export const OrganizationsView: React.FC = () => {
                   <div style={{ gridColumn: 'span 6' }}>
                     <FieldLabelWithTooltip
                       label={t('UNIT_FIELD_EMAIL_LABEL')}
-                      tooltip={t('UNIT_FIELD_EMAIL_TOOLTIP')}
                     />
                     <input
                       type="email"
@@ -1861,7 +1827,7 @@ export const OrganizationsView: React.FC = () => {
         </div>
       )}
 
-      {/* ── MODAL 3: CONFIRMAÇÃO DE EXCLUSÃO DE UNIDADE ── */}
+      {/* ── MODAL 3: CONFIRM FACILITY DELETION ── */}
       {unitToDelete && (
         <div
           style={{

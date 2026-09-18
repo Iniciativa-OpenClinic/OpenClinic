@@ -21,14 +21,35 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      TEST_DATABASE_ADMIN_URL: postgresql://postgres:migration_test_only@127.0.0.1:5432/postgres
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASS: migration_test_only
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - name: Install PostgreSQL 17 Client Tools
+        run: |
+          if ! which pg_dump >/dev/null 2>&1 || ! pg_dump --version | grep -q "17\."; then
+            sudo install -d /etc/apt/keyrings
+            curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg --yes 2>/dev/null || true
+            echo "deb [signed-by=/etc/apt/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends postgresql-client-17
+          fi
+          # Ensure pg17 binaries take precedence over the pre-installed pg16 on Ubuntu runners
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+          export PATH="/usr/lib/postgresql/17/bin:$PATH"
+          pg_dump --version
+          pg_restore --version
       - run: npm ci
       - run: npm run build -w packages/core
       - run: npm run db:verify
-      - run: npm run test:migrations
+      - name: Run Migration and Backup/Restore Tests
+        env:
+          TEST_PG_CLIENT: '1'
+        run: npm run test:migrations

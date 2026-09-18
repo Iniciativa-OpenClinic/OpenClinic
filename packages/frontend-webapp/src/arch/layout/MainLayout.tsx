@@ -58,7 +58,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         background: '#0f172a',
       }}
     >
-      {/* 1. Barra Lateral de Navegação (Sidebar Acordeon) */}
+      {/* 1. Sidebar Navigation (Accordion) */}
       <Sidebar
         key={locale}
         activeTab={activeTab}
@@ -88,7 +88,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         canReadPlatformPolicies={canReadPlatformPolicies}
       />
 
-      {/* 2. Conteúdo Principal */}
+      {/* 2. Main Content Area */}
       <main
         className="main-content-scroll"
         style={{
@@ -103,7 +103,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           padding: '24px 32px 32px 32px',
         }}
       >
-        {/* Top Header com Perfil do Usuário & Dropdown */}
+        {/* Top Header with User Profile & Dropdown */}
         <Header
           activeTab={activeTab}
           user={user}

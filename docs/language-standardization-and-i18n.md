@@ -40,7 +40,9 @@ A regra fundamental de arquitetura divide os idiomas em **duas esferas de atuaç
 | **Exceções de Domínio (`AppError`, `DomainError`, etc.)** | **`ErrorCode` enum** | **Proibido passar strings de texto inline.** Lançar sempre com `ErrorCode`. | `throw new AccessDeniedError(ErrorCode.DEFAULT_GROUP_IMMUTABLE)` |
 | **Respostas de Erro da API (RFC 7807 `ProblemDetail`)** | **Dinâmico (i18n)** | O `errorHandler` traduz o `ErrorCode` pelo header `Accept-Language` (`pt-BR` ou `en-US`). | `getErrorMessage(ErrorCode.GROUP_NOT_FOUND, locale)` |
 | **Interface do Usuário (Frontend WebApp & Telas)** | **Português (`pt-BR`)** | Textos da UI são centralizados no dicionário via `getMessage(KEY)`. | `getMessage('BTN_SAVE')`, `getMessage('FIELD_EMAIL_LABEL')` |
-| **Scripts Administrativos & CLI (`backend-cli`)** | **Inglês / Estruturado** | Saídas de diagnóstico e logs de terminal técnicos em inglês. | `console.log('Database seed completed successfully')` |
+| **Logs de Execução & Console Output** | **Inglês (`en`)** | Logs estruturados (Pino), saídas de CLI de migração e logs técnicos em inglês. | `console.log('Database seed completed successfully')` |
+| **Documentação de Projeto & Guias (`README.md`, `/docs/**`, `/packages/**/README.md`, `/secrets/README.md`)** | **Português (`pt-BR`)** | **100% dos arquivos README.md do repositório em Português.** Onboarding, guias práticos e visão geral de pacotes e diretórios. | `README.md`, `docs/architecture.md`, `packages/core/README.md`, `secrets/README.md` |
+| **Especificações Técnicas de Infra & Drivers (`/infra/**/secrets-architecture.md`)** | **Inglês (`en`)** | Especificações técnicas profundas de runtime, orquestração e drivers (usam nomes semânticos `*-architecture.md` ou `*-spec.md`). | `infra/secrets/secrets-architecture.md` |
 
 ---
 

@@ -19,15 +19,15 @@ export interface SidebarProps {
   canReadBaseProcedures: boolean;
   canReadBaseHealthPlans: boolean;
   canReadBaseStaff: boolean;
-  // Gestão
+  // Management
   canReadMgmtIndicators?: boolean;
   canReadMgmtReports?: boolean;
-  // Sistema
+  // System
   canReadSysSettings?: boolean;
   canReadSysUsers?: boolean;
   canReadSysInstitution?: boolean;
   canReadSysAudit?: boolean;
-  // Plataforma (Owner)
+  // Platform (Owner)
   canReadPlatformSettings?: boolean;
   canReadPlatformTenants?: boolean;
   canReadPlatformApiKeys?: boolean;
@@ -65,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { locale } = useI18n();
   const { appVersion } = useConfig();
 
-  // Controle de Acordeons do Sidebar (Inicialmente abre as seções autorizadas)
+  // Sidebar Accordions State (Initially opens authorized sections)
   const [openSidebarSections, setOpenSidebarSections] = useState<Set<string>>(new Set());
 
   const toggleSidebarSection = (sectionKey: string) => {
@@ -85,19 +85,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const hasFinancialSection = canReadOpCashflow || canReadOpPayables || canReadOpBilling;
   const hasRegistriesSection = canReadBaseProcedures || canReadBaseHealthPlans || canReadBaseStaff;
   
-  // Gestão (BUSINESS)
+  // Management (BUSINESS)
   const hasMgmtIndicators = !!canReadMgmtIndicators;
   const hasMgmtReports = !!canReadMgmtReports;
   const hasManagementSection = hasMgmtIndicators || hasMgmtReports;
 
-  // Sistema (ARCH)
+  // System (ARCH)
   const hasSysSettings = !!canReadSysSettings;
   const hasSysUsers = !!canReadSysUsers;
   const hasSysInstitution = !!canReadSysInstitution;
   const hasSysAudit = !!canReadSysAudit;
   const hasSystemSection = hasSysSettings || hasSysUsers || hasSysInstitution || hasSysAudit;
 
-  // Plataforma (ARCH - Owner)
+  // Platform (ARCH - Owner)
   const hasPlatformSettings = !!canReadPlatformSettings;
   const hasPlatformTenants = !!canReadPlatformTenants;
   const hasPlatformApiKeys = !!canReadPlatformApiKeys;
@@ -105,10 +105,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const hasPlatformPolicies = !!canReadPlatformPolicies;
   const hasPlatformSection = hasPlatformSettings || hasPlatformTenants || hasPlatformApiKeys || hasPlatformWebhooks || hasPlatformPolicies;
 
-  // As secoes do sidebar iniciam retraidas por padrao. A expansao e realizada sob demanda pelo usuario.
+  // Sidebar sections start collapsed by default. Expansion is performed on demand by the user.
 
-
-  // Garante que ao alternar ou ativar uma aba, a seção correspondente esteja aberta
+  // Ensures that upon tab switch or activation, the corresponding section is opened
   useEffect(() => {
     if (!activeTab) return;
     if (activeTab === 'op_schedule' || activeTab === 'op_attendance') {
@@ -372,7 +371,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </>
         )}
 
-        {/* 2. CLÍNICO */}
+        {/* 2. CLINICAL */}
         {renderAccordionSection(
           'clinical',
           '🩺',
@@ -411,7 +410,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </>
         )}
 
-        {/* 5. GESTÃO */}
+        {/* 5. MANAGEMENT */}
         {renderAccordionSection(
           'management',
           '📊',
@@ -455,7 +454,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {menuLoading && <div style={{ fontSize: '0.75rem', color: '#64748b', padding: '8px 12px' }}>{t('MENUS_LOADING')}</div>}
       </nav>
 
-      {/* Sidebar Footer: Versão do Sistema */}
+      {/* Sidebar Footer: System Version */}
       <div style={{ borderTop: '1px solid #334155', paddingTop: 12, marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 4, paddingRight: 4, flexShrink: 0 }}>
         <span style={{ fontSize: '0.70rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
           {t('SYSTEM_VERSION_LABEL')}

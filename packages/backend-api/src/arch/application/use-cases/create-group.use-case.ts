@@ -1,12 +1,25 @@
-import { EntityAlreadyExistsError, ValidationError, ErrorCode, SuccessCode, getSuccessMessage, logger, SupportedLocales } from '@openclinic/core';
+import {
+  EntityAlreadyExistsError,
+  ValidationError,
+  ErrorCode,
+  SuccessCode,
+  getSuccessMessage,
+  logger,
+  SupportedLocales,
+  AUDIT_CONSTANTS,
+  IpAddress,
+  AuditStatus,
+  AuditAction,
+  AuditResource,
+} from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO, CreateGroupDTO, GroupListItemDTO } from '../../domain/dtos.js';
-import { AuditStatus } from '../../../shared/domain/enums.js';
 
 export class CreateGroupUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(input: CreateGroupDTO, ipAddress?: string, username?: string): Promise<ActionResponseDTO<GroupListItemDTO>> {
+  async execute(input: CreateGroupDTO, ipAddress?: string | IpAddress, username?: string): Promise<ActionResponseDTO<GroupListItemDTO>> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     const trimmedName = input.name?.trim();
     if (!trimmedName) {
       throw new ValidationError('name', ErrorCode.REQUIRED_FIELDS_MISSING);
@@ -22,7 +35,7 @@ export class CreateGroupUseCase {
 
     const existingGroup = await this.uow.groups.findByName(trimmedName, tenantId ?? undefined);
     if (existingGroup) {
-      throw new EntityAlreadyExistsError('Grupo', 'nome', trimmedName, ErrorCode.GROUP_NAME_EXISTS);
+      throw new EntityAlreadyExistsError('Group', 'name', trimmedName, ErrorCode.GROUP_NAME_EXISTS);
     }
 
     const newGroup = await this.uow.groups.create({
@@ -35,11 +48,11 @@ export class CreateGroupUseCase {
 
     await this.uow.auditLogs.create({
       user_id: null,
-      username: username ?? 'admin',
-      action: 'group_created',
-      resource: 'iam_groups',
+      username: username ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR,
+      action: AuditAction.GROUP_CREATED,
+      resource: AuditResource.IAM_GROUPS,
       status: AuditStatus.SUCCESS,
-      ip_address: ipAddress ?? null,
+      ip_address: validatedIp?.value ?? null,
       user_agent: null,
       details: { groupId: newGroup.id, name: newGroup.name },
     });

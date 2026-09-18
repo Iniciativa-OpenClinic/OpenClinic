@@ -2,7 +2,7 @@ import { ValueObject } from './value-object.base.js';
 import { ValidationError, ErrorCode } from '../../errors/index.js';
 
 /**
- * Value Object representing a Brazilian CPF (Cadastro de Pessoas Físicas).
+ * Value Object representing a Brazilian Individual Taxpayer Registry (CPF - Cadastro de Pessoas Físicas).
  * Enforces valid 11-digit format, mod-11 check digits, and sequence validation.
  */
 export class Cpf extends ValueObject<string> {

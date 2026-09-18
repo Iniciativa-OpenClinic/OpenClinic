@@ -1,6 +1,6 @@
 /**
- * Catálogo Central de Traduções e Apresentação da UI (OpenClinic)
- * Ponto único da verdade para rótulos, botões, tooltips, modais, navegação e mensagens.
+ * Central Translation and UI Presentation Catalog (OpenClinic)
+ * Single source of truth for labels, buttons, tooltips, modals, navigation, and messages.
  */
 
 import {
@@ -35,11 +35,11 @@ export type {
   TranslationCatalog,
 };
 
-// Objeto canônico de traduções padrão (PT-BR)
+// Canonical default translations object (PT-BR)
 export const Translations = localePtBr;
 
 /**
- * Retorna o texto traduzido do catálogo com suporte a interpolação de variáveis e locale ativo:
+ * Returns the translated string from the catalog with variable interpolation and active locale support:
  * Ex: getTranslation('HELP_TICKET_SENT_SUCCESS', { id: 'TKT-102' })
  */
 export function getTranslation(

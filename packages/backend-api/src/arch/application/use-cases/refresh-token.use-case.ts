@@ -1,4 +1,14 @@
-import { hashToken, createAccessToken, AuthenticationError, ErrorCode, logger, UserRole } from '@openclinic/core';
+import {
+  hashToken,
+  createAccessToken,
+  AuthenticationError,
+  ErrorCode,
+  logger,
+  UserRole,
+  AUTH_SECURITY_DEFAULTS,
+  TIME_CONSTANTS,
+  IpAddress,
+} from '@openclinic/core';
 import type { JwtConfig } from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { RefreshResponseDTO } from '../../domain/dtos.js';
@@ -10,37 +20,67 @@ export class RefreshTokenUseCase {
     private readonly jwtConfig: JwtConfig,
   ) {}
 
-  async execute(refreshToken: string): Promise<RefreshResponseDTO> {
+  async execute(refreshToken: string, ipAddress?: string | IpAddress, userAgent?: string): Promise<RefreshResponseDTO> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     const tokenHash = hashToken(refreshToken);
 
-    // 1. Find existing session
-    const session = await this.uow.sessions.findByTokenHash(tokenHash);
-    if (!session || session.revoked_at || session.expires_at < new Date()) {
+    const newRefreshToken = randomUUID() + '-' + randomUUID();
+    const newRefreshHash = hashToken(newRefreshToken);
+    const expireDays = this.jwtConfig.refreshTokenExpireDays ?? AUTH_SECURITY_DEFAULTS.REFRESH_TOKEN_EXPIRE_DAYS;
+
+    // 1. Atomic compare-and-swap rotation: marks old session revoked and creates new session within the same atomic boundary
+    const rotationResult = await this.uow.sessions.rotate(tokenHash, {
+      token_hash: newRefreshHash,
+      user_agent: userAgent ?? null,
+      ip_address: validatedIp?.value ?? null,
+      expires_at: new Date(Date.now() + expireDays * TIME_CONSTANTS.MS_PER_DAY),
+      revoked_at: null,
+    });
+
+    if (!rotationResult) {
+      // Refresh token could not be rotated: check if session existed and was already revoked (Reuse Detection)
+      const existingSession = await this.uow.sessions.findAnyByTokenHash(tokenHash);
+      if (existingSession) {
+        await this.uow.sessions.revokeAllByUser(existingSession.user_id);
+        logger.warn({ userId: existingSession.user_id }, 'Malicious refresh token reuse detected; all sessions revoked');
+      }
       throw new AuthenticationError(ErrorCode.TOKEN_INVALID);
     }
 
-    // 2. Get user
-    const user = await this.uow.users.getById(session.user_id);
+    const { oldSession, newSession } = rotationResult;
+
+    if (oldSession.expires_at < new Date()) {
+      await this.uow.sessions.revoke(newSession.id);
+      throw new AuthenticationError(ErrorCode.TOKEN_INVALID);
+    }
+
+    // 2. Validate user status
+    const user = await this.uow.users.getById(oldSession.user_id);
     if (!user || !user.is_active) {
-      await this.uow.sessions.revoke(session.id);
+      await this.uow.sessions.revoke(newSession.id);
       throw new AuthenticationError(ErrorCode.USER_DISABLED);
     }
 
-    // 3. Revoke old session (atomic rotation)
-    await this.uow.sessions.revoke(session.id);
+    // 3. Verify session liveness: verify that during asynchronous operations,
+    // a concurrent token reuse detection or admin revocation did not revoke this user's sessions.
+    const activeCheck = await this.uow.sessions.findById(newSession.id);
+    if (!activeCheck || activeCheck.revoked_at !== null) {
+      throw new AuthenticationError(ErrorCode.TOKEN_INVALID);
+    }
 
-    // 4. Create new tokens
+    // 4. Create new access token bound to the new session
     const roleName = user.role ?? UserRole.USER;
-    const tokenData = { sub: user.id, role: roleName, email: user.email, ...(user.tenant_id ? { tenant_id: user.tenant_id } : {}) };
+    const tokenData = {
+      sub: user.id,
+      role: roleName,
+      email: user.email,
+      sid: newSession.id,
+      ...(user.tenant_id ? { tenant_id: user.tenant_id } : {}),
+    };
 
     const newAccessToken = createAccessToken(tokenData, this.jwtConfig);
-    const newRefreshToken = randomUUID() + '-' + randomUUID();
-    const newRefreshHash = hashToken(newRefreshToken);
 
-    const expireDays = this.jwtConfig.refreshTokenExpireDays ?? 7;
-    await this.uow.sessions.create({ user_id: user.id, token_hash: newRefreshHash, user_agent: session.user_agent, ip_address: session.ip_address, expires_at: new Date(Date.now() + expireDays * 86400000), revoked_at: null });
-
-    logger.info({ userId: user.id }, 'Token refreshed successfully');
+    logger.info({ userId: user.id, sessionId: newSession.id }, 'Token refreshed successfully');
 
     return { access_token: newAccessToken, refresh_token: newRefreshToken, token_type: 'bearer' };
   }

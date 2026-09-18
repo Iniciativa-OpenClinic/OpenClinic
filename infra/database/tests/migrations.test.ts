@@ -1,3 +1,5 @@
+import { ensureDefaultSuperAdmin } from '../../../packages/backend-cli/src/commands/user-create-admin.js';
+import { testDatabaseUrl } from '../test-connection.mjs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import fs from 'node:fs';
@@ -7,16 +9,15 @@ import postgres from 'postgres';
 import { baselineDatabase, inspectMigrations, loadMigrations, migrateDatabase, migrationsDirectory,
   MIGRATION_LOCK, schemaSignature, signatureDifferences, databaseDirectory } from '../../../packages/backend-cli/src/utils/migration-runner.js';
 import { seedDemoDatabase } from '../../../packages/backend-cli/src/commands/db-seed.js';
-import { resolveDatabaseTarget } from '../../../packages/backend-cli/src/utils/database-target.js';
+import { resolveDatabaseTarget } from '../../../packages/backend-cli/src/utils/database-connection.js';
 import { cloneVersionedDatabase } from '../../../packages/backend-cli/src/utils/database-clone.js';
 import { executePgRestore } from '../../../packages/backend-cli/src/utils/pg-runner.js';
 
-const adminUrl = process.env['TEST_DATABASE_ADMIN_URL'];
+const adminUrl = testDatabaseUrl();
 async function isolated(run: (url: string, client: postgres.Sql) => Promise<void>) {
-  if (!adminUrl) throw new Error('TEST_DATABASE_ADMIN_URL is required and must point at a disposable PostgreSQL server.');
   const url = new URL(adminUrl);
   if (!['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) throw new Error('Tests only accept a loopback database server.');
-  const name = `oc_test_${randomUUID().replaceAll('-', '')}`;
+  const name = `db_test_${randomUUID().replaceAll('-', '')}`;
   const admin = postgres(adminUrl, { max: 1, onnotice: () => {} });
   await admin`CREATE DATABASE ${admin(name)} TEMPLATE template0`;
   url.pathname = `/${name}`;
@@ -36,6 +37,10 @@ test('fresh install, reference catalog and repeated migration preserve customize
     assert.equal(tables!.count, 19);
     const [users] = await sql`SELECT count(*)::int AS count FROM iam_users`;
     assert.equal(users!.count, 0);
+    const [bindings] = await sql`SELECT count(*)::int AS count FROM iam_groups g JOIN sys_tenants t ON t.id = g.tenant_id WHERE t.slug = 'acme-organization'`;
+    assert.equal(bindings!.count, 6);
+    const [unbound] = await sql`SELECT count(*)::int AS count FROM iam_permissions WHERE tenant_id IS NULL`;
+    assert.equal(unbound!.count, 0);
     await sql`UPDATE sys_applications SET app_name = 'Customized by testers'`;
     assert.deepEqual(await migrateDatabase(url), []);
     const [app] = await sql`SELECT app_name FROM sys_applications`;
@@ -50,7 +55,7 @@ test('baseline adopts existing schema without modifying rows or custom ACLs', as
   await isolated(async (url, sql) => {
     for (const statement of loadMigrations()[0]!.sql) await sql.unsafe(statement);
     await sql`INSERT INTO sys_tenants (id, name, slug) VALUES ('tenant-custom', 'My clinic', 'openclinic-system')`;
-    await sql`INSERT INTO iam_groups (id, name, tenant_id) VALUES ('group-custom', 'Todos os Usuários', 'tenant-custom')`;
+    await sql`INSERT INTO iam_groups (id, name, tenant_id) VALUES ('group-custom', 'All Users', 'tenant-custom')`;
     await sql`INSERT INTO sys_application_resources (id, item_code) VALUES ('res-custom', 'menu_profile')`;
     await sql`INSERT INTO iam_permissions (id, group_id, resource_id, effect) VALUES ('permission-custom', 'group-custom', 'res-custom', 'DENY')`;
     await assert.rejects(migrateDatabase(url), /baseline/);
@@ -72,33 +77,6 @@ test('baseline refuses drift and leaves no history behind', async () => {
     assert.ok((await baselineDatabase(url)).length > 0);
     await assert.rejects(baselineDatabase(url, true), /schema mismatch/);
     assert.equal((await inspectMigrations(sql)).applied, 0);
-  });
-});
-
-test('known legacy transition preserves title, data and constraints; oversized values abort adoption', async () => {
-  await isolated(async (url, sql) => {
-    for (const migration of loadMigrations()) for (const statement of migration.sql) await sql.unsafe(statement);
-    await sql`ALTER TABLE app_patients ALTER COLUMN cpf TYPE VARCHAR(14)`;
-    await sql`ALTER TABLE app_practitioners ALTER COLUMN phone TYPE VARCHAR(30)`;
-    await sql`ALTER TABLE sys_applications ALTER COLUMN app_name DROP NOT NULL`;
-    await sql`ALTER TABLE sys_applications ADD COLUMN app_title VARCHAR(255)`;
-    await sql`UPDATE sys_applications SET app_title = 'Legacy title to preserve'`;
-    await sql`ALTER TABLE iam_permissions RENAME CONSTRAINT iam_permissions_check TO iam_application_permissions_check`;
-    await sql`ALTER TABLE iam_permissions RENAME CONSTRAINT iam_permissions_pkey TO iam_application_permissions_pkey`;
-    await sql`INSERT INTO app_patients (id, tenant_id, full_name, cpf)
-      SELECT 'legacy-patient', id, 'Legacy patient', '12345678901234' FROM sys_tenants LIMIT 1`;
-    await assert.rejects(baselineDatabase(url, true, true), /oversized/);
-    assert.equal((await inspectMigrations(sql)).applied, 0);
-    await sql`UPDATE app_patients SET cpf = '12345678909' WHERE id = 'legacy-patient'`;
-    assert.deepEqual(await baselineDatabase(url, false, true), []);
-    const [before] = await sql`SELECT app_title FROM sys_applications`;
-    assert.equal(before!.app_title, 'Legacy title to preserve');
-    await baselineDatabase(url, true, true);
-    await migrateDatabase(url);
-    const [after] = await sql`SELECT default_extra_settings->>'legacy_app_title' AS title FROM sys_applications`;
-    assert.equal(after!.title, 'Legacy title to preserve');
-    const [patient] = await sql`SELECT full_name FROM app_patients WHERE id = 'legacy-patient'`;
-    assert.equal(patient!.full_name, 'Legacy patient');
   });
 });
 
@@ -148,20 +126,27 @@ test('demo is optional, atomic and refuses populated databases', async () => {
   });
 });
 
-test('remote mutations require explicit target and runtime URL is never a fallback', () => {
-  const old = { ...process.env };
+test('database owner credentials are required for migrations', (t) => {
+  const keys = ['DATABASE_OWNER_URL', 'DB_NAME', 'DB_USER', 'DB_PASS', 'DB_HOST', 'DB_PORT'] as const;
+  const previous = { ...process.env };
+  // Simulate an environment without mounted or local secrets, regardless of the checkout.
+  t.mock.method(fs, 'existsSync', () => false);
   try {
     delete process.env['DATABASE_OWNER_URL'];
-    process.env['DATABASE_URL'] = 'postgresql://app:secret@localhost/clinic';
-    assert.throws(() => resolveDatabaseTarget(), /DATABASE_OWNER_URL/);
-    process.env['DATABASE_OWNER_URL'] = 'postgresql://owner:secret@example.com/clinic';
-    assert.throws(() => resolveDatabaseTarget(), /Local target/);
-    process.env['REMOTE_DATABASE_OWNER_URL'] = 'postgresql://owner:secret@example.com/clinic';
-    assert.throws(() => resolveDatabaseTarget({ target: 'remote' }, true), /confirm-target/);
-    assert.equal(resolveDatabaseTarget({ target: 'remote', confirmTarget: 'example.com:5432/clinic' }, true).identity, 'example.com:5432/clinic');
+    Object.assign(process.env, {
+      DB_NAME: 'clinic', DB_HOST: 'localhost', DB_PORT: '5432',
+      DB_USER: 'clinic_app', DB_PASS: 'appsecret',
+    });
+    assert.throws(() => resolveDatabaseTarget(), /owner credentials/i);
+
+    process.env['DATABASE_OWNER_URL'] = 'postgres://clinic_owner:ownersecret@localhost:5432/clinic';
+    const destination = resolveDatabaseTarget();
+    assert.equal(destination.identity, 'localhost:5432/clinic');
+    assert.equal(destination.parsed.username, 'clinic_owner');
   } finally {
-    for (const key of ['DATABASE_OWNER_URL', 'DATABASE_URL', 'REMOTE_DATABASE_OWNER_URL']) {
-      if (old[key] === undefined) delete process.env[key]; else process.env[key] = old[key];
+    for (const key of keys) {
+      if (previous[key] === undefined) delete process.env[key];
+      else process.env[key] = previous[key];
     }
   }
 });
@@ -198,13 +183,34 @@ test('clone restores to staging, preserves history and archives destination; inv
         assert.equal(timezone!.TimeZone, 'UTC');
         const [row] = await restored`SELECT count(*)::int AS count FROM iam_sessions`;
         assert.equal(row!.count, 0);
-        const invalid = path.resolve('.temp', 'invalid-restore-' + randomUUID() + '.dump');
+        const tempDir = path.resolve('.temp');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+        const invalid = path.resolve(tempDir, 'invalid-restore-' + randomUUID() + '.dump');
         fs.writeFileSync(invalid, 'not a PostgreSQL archive');
         try { await assert.rejects(executePgRestore({ ...config(targetUrl), inputPath: invalid }), /failed/); }
-        finally { fs.unlinkSync(invalid); }
+        finally { if (fs.existsSync(invalid)) fs.unlinkSync(invalid); }
         const [app] = await restored`SELECT app_name FROM sys_applications`;
         assert.equal(app!.app_name, 'OpenClinic');
       } finally { await restored.end(); }
     });
+  });
+});
+
+test('initial OWNER has canonical identity and repeated provisioning preserves account and permissions', async () => {
+  await isolated(async (url, sql) => {
+    await migrateDatabase(url);
+    const first = await ensureDefaultSuperAdmin(url);
+    assert.equal(first.created, true);
+    const [owner] = await sql`SELECT * FROM iam_users WHERE role = 'OWNER'`;
+    assert.equal(owner!.username, 'superadmin');
+    assert.equal(owner!.full_name, 'Superadministrator');
+    assert.equal(owner!.job_title, 'Platform Administrator');
+    const memberships = await sql`SELECT * FROM iam_user_groups ORDER BY id`;
+    const permissions = await sql`SELECT * FROM iam_permissions ORDER BY id`;
+    assert.equal((await ensureDefaultSuperAdmin(url)).created, false);
+    const [afterOwner] = await sql`SELECT * FROM iam_users WHERE role = 'OWNER'`;
+    assert.deepEqual(afterOwner, owner);
+    assert.deepEqual(await sql`SELECT * FROM iam_user_groups ORDER BY id`, memberships);
+    assert.deepEqual(await sql`SELECT * FROM iam_permissions ORDER BY id`, permissions);
   });
 });

@@ -1,12 +1,25 @@
-import { EntityNotFoundError, EntityAlreadyExistsError, ErrorCode, SuccessCode, getSuccessMessage, logger, SupportedLocales } from '@openclinic/core';
+import {
+  EntityNotFoundError,
+  EntityAlreadyExistsError,
+  ErrorCode,
+  SuccessCode,
+  getSuccessMessage,
+  logger,
+  SupportedLocales,
+  AUDIT_CONSTANTS,
+  IpAddress,
+  AuditStatus,
+  AuditAction,
+  AuditResource,
+} from '@openclinic/core';
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
 import type { ActionResponseDTO } from '../../domain/dtos.js';
-import { AuditStatus } from '../../../shared/domain/enums.js';
 
 export class AddGroupMemberUseCase {
   constructor(private readonly uow: IAMUnitOfWork) {}
 
-  async execute(groupId: string, userId: string, ipAddress?: string, username?: string): Promise<ActionResponseDTO<{ groupId: string; userId: string }>> {
+  async execute(groupId: string, userId: string, ipAddress?: string | IpAddress, username?: string): Promise<ActionResponseDTO<{ groupId: string; userId: string }>> {
+    const validatedIp = ipAddress instanceof IpAddress ? ipAddress : IpAddress.createOptional(ipAddress);
     const group = await this.uow.groups.getById(groupId);
     if (!group) {
       throw new EntityNotFoundError('Group', groupId, ErrorCode.GROUP_NOT_FOUND);
@@ -26,11 +39,11 @@ export class AddGroupMemberUseCase {
 
     await this.uow.auditLogs.create({
       user_id: user.id,
-      username: username ?? 'admin',
-      action: 'group_member_added',
-      resource: 'iam_user_groups',
+      username: username ?? AUDIT_CONSTANTS.SYSTEM_OPERATOR,
+      action: AuditAction.GROUP_MEMBER_ADDED,
+      resource: AuditResource.IAM_USER_GROUPS,
       status: AuditStatus.SUCCESS,
-      ip_address: ipAddress ?? null,
+      ip_address: validatedIp?.value ?? null,
       user_agent: null,
       details: { groupId, userId, groupName: group.name, userEmail: user.email },
     });

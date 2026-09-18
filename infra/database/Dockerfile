@@ -9,5 +9,6 @@ RUN npm ci
 COPY packages/core packages/core
 COPY packages/backend-cli packages/backend-cli
 COPY infra/database infra/database
+COPY infra/secrets infra/secrets
 RUN npm run build -w packages/core
 CMD ["npm", "run", "db:migrate"]

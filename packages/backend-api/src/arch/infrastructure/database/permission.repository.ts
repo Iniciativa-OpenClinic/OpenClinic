@@ -3,32 +3,17 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { randomUUID } from 'node:crypto';
 import { iamPermissions } from './drizzle-schema.js';
 import type { ResourceAction, PermissionEffect } from '@openclinic/core';
+import type { IPermissionRepository } from '../../domain/repositories.js';
+import type {
+  ApplicationPermissionEntity,
+  PermissionAclTupleEntity,
+} from '../../domain/entities.js';
 
-export interface ApplicationPermissionRecord {
-  id: string;
-  user_id: string | null;
-  group_id: string | null;
-  resource_id: string;
-  action: ResourceAction;
-  effect: PermissionEffect;
-  is_active: boolean;
-  tenant_id: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
 
-export interface PermissionAclTuple {
-  resource_id: string;
-  action: ResourceAction;
-  effect: PermissionEffect;
-  user_id: string | null;
-  group_id: string | null;
-}
-
-export class PermissionRepository {
+export class PermissionRepository implements IPermissionRepository {
   constructor(private readonly db: PostgresJsDatabase) {}
 
-  async listByUserId(userId: string): Promise<ApplicationPermissionRecord[]> {
+  async listByUserId(userId: string): Promise<ApplicationPermissionEntity[]> {
     const results = await this.db
       .select()
       .from(iamPermissions)
@@ -38,10 +23,10 @@ export class PermissionRepository {
           eq(iamPermissions.is_active, true)
         )
       );
-    return results as unknown as ApplicationPermissionRecord[];
+    return results as unknown as ApplicationPermissionEntity[];
   }
 
-  async listByGroupId(groupId: string): Promise<ApplicationPermissionRecord[]> {
+  async listByGroupId(groupId: string): Promise<ApplicationPermissionEntity[]> {
     const results = await this.db
       .select()
       .from(iamPermissions)
@@ -51,18 +36,18 @@ export class PermissionRepository {
           eq(iamPermissions.is_active, true)
         )
       );
-    return results as unknown as ApplicationPermissionRecord[];
+    return results as unknown as ApplicationPermissionEntity[];
   }
 
-  async listAll(): Promise<ApplicationPermissionRecord[]> {
+  async listAll(): Promise<ApplicationPermissionEntity[]> {
     const results = await this.db
       .select()
       .from(iamPermissions)
       .where(eq(iamPermissions.is_active, true));
-    return results as unknown as ApplicationPermissionRecord[];
+    return results as unknown as ApplicationPermissionEntity[];
   }
 
-  async getAclMap(userId: string, groupIds: string[]): Promise<PermissionAclTuple[]> {
+  async getAclMap(userId: string, groupIds: string[]): Promise<PermissionAclTupleEntity[]> {
     const whereClause =
       groupIds.length > 0
         ? and(
@@ -88,7 +73,7 @@ export class PermissionRepository {
       .from(iamPermissions)
       .where(whereClause);
 
-    return rows as unknown as PermissionAclTuple[];
+    return rows as unknown as PermissionAclTupleEntity[];
   }
 
   async deleteByUser(userId: string): Promise<void> {
@@ -117,7 +102,7 @@ export class PermissionRepository {
     action: ResourceAction;
     effect?: PermissionEffect;
     tenant_id?: string | null;
-  }): Promise<ApplicationPermissionRecord> {
+  }): Promise<ApplicationPermissionEntity> {
     const id = permission.id || randomUUID();
     const [created] = await this.db
       .insert(iamPermissions)
@@ -131,6 +116,6 @@ export class PermissionRepository {
         tenant_id: permission.tenant_id ?? null,
       })
       .returning();
-    return created as unknown as ApplicationPermissionRecord;
+    return created as unknown as ApplicationPermissionEntity;
   }
 }

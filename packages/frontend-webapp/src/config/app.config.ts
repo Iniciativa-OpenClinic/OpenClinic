@@ -1,22 +1,16 @@
 /**
- * Configurações gerais da aplicação frontend OpenClinic.
+ * Global frontend application settings and constants.
  */
 export const APP_CONFIG = {
-  /**
-   * Tempo em segundos para fechamento automático de mensagens e alertas de feedback.
-   */
+  // Automatic feedback alert dismiss duration in seconds
   NOTIFICATION_AUTO_DISMISS_SECONDS: 5,
 
-  /**
-   * Tempo em milissegundos para fechamento automático de mensagens e alertas de feedback.
-   */
+  // Automatic feedback alert dismiss duration in milliseconds
   get NOTIFICATION_AUTO_DISMISS_MS(): number {
     return this.NOTIFICATION_AUTO_DISMISS_SECONDS * 1000;
   },
 
-  /**
-   * Nome padrão do sistema / produto.
-   */
+  // Default system product name
   APP_NAME: 'OpenClinic',
 } as const;
 

@@ -8,7 +8,7 @@ export class GetGroupMembersUseCase {
   async execute(groupId: string): Promise<GroupMembersResponseDTO> {
     const group = await this.uow.groups.getById(groupId);
     if (!group) {
-      throw new EntityNotFoundError('Grupo', groupId, ErrorCode.GROUP_NOT_FOUND);
+      throw new EntityNotFoundError('Group', groupId, ErrorCode.GROUP_NOT_FOUND);
     }
 
     const memberEntities = await this.uow.groups.getMembers(groupId);
@@ -51,7 +51,7 @@ export class GetGroupMembersUseCase {
         name: group.name,
         description: group.description,
         is_active: group.is_active,
-        is_default: (group as any).is_default ?? false,
+        is_default: group.is_default ?? false,
         member_count: members.length,
         tenant_id: group.tenant_id,
         created_at: group.created_at,

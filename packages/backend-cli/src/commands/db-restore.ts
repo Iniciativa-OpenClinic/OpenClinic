@@ -2,169 +2,228 @@ import inquirer from 'inquirer';
 import fs from 'node:fs';
 import path from 'node:path';
 import { executePgRestore, testPgConnection } from '../utils/pg-runner.js';
+import { getDatabaseConfig } from '../utils/database-connection.js';
 
-export async function dbRestore(): Promise<void> {
+export interface DbRestoreOptions {
+  file?: string;
+  destination?: 'local' | 'remote';
+  host?: string;
+  port?: number;
+  database?: string;
+  user?: string;
+  password?: string;
+}
+
+export async function dbRestore(options?: DbRestoreOptions): Promise<void> {
+  const config = getDatabaseConfig();
+  const targetDb = options?.database || config.database;
+
   console.log('============================================================');
-  console.log('  OpenClinic CLI - Utilitário de Restauração de Backup       ');
-  console.log('  (PostgreSQL Restore com Formato Portátil Compactado -Fc)   ');
+  console.log('  Database Restoration Utility' + (targetDb ? ` [Target: ${targetDb}]` : ''));
+  console.log('  (PostgreSQL Restore from Compressed .dump Archive)         ');
   console.log('============================================================\n');
 
   try {
-    // 1. Identificar arquivos de backup existentes
-    const backupsDir = path.resolve('backups');
-    let backupChoices: { name: string; value: string }[] = [];
+    // 1. File Selection
+    let inputPath = options?.file;
+    if (!inputPath) {
+      const backupDir = path.resolve('backups');
+      let backupChoices: { name: string; value: string }[] = [];
 
-    if (fs.existsSync(backupsDir)) {
-      const files = fs
-        .readdirSync(backupsDir)
-        .filter((f) => f.endsWith('.dump') || f.endsWith('.sql'))
-        .sort()
-        .reverse();
+      if (fs.existsSync(backupDir)) {
+        const files = fs
+          .readdirSync(backupDir)
+          .filter((f) => f.endsWith('.dump') || f.endsWith('.sql'))
+          .sort()
+          .reverse();
 
-      backupChoices = files.map((f) => ({
-        name: `${f} (${(fs.statSync(path.join(backupsDir, f)).size / (1024 * 1024)).toFixed(2)} MB)`,
-        value: path.join('backups', f),
-      }));
-    }
+        backupChoices = files.map((f) => {
+          const stats = fs.statSync(path.join(backupDir, f));
+          const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
+          const dateStr = stats.mtime.toISOString().replace('T', ' ').slice(0, 19);
+          return {
+            name: `${f} (${sizeMb} MB - ${dateStr})`,
+            value: path.join(backupDir, f),
+          };
+        });
+      }
 
-    backupChoices.push({ name: 'Digitar outro caminho manualmente...', value: '__custom__' });
+      backupChoices.push({ name: 'Enter another path manually...', value: '__custom__' });
 
-    let inputPath = '';
-    const { selectedBackup } = await inquirer.prompt<{ selectedBackup: string }>([
-      {
-        type: 'list',
-        name: 'selectedBackup',
-        message: 'Selecione o arquivo de backup para restauração:',
-        choices: backupChoices,
-      },
-    ]);
-
-    if (selectedBackup === '__custom__') {
-      const customAnswer = await inquirer.prompt<{ customPath: string }>([
+      const { selectedBackup } = await inquirer.prompt<{ selectedBackup: string }>([
         {
-          type: 'input',
-          name: 'customPath',
-          message: 'Informe o caminho do arquivo .dump:',
-          validate: (p: string) => fs.existsSync(p.trim()) || 'Arquivo não encontrado no caminho informado.',
+          type: 'list',
+          name: 'selectedBackup',
+          message: 'Select backup archive to restore:',
+          choices: backupChoices,
         },
       ]);
-      inputPath = customAnswer.customPath.trim();
-    } else {
-      inputPath = selectedBackup;
+
+      if (selectedBackup === '__custom__') {
+        const customAnswer = await inquirer.prompt<{ customPath: string }>([
+          {
+            type: 'input',
+            name: 'customPath',
+            message: 'Enter path to .dump file:',
+            validate: (p: string) => fs.existsSync(p.trim()) || 'File not found at specified path.',
+          },
+        ]);
+        inputPath = customAnswer.customPath.trim();
+      } else {
+        inputPath = selectedBackup;
+      }
     }
 
-    console.log(`\nArquivo selecionado: ${path.resolve(inputPath)}`);
+    if (!inputPath || !fs.existsSync(inputPath)) {
+      throw new Error(`Backup file not found: ${inputPath}`);
+    }
 
-    // 2. Destino da Restauração
-    const { destination } = await inquirer.prompt<{ destination: 'remote' | 'local' }>([
-      {
-        type: 'list',
-        name: 'destination',
-        message: 'Selecione o destino da restauração:',
-        choices: [
-          { name: '1. Servidor Remoto na Nuvem (Host / IP de Produção ou Staging)', value: 'remote' },
-          { name: '2. Banco Local (Docker / localhost:5432)', value: 'local' },
-        ],
-        default: 'remote',
-      },
-    ]);
+    console.log(`\nSelected archive: ${path.resolve(inputPath)}`);
 
-    let host = 'localhost';
-    let port = 5432;
-    let database = 'openclinic';
-    let user = 'openclinic_owner';
-    let password = 'temp1234';
+    // 2. Destination
+    const config = getDatabaseConfig();
+
+    let destination = options?.destination;
+    if (!destination) {
+      const answer = await inquirer.prompt<{ destination: 'remote' | 'local' }>([
+        {
+          type: 'list',
+          name: 'destination',
+          message: 'Select restore destination:',
+          choices: [
+            { name: '1. Remote Cloud Server (Production or Staging Host / IP)', value: 'remote' },
+            { name: `2. Local Database (Docker / localhost:${config.port})`, value: 'local' },
+          ],
+          default: 'remote',
+        },
+      ]);
+      destination = answer.destination;
+    }
+
+    let host = options?.host || config.host;
+    let port = options?.port || config.port;
+    let database = options?.database || config.database;
+    let user = options?.user;
+    let password = options?.password;
     const isLocal = destination === 'local';
 
     if (isLocal) {
-      const envOwnerUrl = process.env['DATABASE_OWNER_URL'] ?? process.env['DATABASE_URL'];
-      if (envOwnerUrl) {
-        try {
-          const parsed = new URL(envOwnerUrl);
-          host = parsed.hostname || 'localhost';
-          port = parsed.port ? parseInt(parsed.port, 10) : 5432;
-          database = parsed.pathname.replace(/^\//, '') || 'openclinic';
-          user = decodeURIComponent(parsed.username || 'openclinic_owner');
-          password = decodeURIComponent(parsed.password || 'temp1234');
-        } catch {
-          // Mantém padrões
+      if (!user) {
+        const userPrompt = await inquirer.prompt<{ user: string }>([
+          {
+            type: 'input',
+            name: 'user',
+            message: 'PostgreSQL username for restore:',
+            default: config.ownerUser || config.appUser || undefined,
+            validate: (v: string) => v.trim().length > 0 || 'Username is required.',
+          },
+        ]);
+        user = userPrompt.user.trim();
+      }
+
+      if (!password) {
+        const defaultPass = (user === config.appUser ? config.appPassword : config.ownerPassword) || undefined;
+        if (!defaultPass) {
+          const passAnswer = await inquirer.prompt<{ password: string }>([
+            {
+              type: 'password',
+              name: 'password',
+              message: `Password for user ${user}:`,
+              mask: '*',
+              validate: (v: string) => v.length > 0 || 'Password is required.',
+            },
+          ]);
+          password = passAnswer.password;
+        } else {
+          password = defaultPass;
         }
       }
-      console.log(`\nConfigurações locais detectadas:`);
-      console.log(`  Host: ${host}:${port} | Base: ${database} | Usuário: ${user}\n`);
     } else {
-      console.log('\nInforme os dados de conexão do servidor remoto de destino:');
-      const remoteAnswers = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'host',
-          message: 'Host / IP do servidor remoto:',
-          validate: (v: string) => v.trim().length > 0 || 'O host é obrigatório.',
-        },
-        {
-          type: 'input',
-          name: 'port',
-          message: 'Porta do PostgreSQL:',
-          default: '5432',
-          validate: (v: string) => !isNaN(parseInt(v, 10)) || 'Porta inválida.',
-        },
-        {
-          type: 'input',
-          name: 'database',
-          message: 'Nome do banco de dados:',
-          default: 'openclinic',
-        },
-        {
-          type: 'input',
-          name: 'user',
-          message: 'Usuário (owner com permissões DDL):',
-          default: 'openclinic_owner',
-        },
-        {
-          type: 'password',
-          name: 'password',
-          message: 'Senha do usuário:',
-          mask: '*',
-        },
-      ]);
+      if (!host || !user || !password) {
+        console.log('\nEnter remote destination connection parameters:');
+        const remoteAnswers = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'host',
+            message: 'Remote server host / IP:',
+            default: host || process.env['REMOTE_DB_HOST'] || '',
+            validate: (v: string) => v.trim().length > 0 || 'Host is required.',
+            when: !options?.host,
+          },
+          {
+            type: 'input',
+            name: 'port',
+            message: 'PostgreSQL port:',
+            default: String(port),
+            validate: (v: string) => !isNaN(parseInt(v, 10)) || 'Invalid port.',
+            when: !options?.port,
+          },
+          {
+            type: 'input',
+            name: 'database',
+            message: 'Database name:',
+            default: database,
+            validate: (v: string) => v.trim().length > 0 || 'Database name is required.',
+            when: !options?.database,
+          },
+          {
+            type: 'input',
+            name: 'user',
+            message: 'Username (owner with DDL privileges):',
+            default: user || config.ownerUser || undefined,
+            validate: (v: string) => v.trim().length > 0 || 'User is required.',
+            when: !options?.user,
+          },
+          {
+            type: 'password',
+            name: 'password',
+            message: 'User password:',
+            mask: '*',
+            validate: (v: string) => v.length > 0 || 'Password is required.',
+            when: !options?.password,
+          },
+        ]);
 
-      host = remoteAnswers.host.trim();
-      port = parseInt(remoteAnswers.port.trim(), 10);
-      database = remoteAnswers.database.trim();
-      user = remoteAnswers.user.trim();
-      password = remoteAnswers.password;
+        host = (options?.host || remoteAnswers.host || '').trim();
+        port = options?.port || parseInt(String(remoteAnswers.port || config.port).trim(), 10);
+        database = (options?.database || remoteAnswers.database || '').trim();
+        user = (options?.user || remoteAnswers.user || '').trim();
+        password = options?.password || remoteAnswers.password;
+      }
     }
 
-    // 3. Validação prévia de conectividade
-    console.log('\n[1/2] Testando conectividade com o servidor de destino...');
+    if (!user) throw new Error('PostgreSQL user is required.');
+    if (!database) throw new Error('Database name is required.');
+
+    // 3. Test Connectivity
+    console.log(`\n[1/2] Testing connectivity to ${host}:${port}/${database}...`);
     const connTest = await testPgConnection({ host, port, database, user, password });
     if (!connTest.success) {
-      console.error(`❌ [ERRO] Não foi possível conectar ao banco de dados: ${connTest.error}`);
-      console.log('\nDica: Certifique-se de que o comando "npm run db:init" já foi executado no servidor');
-      console.log('remoto como superusuário Postgres para criar a base e o usuário "openclinic_owner".');
+      console.error(`❌ [ERROR] Could not connect to database: ${connTest.error}`);
+      console.log('\nTip: Make sure "npm run db:init" was executed on the server');
+      console.log(`as PostgreSQL superuser to provision the database and user "${user}".`);
       process.exit(1);
     }
-    console.log('  [OK] Conexão com o banco remoto estabelecida com sucesso!');
+    console.log('  [OK] Connection established successfully.');
 
-    // 4. Confirmação do Usuário
+    // 4. Confirmation
     const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
       {
         type: 'confirm',
         name: 'confirm',
-        message: `Deseja iniciar a restauração agora em "${database}" no host "${host}"?`,
+        message: `Proceed with database restoration into "${database}" on "${host}"?`,
         default: true,
       },
     ]);
 
     if (!confirm) {
-      console.log('Operação cancelada pelo usuário.');
-      process.exit(0);
+      console.log('Restoration cancelled by operator.');
+      return;
     }
 
-    // 5. Execução do Restore
-    console.log(`\n[2/2] Executando pg_restore no banco "${database}"...`);
+    // 5. Execute Restore
+    console.log(`\n[2/2] Restoring database "${database}"...`);
     const startTime = Date.now();
-
     await executePgRestore({
       host,
       port,
@@ -178,13 +237,13 @@ export async function dbRestore(): Promise<void> {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
     console.log('\n============================================================');
-    console.log('  ✅ Restauração concluída com sucesso!');
-    console.log(`  Servidor: ${host}:${port} | Base: ${database}`);
-    console.log(`  Arquivo restaurado: ${inputPath}`);
-    console.log(`  Tempo decorrido: ${elapsed}s`);
+    console.log('  ✅ Restoration completed successfully!');
+    console.log(`  Database: ${database} (${host}:${port})`);
+    console.log(`  Restored Archive: ${inputPath}`);
+    console.log(`  Elapsed: ${elapsed}s`);
     console.log('============================================================\n');
   } catch (error) {
-    console.error('\n❌ [ERRO CRÍTICO] Falha na restauração do backup:', error);
+    console.error('\n❌ [CRITICAL ERROR] Restoration failed:', error instanceof Error ? error.message : error);
     process.exit(1);
   }
 }

@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   isValidAppVersion,
   generateCompliantPassword,
+  isValidAssetUrl,
+  LOGO_ALLOWED_EXTENSIONS,
+  FAVICON_ALLOWED_EXTENSIONS,
 } from '../src/arch/pages/PlatformSettingsView.js';
 import { applyDocumentBranding } from '../src/services/api.js';
 
@@ -26,6 +29,40 @@ describe('PlatformSettings validations and security utilities', () => {
       expect(isValidAppVersion('1.0.100000')).toBe(false); // patch > 99999
       expect(isValidAppVersion('1.0.0.0')).toBe(false);
       expect(isValidAppVersion('invalid-version')).toBe(false);
+    });
+  });
+
+  describe('isValidAssetUrl (Logo & Favicon safety and format validation)', () => {
+    it('should allow empty or whitespace string (optional field)', () => {
+      expect(isValidAssetUrl('', LOGO_ALLOWED_EXTENSIONS)).toBe(true);
+      expect(isValidAssetUrl('   ', LOGO_ALLOWED_EXTENSIONS)).toBe(true);
+    });
+
+    it('should accept valid relative asset paths with supported extensions', () => {
+      expect(isValidAssetUrl('/logo.png', LOGO_ALLOWED_EXTENSIONS)).toBe(true);
+      expect(isValidAssetUrl('/assets/images/logo.svg', LOGO_ALLOWED_EXTENSIONS)).toBe(true);
+      expect(isValidAssetUrl('/favicon.ico', FAVICON_ALLOWED_EXTENSIONS)).toBe(true);
+      expect(isValidAssetUrl('/favicon.png?v=2', FAVICON_ALLOWED_EXTENSIONS)).toBe(true);
+    });
+
+    it('should accept valid HTTPS/HTTP absolute URLs with supported extensions', () => {
+      expect(isValidAssetUrl('https://cdn.example.com/brand/logo.png', LOGO_ALLOWED_EXTENSIONS)).toBe(true);
+      expect(isValidAssetUrl('https://assets.example.org/favicon.ico', FAVICON_ALLOWED_EXTENSIONS)).toBe(true);
+      expect(isValidAssetUrl('http://localhost:3000/logo.webp', LOGO_ALLOWED_EXTENSIONS)).toBe(true);
+    });
+
+    it('should reject dangerous schemes and malformed URLs', () => {
+      expect(isValidAssetUrl('javascript:alert(1)', LOGO_ALLOWED_EXTENSIONS)).toBe(false);
+      expect(isValidAssetUrl('data:image/png;base64,123', LOGO_ALLOWED_EXTENSIONS)).toBe(false);
+      expect(isValidAssetUrl('file:///C:/logo.png', LOGO_ALLOWED_EXTENSIONS)).toBe(false);
+      expect(isValidAssetUrl('ftp://example.com/logo.png', LOGO_ALLOWED_EXTENSIONS)).toBe(false);
+      expect(isValidAssetUrl('not-a-url', LOGO_ALLOWED_EXTENSIONS)).toBe(false);
+    });
+
+    it('should reject paths lacking leading slash or missing/unsupported image extension', () => {
+      expect(isValidAssetUrl('logo.png', LOGO_ALLOWED_EXTENSIONS)).toBe(false); // missing leading slash
+      expect(isValidAssetUrl('/logo.pdf', LOGO_ALLOWED_EXTENSIONS)).toBe(false); // unsupported extension
+      expect(isValidAssetUrl('/favicon.txt', FAVICON_ALLOWED_EXTENSIONS)).toBe(false); // unsupported extension
     });
   });
 
@@ -60,7 +97,7 @@ describe('PlatformSettings validations and security utilities', () => {
         documentElement: { lang: '' },
         querySelector: () => mockLink,
         createElement: () => ({ rel: '', href: '' }),
-        head: { appendChild: () => {} },
+        head: { appendChild: () => { } },
       };
 
       applyDocumentBranding('OpenClinic Title Test', '/custom-favicon.png', 'en-US');
@@ -75,11 +112,11 @@ describe('PlatformSettings validations and security utilities', () => {
 
   describe('DEFAULT_PUBLIC_CONFIG_FALLBACKS resilience', () => {
     it('should provide default values for appName, appSubtitle, appDescription, and appVersion', async () => {
-      const { DEFAULT_PUBLIC_CONFIG_FALLBACKS } = await import('../src/constants/config.constants.js');
+      const { DEFAULT_PUBLIC_CONFIG_FALLBACKS } = await import('../src/config/config.constants.js');
       expect(DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_NAME).toBe('OpenClinic');
       expect(DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_SUBTITLE).toBeTruthy();
       expect(DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_DESCRIPTION).toBeTruthy();
-      expect(DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_VERSION).toBe('1.0.0');
+      expect(DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_VERSION).toBe('0.1.0');
       expect(DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_LOGO_URL).toBe('/logo.png');
       expect(DEFAULT_PUBLIC_CONFIG_FALLBACKS.APP_FAVICON_URL).toBe('/favicon.png');
     });

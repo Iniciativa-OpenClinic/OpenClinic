@@ -1,7 +1,7 @@
 import type { IAMUnitOfWork } from '../../domain/repositories.js';
-import type { UserRole } from '../../../shared/domain/enums.js';
-import { UserRole as UserRoleEnum } from '../../../shared/domain/enums.js';
-import type { MenuItemDTO } from '../../infrastructure/database/resource.repository.js';
+import type { UserRole } from '@openclinic/core';
+import { UserRole as UserRoleEnum } from '@openclinic/core';
+import type { MenuItemDTO } from '../../domain/dtos.js';
 import { IAMPermissionService } from '../services/iam-permission.service.js';
 
 export interface GetMenuResponseDTO {
@@ -10,7 +10,7 @@ export interface GetMenuResponseDTO {
 }
 
 export class GetMenuUseCase {
-  constructor(private readonly uow: IAMUnitOfWork & { resources: any }) {}
+  constructor(private readonly uow: IAMUnitOfWork) {}
 
   async execute(role: UserRole, userId?: string): Promise<GetMenuResponseDTO> {
     if (role === UserRoleEnum.OWNER || !userId) {

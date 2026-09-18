@@ -8,7 +8,7 @@ export const swaggerOptions: FastifyDynamicSwaggerOptions = {
     info: {
       title: 'OpenClinic — Electronic Health Record (EHR) & Governance API',
       description: 'Open, modular, and auditable Electronic Health Record (EHR) and Clinical Management API with hybrid access control (RBAC + ACL), multi-tenancy, dynamic capabilities resolution, and enterprise security (Argon2id + in-memory JWT).',
-      version: '1.0.0',
+      version: process.env['npm_package_version'] ?? '0.1.0',
       contact: {
         name: 'Iniciativa OpenClinic',
         url: 'https://github.com/Iniciativa-OpenClinic/OpenClinic',
@@ -20,8 +20,12 @@ export const swaggerOptions: FastifyDynamicSwaggerOptions = {
     },
     servers: [
       {
+        url: '/',
+        description: 'Current Origin (Domain / Reverse Proxy)',
+      },
+      {
         url: 'http://localhost:3000',
-        description: 'Local Development Server',
+        description: 'Local Direct Server',
       },
     ],
     tags: [

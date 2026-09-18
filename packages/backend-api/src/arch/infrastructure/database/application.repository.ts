@@ -8,8 +8,9 @@ import type {
   UpdatePlatformApplicationDto,
   UpdateTenantApplicationConfigDto,
 } from '../../domain/application.dto.js';
+import type { IApplicationRepository } from '../../domain/repositories.js';
 
-export class ApplicationRepository {
+export class ApplicationRepository implements IApplicationRepository {
   constructor(private db: PostgresJsDatabase) {}
 
   async getDefaultApplication(): Promise<PlatformApplicationEntity | null> {

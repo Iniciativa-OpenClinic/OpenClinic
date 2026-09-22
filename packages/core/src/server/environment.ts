@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
 import fs from 'node:fs';
-import { loadSecretFiles, secretsMode, SECRETS_PROVIDER, type SecretEnvironment } from './secrets.js';
+import { loadSecretFiles, type SecretEnvironment } from './secrets.js';
 
 export interface LoadEnvironmentOptions {
   cwd?: string;
@@ -23,24 +23,22 @@ export function loadEnvironment(options: LoadEnvironmentOptions = {}): SecretEnv
     }
   };
 
-  // If strict FILE mode is active, do not load .env file
-  if (secretsMode(environment) !== SECRETS_PROVIDER.FILE) {
-    if (options.customEnvPath && fs.existsSync(options.customEnvPath)) {
-      loadFile(options.customEnvPath);
-    } else {
-      const candidates = [
-        path.resolve(cwd, '.env'),
-        path.resolve(cwd, '../.env'),
-        path.resolve(cwd, '../../.env'),
-        path.resolve(cwd, '../../../.env'),
-        path.resolve(cwd, '../../../../.env'),
-      ];
+  // Load .env for non-secret configuration variables (ports, hosts, secret names)
+  if (options.customEnvPath && fs.existsSync(options.customEnvPath)) {
+    loadFile(options.customEnvPath);
+  } else {
+    const candidates = [
+      path.resolve(cwd, '.env'),
+      path.resolve(cwd, '../.env'),
+      path.resolve(cwd, '../../.env'),
+      path.resolve(cwd, '../../../.env'),
+      path.resolve(cwd, '../../../../.env'),
+    ];
 
-      for (const p of candidates) {
-        if (fs.existsSync(p)) {
-          loadFile(p);
-          break;
-        }
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        loadFile(p);
+        break;
       }
     }
   }

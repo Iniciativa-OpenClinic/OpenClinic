@@ -11,7 +11,6 @@ export const SECRET_NAMES = Object.freeze([
 ]);
 
 export const SECRETS_PROVIDER = Object.freeze({
-  ENV: 'env',
   FILE: 'file',
   GSM: 'gsm',
   AWS: 'aws',
@@ -25,7 +24,7 @@ export const SUPPORTED_SECRETS_PROVIDERS = Object.freeze(Object.values(SECRETS_P
  * Uses SECRETS_PROVIDER as the single provider selector.
  *
  * @param {Record<string, string | undefined>} environment
- * @returns {'env' | 'file' | 'gsm' | 'aws'}
+ * @returns {'file' | 'gsm' | 'aws'}
  */
 export function secretsMode(environment = process.env) {
   const provider = environment.SECRETS_PROVIDER;
@@ -33,13 +32,16 @@ export function secretsMode(environment = process.env) {
 
   if (provider !== undefined) {
     const norm = provider.toLowerCase().trim();
+    if (norm === 'env') {
+      throw new Error('SECRETS_PROVIDER="env" is no longer supported. OpenClinic enforces a Secrets-First architecture. Use "file", "gsm", or "aws".');
+    }
     if (SUPPORTED_SECRETS_PROVIDERS.includes(norm)) {
       return norm;
     }
     throw new Error(`SECRETS_PROVIDER must be ${SUPPORTED_SECRETS_PROVIDERS.join(', ')}.`);
   }
 
-  return SECRETS_PROVIDER.ENV;
+  return SECRETS_PROVIDER.FILE;
 }
 
 /**
@@ -49,50 +51,40 @@ export function secretsMode(environment = process.env) {
  * @param {Record<string, string | undefined>} environment
  */
 export function loadSecretFiles(environment = process.env) {
-  const mode = secretsMode(environment);
+  secretsMode(environment);
   const resolved = {};
-  const fileProvider = createSecretProvider(environment);
+  const provider = createSecretProvider(environment);
 
   // 1. Resolve structured logical secrets (DB_APP_SECRET_NAME, DB_OWNER_SECRET_NAME, JWT_SECRET_NAME)
-  // When a secret provider is active (file, gsm, aws), resolve credentials from the provider.
-  if (fileProvider.name !== 'env') {
-    const appSecretName = environment.DB_APP_SECRET_NAME || 'database-secret-app';
-    try {
-      const rawApp = fileProvider.getSecret(appSecretName, environment);
-      resolved['DATABASE_URL'] = parseDatabaseSecret(rawApp, appSecretName);
-    } catch (err) {
-      if (environment.DB_APP_SECRET_NAME) throw err;
-    }
-
-    const ownerSecretName = environment.DB_OWNER_SECRET_NAME;
-    if (ownerSecretName) {
-      const rawOwner = fileProvider.getSecret(ownerSecretName, environment);
-      resolved['DATABASE_OWNER_URL'] = parseDatabaseSecret(rawOwner, ownerSecretName);
-    }
-
-    const jwtSecretName = environment.JWT_SECRET_NAME || 'jwt-secret';
-    try {
-      const rawJwt = fileProvider.getSecret(jwtSecretName, environment);
-      resolved['JWT_KEY'] = parseJwtSecret(rawJwt, jwtSecretName);
-    } catch (err) {
-      if (environment.JWT_SECRET_NAME) throw err;
-    }
-  } else {
-    // Security advisory when running with SECRETS_PROVIDER=env in production
-    if (environment.NODE_ENV === 'production') {
-      console.warn(
-        '⚠️ [SECURITY ADVISORY] SECRETS_PROVIDER=env is active in production. Plaintext credentials in environment variables may increase exposure risks. Consider using file (Docker Secrets), gsm, or aws in production.'
-      );
-    }
+  const appSecretName = environment.DB_APP_SECRET_NAME || 'database-secret-app';
+  try {
+    const rawApp = provider.getSecret(appSecretName, environment);
+    resolved['DATABASE_URL'] = parseDatabaseSecret(rawApp, appSecretName, environment);
+  } catch (err) {
+    if (environment.DB_APP_SECRET_NAME) throw err;
   }
 
-  // 2. Resolve direct ${NAME}_FILE mounts
+  const ownerSecretName = environment.DB_OWNER_SECRET_NAME;
+  if (ownerSecretName) {
+    const rawOwner = provider.getSecret(ownerSecretName, environment);
+    resolved['DATABASE_OWNER_URL'] = parseDatabaseSecret(rawOwner, ownerSecretName, environment);
+  }
+
+  const jwtSecretName = environment.JWT_SECRET_NAME || 'jwt-secret';
+  try {
+    const rawJwt = provider.getSecret(jwtSecretName, environment);
+    resolved['JWT_KEY'] = parseJwtSecret(rawJwt, jwtSecretName);
+  } catch (err) {
+    if (environment.JWT_SECRET_NAME) throw err;
+  }
+
+  // 2. Resolve direct ${NAME}_FILE mounts and enforce Secrets-First
   for (const name of SECRET_NAMES) {
     const fileKey = `${name}_FILE`;
     const filePath = environment[fileKey];
 
-    if (mode === SECRETS_PROVIDER.FILE && environment[name] !== undefined) {
-      throw new Error(`${name} must be supplied through ${fileKey} in files mode.`);
+    if (environment[name] !== undefined) {
+      throw new Error(`${name} must not be supplied in environment variables. In Secrets-First architecture, credentials must be supplied via secrets (${fileKey} or secret provider).`);
     }
 
     if (filePath === undefined) continue;

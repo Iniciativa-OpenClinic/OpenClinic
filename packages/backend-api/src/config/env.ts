@@ -19,7 +19,7 @@ const EnvSchema = z.object({
   CORS_ALLOWED_ORIGINS: z.string().default(SYSTEM_DEFAULTS.DEFAULT_CORS_ALLOWED_ORIGINS),
   NODE_ENV: z.nativeEnum(NodeEnvironment).default(NodeEnvironment.DEVELOPMENT),
   LOG_LEVEL: z.nativeEnum(LogLevel).default(SYSTEM_DEFAULTS.DEFAULT_LOG_LEVEL),
-  SECRETS_PROVIDER: z.nativeEnum(SecretsProvider).default(SecretsProvider.ENV),
+  SECRETS_PROVIDER: z.nativeEnum(SecretsProvider).default(SecretsProvider.FILE),
 });
 
 export type EnvConfig = z.infer<typeof EnvSchema>;

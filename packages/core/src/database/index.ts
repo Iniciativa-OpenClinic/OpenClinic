@@ -75,7 +75,7 @@ export function getDatabaseEnv(environment: Record<string, string | undefined> =
   let user = environment['DB_USER'];
   let password = environment['DB_PASS'];
 
-  if ((!user || !database) && environment['DATABASE_URL']) {
+  if ((!user || !database || !password) && environment['DATABASE_URL']) {
     const fallbackUrl = environment['DATABASE_URL'];
     const parsed = parseDatabaseUrl(fallbackUrl);
     host = host || parsed.host;

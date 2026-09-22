@@ -145,21 +145,12 @@ APP_PORT=3000
 NODE_ENV=development
 LOG_LEVEL=info
 
-# Provedor ativo de credenciais ('env', 'file', 'gsm', 'aws')
-SECRETS_PROVIDER=env
+# Provedor ativo de credenciais ('file', 'gsm', 'aws' — Secrets-First)
+SECRETS_PROVIDER=file
 
-# Configuração atômica do banco (quando SECRETS_PROVIDER=env)
-# DATABASE_URL é sintetizada dinamicamente em memória e NUNCA salva no .env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=openclinic
-DB_USER=openclinic_app
-DB_PASS="sua-senha-de-desenvolvimento"
-
-# Chave de assinatura JWT (mínimo de 32 caracteres)
-JWT_KEY="chave-aleatoria-criptograficamente-segura-min-32-chars"
-
-# Identificadores de secrets (para SECRETS_PROVIDER=file, gsm ou aws)
+# Identificadores de secrets (resolvidos estritamente via SECRETS_PROVIDER)
+# As configurações de conexão com o banco (host, port, database, user, password)
+# ficam totalmente encapsuladas nos arquivos JSON de credenciais.
 DB_APP_SECRET_NAME=database-secret-app
 DB_OWNER_SECRET_NAME=database-secret-owner
 JWT_SECRET_NAME=jwt-secret

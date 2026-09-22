@@ -2,11 +2,9 @@ import { readFileSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { parseDatabaseSecret, parseJwtSecret } from './parsers.js';
 
-import { resolveDatabaseUrl } from '../database/index.js';
 import {
   SecretsProvider,
   type SecretsProvider as SecretsProviderValue,
-  NodeEnvironment,
 } from '../domain/enums.js';
 
 export const SECRET_NAMES = Object.freeze([
@@ -49,13 +47,18 @@ export function secretsMode(environment: SecretEnvironment = process.env): Secre
 
   if (provider !== undefined) {
     const norm = provider.toLowerCase().trim() as SecretsProviderValue;
+    if ((norm as string) === 'env') {
+      throw new Error(
+        'SECRETS_PROVIDER="env" is no longer supported. OpenClinic enforces a Secrets-First architecture. Use "file", "gsm", or "aws".'
+      );
+    }
     if (SUPPORTED_SECRETS_PROVIDERS.includes(norm)) {
       return norm;
     }
     throw new Error(`SECRETS_PROVIDER must be ${SUPPORTED_SECRETS_PROVIDERS.join(', ')}.`);
   }
 
-  return SECRETS_PROVIDER.ENV;
+  return SECRETS_PROVIDER.FILE;
 }
 
 export class FileSecretProvider implements SecretProvider {
@@ -90,52 +93,36 @@ export class FileSecretProvider implements SecretProvider {
       throw new Error(`Invalid secret identifier: "${logicalName}".`);
     }
 
-    if (path.isAbsolute(logicalName) && existsSync(logicalName)) {
-      return logicalName;
-    }
-
-    const directCwd = path.resolve(process.cwd(), logicalName);
-    if (existsSync(directCwd) && statSync(directCwd).isFile()) {
-      return directCwd;
-    }
-
-    const directories = this.getSearchDirectories(environment);
-    const candidateFilenames = [
+    const candidateFiles = [
       logicalName,
       `${logicalName}.json`,
       `${logicalName}.txt`,
     ];
 
-    for (const dir of directories) {
-      for (const filename of candidateFilenames) {
-        const fullPath = path.resolve(dir, filename);
+    for (const dir of this.getSearchDirectories(environment)) {
+      for (const file of candidateFiles) {
+        const fullPath = path.resolve(dir, file);
         if (existsSync(fullPath)) {
-          try {
-            const stat = statSync(fullPath);
-            if (stat.isFile()) {
-              return fullPath;
-            }
-          } catch {
-            // Continue searching if stat fails
-          }
+          return fullPath;
         }
       }
     }
 
-    throw new Error(
-      `Secret file for "${logicalName}" not found. Searched candidate directories: ${directories.join(', ')}.`
-    );
+    const searchLocations = this.getSearchDirectories(environment).join(', ');
+    throw new Error(`Secret "${logicalName}" not found in search locations: ${searchLocations}.`);
   }
 
   getSecret(logicalName: string, environment: SecretEnvironment = process.env): string {
     const filePath = this.resolveSecretPath(logicalName, environment);
-
     try {
       const stat = statSync(filePath);
-      if (!stat.isFile() || stat.size > 512000) {
-        throw new Error(`Secret file "${filePath}" exceeds maximum size (500 KiB) or is not a regular file.`);
+      if (!stat.isFile()) {
+        throw new Error(`Secret path "${filePath}" is not a regular file.`);
       }
-      const content = readFileSync(filePath, 'utf8');
+      if (stat.size > 512000) {
+        throw new Error(`Secret file "${filePath}" exceeds maximum size limit of 500 KiB.`);
+      }
+      const content = readFileSync(filePath, 'utf8').replace(/\r?\n$/, '');
       if (!content.trim() || content.includes('\0')) {
         throw new Error(`Secret file "${filePath}" contains empty or invalid content.`);
       }
@@ -146,17 +133,6 @@ export class FileSecretProvider implements SecretProvider {
       }
       throw new Error(`Cannot read secret "${logicalName}" from "${filePath}".`);
     }
-  }
-}
-
-export class EnvProvider implements SecretProvider {
-  public readonly name = 'env';
-
-  getSecret(secretName: string): string {
-    throw new Error(
-      `Cannot resolve secret "${secretName}" when SECRETS_PROVIDER=env. ` +
-        'Configure direct atomic environment variables (DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME, JWT_KEY) or set SECRETS_PROVIDER=file.'
-    );
   }
 }
 
@@ -183,8 +159,6 @@ export function createSecretProvider(environment: SecretEnvironment = process.en
   const rawProvider = secretsMode(environment);
 
   switch (rawProvider) {
-    case SECRETS_PROVIDER.ENV:
-      return new EnvProvider();
     case SECRETS_PROVIDER.FILE:
       return new FileSecretProvider();
     case SECRETS_PROVIDER.GSM:
@@ -203,55 +177,38 @@ export function createSecretProvider(environment: SecretEnvironment = process.en
 export function loadSecretFiles(environment: SecretEnvironment = process.env): void {
   secretsMode(environment);
   const resolved: Record<string, string> = {};
-  const fileProvider = createSecretProvider(environment);
+  const provider = createSecretProvider(environment);
 
   // 1. Resolve structured logical secrets (DB_APP_SECRET_NAME, DB_OWNER_SECRET_NAME, JWT_SECRET_NAME)
-  if (fileProvider.name !== 'env') {
-    const appSecretName = environment['DB_APP_SECRET_NAME'] || 'database-secret-app';
-    try {
-      const rawAppSecret = fileProvider.getSecret(appSecretName, environment);
-      resolved['DATABASE_URL'] = parseDatabaseSecret(rawAppSecret, appSecretName);
-    } catch (err) {
-      if (environment['DB_APP_SECRET_NAME']) throw err;
-    }
-
-    const ownerSecretName = environment['DB_OWNER_SECRET_NAME'];
-    if (ownerSecretName) {
-      const rawOwnerSecret = fileProvider.getSecret(ownerSecretName, environment);
-      resolved['DATABASE_OWNER_URL'] = parseDatabaseSecret(rawOwnerSecret, ownerSecretName);
-    }
-
-    const jwtSecretName = environment['JWT_SECRET_NAME'] || 'jwt-secret';
-    try {
-      const rawJwtSecret = fileProvider.getSecret(jwtSecretName, environment);
-      resolved['JWT_KEY'] = parseJwtSecret(rawJwtSecret, jwtSecretName);
-    } catch (err) {
-      if (environment['JWT_SECRET_NAME']) throw err;
-    }
-  } else {
-    // In SECRETS_PROVIDER=env: DATABASE_URL is never stored in .env; synthesize dynamically from atomic variables
-    if (!environment['DATABASE_URL']) {
-      const synthesizedUrl = resolveDatabaseUrl(environment);
-      if (synthesizedUrl) {
-        resolved['DATABASE_URL'] = synthesizedUrl;
-      }
-    }
-
-    // Security advisory when running with SECRETS_PROVIDER=env in production
-    if (environment['NODE_ENV'] === NodeEnvironment.PRODUCTION) {
-      console.warn(
-        '⚠️ [SECURITY ADVISORY] SECRETS_PROVIDER=env is active in production. Plaintext credentials in environment variables may increase exposure risks. Consider using file (Docker Secrets), gsm, or aws in production.'
-      );
-    }
+  const appSecretName = environment['DB_APP_SECRET_NAME'] || 'database-secret-app';
+  try {
+    const rawAppSecret = provider.getSecret(appSecretName, environment);
+    resolved['DATABASE_URL'] = parseDatabaseSecret(rawAppSecret, appSecretName, environment);
+  } catch (err) {
+    if (environment['DB_APP_SECRET_NAME']) throw err;
   }
 
-  // 2. Resolve direct ${NAME}_FILE mounts
+  const ownerSecretName = environment['DB_OWNER_SECRET_NAME'];
+  if (ownerSecretName) {
+    const rawOwnerSecret = provider.getSecret(ownerSecretName, environment);
+    resolved['DATABASE_OWNER_URL'] = parseDatabaseSecret(rawOwnerSecret, ownerSecretName, environment);
+  }
+
+  const jwtSecretName = environment['JWT_SECRET_NAME'] || 'jwt-secret';
+  try {
+    const rawJwtSecret = provider.getSecret(jwtSecretName, environment);
+    resolved['JWT_KEY'] = parseJwtSecret(rawJwtSecret, jwtSecretName);
+  } catch (err) {
+    if (environment['JWT_SECRET_NAME']) throw err;
+  }
+
+  // 2. Resolve direct ${NAME}_FILE mounts and enforce Secrets-First
   for (const name of SECRET_NAMES) {
     const fileKey = `${name}_FILE`;
     const filePath = environment[fileKey];
 
-    if (secretsMode(environment) === SECRETS_PROVIDER.FILE && environment[name] !== undefined) {
-      throw new Error(`${name} must be supplied through ${fileKey} in files mode.`);
+    if (environment[name] !== undefined) {
+      throw new Error(`${name} must not be supplied in environment variables. In Secrets-First architecture, credentials must be supplied via secrets (${fileKey} or secret provider).`);
     }
 
     if (filePath === undefined) continue;

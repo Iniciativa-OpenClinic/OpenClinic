@@ -245,22 +245,16 @@ fi
 echo "==> Connecting to PostgreSQL as '${ADMIN_USER}' on database '${TARGET_DB}'..."
 echo "==> Applying roles and permissions securely..."
 
-psql -v ON_ERROR_STOP=1 $PSQL_CONN_ARGS --username "$ADMIN_USER" --dbname "$TARGET_DB" \
-  -v app_user="$APP_USER" \
-  -v app_pass="$APP_PASS" \
-  -v owner_user="$OWNER_USER" \
-  -v owner_pass="$OWNER_PASS" \
-  -v target_db="$TARGET_DB" \
-  -v admin_user="$ADMIN_USER" <<'EOSQL'
-DO $$
+psql -v ON_ERROR_STOP=1 $PSQL_CONN_ARGS --username "$ADMIN_USER" --dbname "$TARGET_DB" <<EOF
+DO \$roles\$
 DECLARE
   r RECORD;
-  v_app_user text := :'app_user';
-  v_app_pass text := :'app_pass';
-  v_owner_user text := :'owner_user';
-  v_owner_pass text := :'owner_pass';
-  v_target_db text := :'target_db';
-  v_admin_user text := :'admin_user';
+  v_app_user text := '$APP_USER';
+  v_app_pass text := '$APP_PASS';
+  v_owner_user text := '$OWNER_USER';
+  v_owner_pass text := '$OWNER_PASS';
+  v_target_db text := '$TARGET_DB';
+  v_admin_user text := '$ADMIN_USER';
 BEGIN
   -- 1. Ensure application role exists
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = v_app_user) THEN
@@ -303,7 +297,7 @@ BEGIN
     EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO %I', r.rolname, v_app_user);
   END LOOP;
 END
-$$;
-EOSQL
+\$roles\$;
+EOF
 
 echo "==> Permissions successfully applied for '${APP_USER}' on database '${TARGET_DB}'!"

@@ -21,8 +21,7 @@ Como uma plataforma de software de saúde clínica que gerencia Dados Pessoais S
 2. **Gerenciadores de Segredos em Nuvem (`SECRETS_PROVIDER=gsm` / `SECRETS_PROVIDER=aws`):**
    - Obtém credenciais estruturadas diretamente do Google Secret Manager ou AWS Secrets Manager utilizando os identificadores declarados em `DB_APP_SECRET_NAME`, `DB_OWNER_SECRET_NAME` e `JWT_SECRET_NAME`.
 
-3. **Modo Legado via Variáveis de Ambiente (`SECRETS_PROVIDER=env`):**
-   - Descontinuado para ambientes de produção. Emite um aviso de conformidade de segurança se configurado quando `NODE_ENV=production`.
+> 🔒 **Arquitetura Secrets-First Obrigatória:** O modo legado `SECRETS_PROVIDER=env` foi descontinuado e eliminado do OpenClinic. Nenhuma senha, hash ou chave criptográfica pode residir em variáveis de ambiente abertas (`.env`). Todos os ambientes operam estritamente com `SECRETS_PROVIDER=file`, `gsm` ou `aws`.
 
 Todas as credenciais reais neste diretório (`*.json`, `*.txt` sem `.example.`) são estritamente excluídas pelo `.gitignore`. Apenas os templates de exemplo (`*.example.json`, `*.example.txt`) são rastreados no controle de versão.
 

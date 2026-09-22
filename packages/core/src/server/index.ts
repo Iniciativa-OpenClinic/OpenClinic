@@ -12,7 +12,6 @@ export {
   type SecretEnvironment,
   type SecretProvider,
   FileSecretProvider,
-  EnvProvider,
   GsmSecretProvider,
   AwsSecretProvider,
   createSecretProvider,

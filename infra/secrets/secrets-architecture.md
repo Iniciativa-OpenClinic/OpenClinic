@@ -19,14 +19,15 @@ This module implements the unified secrets management for the architectural temp
 
 ## 2. Secrets Providers
 
-Configured via `SECRETS_PROVIDER` in `.env`:
+Configured via `SECRETS_PROVIDER` in `.env` (defaults to `file`):
 
 | Provider | Description | Resolution Strategy |
 | :--- | :--- | :--- |
-| `file` | Docker Swarm & Local Dev | Reads from `/run/secrets/<name>` in containers, or `./secrets/<name>.json` / `.txt` locally. |
-| `env` | Direct Environment | Explicit mode using direct atomic variables (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `JWT_KEY`). |
+| `file` | Docker Swarm & Local Dev (Default) | Reads from `/run/secrets/<name>` in containers, or `./secrets/<name>.json` / `.txt` locally. |
 | `gsm` | Google Cloud Secret Manager | Prepared adapter via `@google-cloud/secret-manager` (lazy-loaded). |
 | `aws` | AWS Secrets Manager | Prepared adapter via `@aws-sdk/client-secrets-manager` (lazy-loaded). |
+
+> 🔒 **Secrets-First Invariant:** The legacy `SECRETS_PROVIDER=env` has been eradicated. Raw credentials (passwords, JWT keys) must never be passed via open environment variables. Only `file`, `gsm`, and `aws` are supported.
 
 ---
 
@@ -85,5 +86,5 @@ npm test
 ```
 
 ## Configuration contract
-
-Use SECRETS_PROVIDER=file explicitly for structured secrets or mounted files. Do not set DB_PASS or JWT_KEY directly in that mode. Without an explicit provider, the runtime selects none; set the provider explicitly in deployment configuration. In file mode configured before bootstrap, .env discovery is skipped, so provide all required configuration in the process environment. Cloud adapters are placeholders until implemented and validated.
+ 
+`SECRETS_PROVIDER` defaults to `file`. Passwords, hashes, and encryption keys must never be placed in `.env`. Credentials must be supplied via structured JSON/text files (`SECRETS_DIR` or direct `*_FILE` mounts), or via cloud secret managers (`gsm`, `aws`). Legacy `SECRETS_PROVIDER=env` is rejected at bootstrap with an explicit error.

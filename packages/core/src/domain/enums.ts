@@ -162,7 +162,6 @@ export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 export type LogLevelType = LogLevel;
 
 export const SecretsProvider = {
-  ENV: 'env',
   FILE: 'file',
   GSM: 'gsm',
   AWS: 'aws',

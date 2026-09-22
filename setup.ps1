@@ -9,7 +9,8 @@ param (
     [switch]$Quickstart,
     [switch]$Demo,
     [switch]$Stop,
-    [switch]$Secrets
+    [switch]$Secrets,
+    [switch]$Help
 )
 
 $argsList = @()
@@ -17,5 +18,6 @@ if ($Quickstart) { $argsList += "--quickstart" }
 if ($Demo) { $argsList += "--demo" }
 if ($Stop) { $argsList += "--stop" }
 if ($Secrets) { $argsList += "--secrets" }
+if ($Help) { $argsList += "--help" }
 
 node "$PSScriptRoot\scripts\setup.mjs" @argsList

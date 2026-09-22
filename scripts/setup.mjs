@@ -155,11 +155,11 @@ function ensureLocalSecrets() {
         if (target.includes('jwt')) {
           writeFileSync(targetPath, 'openclinic-dev-jwt-super-secret-key-32chars');
         } else if (target.includes('owner')) {
-          writeFileSync(targetPath, JSON.stringify({ host: 'postgres', port: 5432, database: 'openclinic', user: 'postgres', password: 'openclinic_postgres_password' }, null, 2));
+          writeFileSync(targetPath, JSON.stringify({ host: 'localhost', port: 5432, database: 'openclinic', user: 'postgres', password: 'openclinic_postgres_password' }, null, 2));
         } else if (target.includes('postgres-password')) {
           writeFileSync(targetPath, 'openclinic_postgres_password');
         } else {
-          writeFileSync(targetPath, JSON.stringify({ host: 'postgres', port: 5432, database: 'openclinic', user: 'openclinic_app', password: 'openclinic_app_password' }, null, 2));
+          writeFileSync(targetPath, JSON.stringify({ host: 'localhost', port: 5432, database: 'openclinic', user: 'openclinic_app', password: 'openclinic_app_password' }, null, 2));
         }
         createdCount++;
       }
@@ -283,6 +283,19 @@ function spawnInteractive(command, args, options = {}) {
 }
 
 /**
+ * Build compose arguments with project name and root .env file
+ */
+function getComposeArgs(stackFile, actionArgs = []) {
+  const rootEnvFile = resolve(ROOT_DIR, '.env');
+  const args = ['compose', '-p', 'openclinic'];
+  if (existsSync(rootEnvFile)) {
+    args.push('--env-file', rootEnvFile);
+  }
+  args.push('-f', stackFile, ...actionArgs);
+  return args;
+}
+
+/**
  * Wait for PostgreSQL container to report healthy
  */
 async function waitForPostgresHealthy(containerName = 'openclinic-db', maxAttempts = 30) {
@@ -310,11 +323,11 @@ async function startQuickstart(rl, options = {}) {
   // Pergunta sobre usuários de teste vs superadmin
   let useDemo = options.demo;
   if (useDemo === undefined) {
-    console.log(`${C.cyan}${C.bold}Opções de Dados Iniciais do Banco de Dados:${C.reset}`);
-    console.log(`  [1] ${C.bold}Apenas Superadministrador${C.reset} (Recomendado para início limpo / produção)`);
-    console.log(`  [2] ${C.bold}Superadministrador + Usuários e Dados de Demonstração${C.reset} (Médicos, pacientes, agendamentos - Recomendado para testes/dev)`);
-    const demoAnswer = await rl.question(`\nEscolha uma opção [1 ou 2, padrão: 2]: `);
-    useDemo = demoAnswer.trim() === '1' ? false : true;
+    console.log(`${C.cyan}${C.bold}Opções de Inicialização de Usuários:${C.reset}`);
+    console.log(`  [1] ${C.bold}Equipe Completa de Colaboradores${C.reset} (Recomendado: 6 perfis para testes de RBAC: Superadmin, Admin, Diretor, Médico, Enfermeira, Atendente)`);
+    console.log(`  [2] ${C.bold}Apenas Superadministrador Limpo${C.reset} (Cria exclusivamente o usuário OWNER com CPF de teste)`);
+    const demoAnswer = await rl.question(`\nEscolha uma opção [1 ou 2, padrão: 1]: `);
+    useDemo = demoAnswer.trim() === '2' ? false : true;
   }
 
   ensureLocalSecrets();
@@ -322,7 +335,7 @@ async function startQuickstart(rl, options = {}) {
   const stackFile = resolve(STACKS_DIR, 'openclinic-db-api-webapp-local.yml');
   console.log(`\n${C.bold}Resumo da Ação:${C.reset}`);
   console.log(`  • Stack:       ${stackFile}`);
-  console.log(`  • Modo dados:  ${useDemo ? 'Superadministrador + Demonstração Completa' : 'Apenas Superadministrador'}`);
+  console.log(`  • Modo dados:  ${useDemo ? 'Equipe Completa de Colaboradores (6 perfis)' : 'Apenas Superadministrador'}`);
   console.log(`  • Endereços:   WebApp (http://localhost:80), API Docs (http://localhost:3000/docs)`);
 
   const confirm = await rl.question(`\n${C.yellow}Deseja iniciar a stack agora? [S/n]: ${C.reset}`);
@@ -332,7 +345,7 @@ async function startQuickstart(rl, options = {}) {
   }
 
   console.log(`\n${C.cyan}▶ Subindo containers com Docker Compose...${C.reset}`);
-  await spawnInteractive('docker', ['compose', '-f', stackFile, 'up', '-d', '--build']);
+  await spawnInteractive('docker', getComposeArgs(stackFile, ['up', '-d', '--build']));
 
   await waitForPostgresHealthy('openclinic-db');
 
@@ -348,8 +361,13 @@ async function startQuickstart(rl, options = {}) {
   console.log(`${C.green}${C.bold}============================================================${C.reset}\n`);
   console.log(`  🌐 ${C.bold}Frontend WebApp:${C.reset}   http://localhost (ou http://localhost:80)`);
   console.log(`  📚 ${C.bold}Swagger / OpenAPI:${C.reset} http://localhost:3000/docs`);
-  console.log(`  💓 ${C.bold}API Healthcheck:${C.reset}   http://localhost:3000/health/live`);
-  console.log(`  🔑 ${C.bold}Superadmin Inicial:${C.reset} Role OWNER (configurado no console acima)\n`);
+  console.log(`  💓 ${C.bold}API Healthcheck:${C.reset}   http://localhost:3000/health/live\n`);
+  console.log(`${C.cyan}${C.bold}🔑 Credenciais de Acesso Inicial:${C.reset}`);
+  console.log(`  • Usuário:   ${C.bold}joao.silva${C.reset}`);
+  console.log(`  • CPF:       ${C.bold}123.456.789-09${C.reset} (ou 12345678909)`);
+  console.log(`  • Senha:     ${C.bold}temp1234${C.reset}`);
+  console.log(`  • Papel:     ${C.bold}OWNER (Superadministrador)${C.reset}`);
+  console.log(`  • Dica:      ${C.dim}Na tela de login, clique no card "João Silva" para preencher instantaneamente!${C.reset}\n`);
 }
 
 /**
@@ -378,7 +396,7 @@ async function startDbOnly(rl) {
 
   if (trimmed === '2') {
     console.log(`\n${C.cyan}▶ Subindo stack operacional do PostgreSQL (openclinic-db.yml)...${C.reset}`);
-    await spawnInteractive('docker', ['compose', '-f', operationalStackFile, 'up', '-d']);
+    await spawnInteractive('docker', getComposeArgs(operationalStackFile, ['up', '-d']));
     await waitForPostgresHealthy('openclinic-db');
     console.log(`\n${C.green}✔ PostgreSQL operacional em execução.${C.reset}`);
     console.log(`Para rodar a API localmente no terminal conectando neste banco:`);
@@ -430,15 +448,15 @@ async function startDbOnly(rl) {
     POSTGRES_HOST_AUTH_METHOD: authMethod,
   };
 
-  await spawnInteractive('docker', ['compose', '-f', initStackFile, 'up', '-d'], { env: envVars });
+  await spawnInteractive('docker', getComposeArgs(initStackFile, ['up', '-d']), { env: envVars });
   await waitForPostgresHealthy('openclinic-db-init');
 
   console.log(`\n${C.green}✔ Volume persistente (openclinic_postgres_data) inicializado com sucesso!${C.reset}`);
   console.log(`${C.cyan}▶ Descartando container temporário de inicialização...${C.reset}`);
-  await spawnInteractive('docker', ['compose', '-f', initStackFile, 'down']);
+  await spawnInteractive('docker', getComposeArgs(initStackFile, ['down']));
 
   console.log(`\n${C.cyan}▶ Fase 2: Subindo stack operacional contínua (openclinic-db.yml - sem senhas no YAML)...${C.reset}`);
-  await spawnInteractive('docker', ['compose', '-f', operationalStackFile, 'up', '-d']);
+  await spawnInteractive('docker', getComposeArgs(operationalStackFile, ['up', '-d']));
   await waitForPostgresHealthy('openclinic-db');
 
   console.log(`\n${C.green}${C.bold}============================================================${C.reset}`);
@@ -462,7 +480,7 @@ async function startAppOnly(rl) {
   const confirm = await rl.question(`\n${C.yellow}Deseja iniciar a stack de aplicação? [S/n]: ${C.reset}`);
   if (confirm.trim().toLowerCase() === 'n') return;
 
-  await spawnInteractive('docker', ['compose', '-f', stackFile, 'up', '-d']);
+  await spawnInteractive('docker', getComposeArgs(stackFile, ['up', '-d']));
   console.log(`\n${C.green}✔ Stack de aplicação iniciada!${C.reset}\n`);
 }
 
@@ -478,7 +496,7 @@ async function startProdVps(rl) {
   const confirm = await rl.question(`\n${C.yellow}Deseja iniciar a stack de produção VPS? [S/n]: ${C.reset}`);
   if (confirm.trim().toLowerCase() === 'n') return;
 
-  await spawnInteractive('docker', ['compose', '-f', stackFile, 'up', '-d']);
+  await spawnInteractive('docker', getComposeArgs(stackFile, ['up', '-d']));
   console.log(`\n${C.green}✔ Stack de produção VPS iniciada!${C.reset}\n`);
 }
 
@@ -521,11 +539,151 @@ async function stopStacks(rl) {
     const filePath = resolve(STACKS_DIR, stack);
     if (existsSync(filePath)) {
       console.log(`\n${C.cyan}Parando stack: ${stack}...${C.reset}`);
-      await spawnInteractive('docker', ['compose', '-f', filePath, ...extraArgs]);
+      await spawnInteractive('docker', getComposeArgs(filePath, extraArgs));
     }
   }
 
   console.log(`\n${C.green}✔ Operação concluída com sucesso!${C.reset}\n`);
+}
+
+const DOCS_LIST = [
+  {
+    num: '1',
+    icon: '🏛️ ',
+    title: 'Visão Geral da Arquitetura do Sistema',
+    file: 'docs/architecture.md',
+    desc: 'Monolito modular, separação canônica ARCH vs BUSINESS, monorepo e pacotes.',
+  },
+  {
+    num: '2',
+    icon: '🐳',
+    title: 'Manual de Instalação Docker & Stacks',
+    file: 'docs/docker-installation-guide.md',
+    desc: 'Guia passo a passo de deploy local e produção com Docker Compose e Swarm.',
+  },
+  {
+    num: '3',
+    icon: '🐘',
+    title: 'Banco de Dados, Migrações & Separação DDL/DML',
+    file: 'infra/database/README.md',
+    desc: 'Estratégia de migrations, isolamento de privilégios (owner vs app) e CLI.',
+  },
+  {
+    num: '4',
+    icon: '🔐',
+    title: 'Segurança, Autenticação, IAM & RBAC',
+    file: 'docs/iam-rbac-acl-backend-architecture.md',
+    desc: 'Argon2id, JWT secrets, RBAC Guards, controle de acesso e auditoria LGPD.',
+  },
+  {
+    num: '5',
+    icon: '💻',
+    title: 'Guia de Desenvolvimento Local no Host',
+    file: 'docs/DEVELOPMENT_README.md',
+    desc: 'Como executar a API (Fastify) e o WebApp (React 19) no host com hot-reload.',
+  },
+  {
+    num: '6',
+    icon: '📖',
+    title: 'Visão Geral do Repositório & Apresentação',
+    file: 'README.md',
+    desc: 'Apresentação geral, governança, roadmap e contribuições comunitárias.',
+  },
+];
+
+function openDocument(relativePath) {
+  const fullPath = resolve(ROOT_DIR, relativePath);
+  console.log(`\n  ${C.green}✔ Abrindo arquivo:${C.reset} ${C.bold}${relativePath}${C.reset}`);
+  console.log(`  ${C.dim}Caminho local: ${fullPath}${C.reset}\n`);
+
+  try {
+    if (process.platform === 'win32') {
+      execSync(`start "" "${fullPath}"`, { shell: 'cmd.exe', stdio: 'ignore' });
+    } else if (process.platform === 'darwin') {
+      execSync(`open "${fullPath}"`, { stdio: 'ignore' });
+    } else {
+      execSync(`xdg-open "${fullPath}"`, { stdio: 'ignore' });
+    }
+  } catch {
+    // Continua caso não haja aplicativo GUI associado no terminal
+  }
+}
+
+/**
+ * Display interactive Architecture & Setup Guide with links to docs
+ */
+async function showHelpGuide(rl = null) {
+  console.log(`\n${C.cyan}${C.bold}============================================================${C.reset}`);
+  console.log(`${C.cyan}${C.bold}  📖 GUIA DE AJUDA, STACKS & DOCUMENTAÇÃO DE ARQUITETURA   ${C.reset}`);
+  console.log(`${C.cyan}${C.bold}============================================================${C.reset}\n`);
+
+  console.log(`${C.bold}🎯 FINALIDADE DE CADA OPÇÃO DO MENU:${C.reset}\n`);
+
+  console.log(`  ${C.bold}[1] 🚀  Quickstart Local Completo${C.reset}`);
+  console.log(`      • ${C.cyan}Para quem é:${C.reset} Desenvolvedores iniciando no projeto ou testando a plataforma.`);
+  console.log(`      • ${C.cyan}O que faz:${C.reset} Sobe Postgres 17, compila e roda a API e o WebApp, e executa`);
+  console.log(`        o setup automático de migrações e criação do superadministrador inicial.`);
+  console.log(`      • ${C.cyan}Stack Docker:${C.reset} infra/docker/stacks/openclinic-db-api-webapp-local.yml`);
+  console.log(`      • ${C.cyan}Portas no host:${C.reset} WebApp (80), API Docs (3000), Postgres (5432 ou DB_PORT configurada)\n`);
+
+  console.log(`  ${C.bold}[2] 🛡️   Subir Produção VPS Standalone${C.reset}`);
+  console.log(`      • ${C.cyan}Para quem é:${C.reset} Deploy em servidor VPS ou máquina dedicada de produção/staging.`);
+  console.log(`      • ${C.cyan}O que faz:${C.reset} Inicializa a stack de produção com Traefik (proxy reverso com`);
+  console.log(`        suporte a Let's Encrypt / SSL automático), API e WebApp.`);
+  console.log(`      • ${C.cyan}Stack Docker:${C.reset} infra/docker/stacks/openclinic-db-api-webapp.yml`);
+  console.log(`      • ${C.cyan}Portas no host:${C.reset} 80 (HTTP) e 443 (HTTPS gerido pelo Traefik)\n`);
+
+  console.log(`  ${C.bold}[3] 🐘  Subir Apenas Banco de Dados${C.reset}`);
+  console.log(`      • ${C.cyan}Para quem é:${C.reset} Desenvolvedores que preferem rodar API e WebApp no host`);
+  console.log(`        ('npm run dev:api' e 'npm run dev:webapp') com hot-reload rápido no terminal.`);
+  console.log(`      • ${C.cyan}O que faz:${C.reset} Inicializa apenas o PostgreSQL 17 isolado em container.`);
+  console.log(`        Suporta bootstrap em duas fases (init temporário + stack operacional sem senhas no YAML).`);
+  console.log(`      • ${C.cyan}Stacks Docker:${C.reset} infra/docker/stacks/openclinic-db-init.yml / openclinic-db.yml\n`);
+
+  console.log(`  ${C.bold}[4] 🌐  Subir Apenas Aplicação${C.reset}`);
+  console.log(`      • ${C.cyan}Para quem é:${C.reset} Ambientes onde o banco PostgreSQL já existe externamente`);
+  console.log(`        (ex.: AWS RDS, Supabase, cluster gerenciado, ou container existente no host).`);
+  console.log(`      • ${C.cyan}O que faz:${C.reset} Sobe apenas os containers de API e WebApp conectando ao banco`);
+  console.log(`        indicado no arquivo .env ou nos segredos.`);
+  console.log(`      • ${C.cyan}Stack Docker:${C.reset} infra/docker/stacks/openclinic-api-webapp.yml\n`);
+
+  console.log(`  ${C.bold}[5] 🔐  Gerador de Comandos de Secrets para Docker Swarm / VPS${C.reset}`);
+  console.log(`      • ${C.cyan}Para quem é:${C.reset} Administradores provisionando infraestrutura Swarm ou VPS corporativa.`);
+  console.log(`      • ${C.cyan}O que faz:${C.reset} Gera comandos 'docker secret create' criptograficamente seguros`);
+  console.log(`        para os 4 segredos canônicos (app, owner, postgres-password e jwt-secret).\n`);
+
+  console.log(`  ${C.bold}[6] 🛑  Parar Containers / Limpar Stacks${C.reset}`);
+  console.log(`      • ${C.cyan}O que faz:${C.reset} Para todos os containers do OpenClinic e libera portas no host de forma limpa.`);
+  console.log(`        Permite opcionalmente limpar volumes persistentes caso deseje um reset total.\n`);
+
+  while (true) {
+    console.log(`${C.cyan}${C.bold}------------------------------------------------------------${C.reset}`);
+    console.log(`${C.bold}📚 DOCUMENTAÇÃO DETALHADA (Digite o número para abrir o arquivo):${C.reset}`);
+    console.log(`${C.cyan}${C.bold}------------------------------------------------------------${C.reset}`);
+    for (const doc of DOCS_LIST) {
+      console.log(`  [${doc.num}] ${doc.icon}  ${C.bold}${doc.title}${C.reset}`);
+      console.log(`      ${C.cyan}Arquivo:${C.reset} ${doc.file}`);
+      console.log(`      ${C.dim}${doc.desc}${C.reset}\n`);
+    }
+    console.log(`  [0] ↩️   ${C.bold}Voltar ao Menu Principal${C.reset}\n`);
+
+    if (!rl) return;
+
+    const answer = await rl.question(`Digite o número do documento para abrir [1-${DOCS_LIST.length}, ou 0 para voltar]: `);
+    const trimmed = answer.trim();
+
+    if (trimmed === '0' || trimmed === '') {
+      console.log('');
+      return;
+    }
+
+    const selectedDoc = DOCS_LIST.find((d) => d.num === trimmed);
+    if (selectedDoc) {
+      openDocument(selectedDoc.file);
+    } else {
+      console.log(`\n${C.yellow}Opção inválida. Digite de 1 a ${DOCS_LIST.length} ou 0 para voltar.${C.reset}\n`);
+    }
+  }
 }
 
 /**
@@ -540,13 +698,7 @@ async function main() {
 
   try {
     if (args.includes('--help') || args.includes('-h')) {
-      console.log(`Uso: npm run setup [opções]`);
-      console.log(`Opções:`);
-      console.log(`  --quickstart    Inicializa diretamente a stack completa local`);
-      console.log(`  --demo          Inclui dados de demonstração no quickstart`);
-      console.log(`  --secrets       Exibe comandos de criação de secrets para o Swarm`);
-      console.log(`  --stop          Finaliza os containers em execução`);
-      console.log(`  --help          Exibe esta ajuda\n`);
+      await showHelpGuide(null);
       return;
     }
 
@@ -568,15 +720,16 @@ async function main() {
     // Interactive Menu
     while (true) {
       console.log(`${C.bold}Selecione a ação desejada:${C.reset}`);
-      console.log(`  [1] 🚀 ${C.bold}Quickstart Local Completo${C.reset} (Postgres + API + WebApp + Setup do Banco)`);
-      console.log(`  [2] 🛡️ ${C.bold}Subir Produção VPS Standalone${C.reset} (openclinic-db-api-webapp.yml com Traefik)`);
-      console.log(`  [3] 🐘 ${C.bold}Subir Apenas Banco de Dados${C.reset} (PostgreSQL isolado para dev no host)`);
-      console.log(`  [4] 🌐 ${C.bold}Subir Apenas Aplicação${C.reset} (API + WebApp conectando a banco externo)`);
-      console.log(`  [5] 🔐 ${C.bold}Gerador de Comandos de Secrets para Docker Swarm / VPS${C.reset}`);
-      console.log(`  [6] 🛑 ${C.bold}Parar Containers / Limpar Stacks${C.reset}`);
-      console.log(`  [0] 🚪 ${C.dim}Sair${C.reset}\n`);
+      console.log(`  [1] 🚀  ${C.bold}Quickstart Local Completo${C.reset} (Postgres + API + WebApp + Setup do Banco)`);
+      console.log(`  [2] 🛡️   ${C.bold}Subir Produção VPS Standalone${C.reset} (openclinic-db-api-webapp.yml com Traefik)`);
+      console.log(`  [3] 🐘  ${C.bold}Subir Apenas Banco de Dados${C.reset} (PostgreSQL isolado para dev no host)`);
+      console.log(`  [4] 🌐  ${C.bold}Subir Apenas Aplicação${C.reset} (API + WebApp conectando a banco externo)`);
+      console.log(`  [5] 🔐  ${C.bold}Gerador de Comandos de Secrets para Docker Swarm / VPS${C.reset}`);
+      console.log(`  [6] 🛑  ${C.bold}Parar Containers / Limpar Stacks${C.reset}`);
+      console.log(`  [7] 📖  ${C.bold}Guia de Ajuda & Documentação de Arquitetura${C.reset}`);
+      console.log(`  [0] 🚪  ${C.dim}Sair${C.reset}\n`);
 
-      const option = await rl.question(`Digite o número da opção desejada [0-6]: `);
+      const option = await rl.question(`Digite o número da opção desejada [0-7]: `);
 
       switch (option.trim()) {
         case '1':
@@ -596,6 +749,9 @@ async function main() {
           break;
         case '6':
           await stopStacks(rl);
+          break;
+        case '7':
+          await showHelpGuide(rl);
           break;
         case '0':
           console.log(`Até logo!\n`);

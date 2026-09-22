@@ -108,40 +108,34 @@ Copy-Item .env.example .env
 copy .env.example .env
 ```
 
-### Detalhamento das Variáveis do `.env` & Arquitetura de Secrets
+### Detalhamento das Variáveis do `.env` & Arquitetura Secrets-First
 
-O OpenClinic adota uma arquitetura agnóstica de **Secrets Provider** com estrita observância ao Princípio do Menor Privilégio (**PoLP**):
+O OpenClinic adota uma arquitetura estritamente **Secrets-First** baseada no **Provider Pattern** e com observância rigorosa ao Princípio do Menor Privilégio (**PoLP**).
+
+> 💡 **Importante:** Todas as configurações de conexão com o banco de dados (`host`, `port`, `database`, `user` e `password`) ficam encapsuladas nos arquivos de secrets (`.json`) em `./secrets/` (ou `/run/secrets/`). Portanto, elas **não precisam e não devem estar no `.env`**.
 
 ```env
 # ============================================================
-# 🐘 1. CONFIGURAÇÃO DIRETA ATÔMICA (SECRETS_PROVIDER=env)
+# 🔐 1. ARQUITETURA SECRETS-FIRST (Provider Pattern)
 # ============================================================
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=openclinic
-DB_USER=openclinic_app
-DB_PASS="sua-senha-de-desenvolvimento"
+# Provedor ativo: 'file' (Docker Secrets / montagem de arquivos), 'gsm' (GCP) ou 'aws' (AWS)
+SECRETS_PROVIDER=file
 
-# Chave criptográfica de assinatura dos tokens JWT (mínimo de 32 caracteres)
-JWT_KEY="gere-uma-chave-aleatoria-criptograficamente-segura-min-32-chars"
-
-# ============================================================
-# 🔐 2. ARQUITETURA DE PROVEDOR DE SECRETS (Provider Pattern)
-# ============================================================
-# Provedor ativo: 'env', 'file', 'gsm' (Google Secret Manager) ou 'aws' (AWS Secrets Manager)
-SECRETS_PROVIDER=env
-
-# Identificadores lógicos de secrets (resolvidos em 'file', 'gsm' ou 'aws'):
-DB_APP_SECRET_NAME=database-secret-app
-DB_OWNER_SECRET_NAME=database-secret-owner
-JWT_SECRET_NAME=jwt-secret
+# Identificadores lógicos de secrets (resolvidos estritamente via SECRETS_PROVIDER):
+# As credenciais completas de conexão (host, port, database, user, password)
+# residem de forma estruturada e segura dentro dos respectivos arquivos JSON.
+DB_APP_SECRET_NAME=openclinic-dev-app-postgres-credentials
+DB_OWNER_SECRET_NAME=openclinic-dev-owner-postgres-credentials
+JWT_SECRET_NAME=openclinic-dev-jwt-secret
 SECRETS_DIR=./secrets
 
 # ============================================================
-# 🌐 3. PARÂMETROS DO SERVIDOR HTTP (API)
+# 🌐 2. PARÂMETROS DO SERVIDOR HTTP (API) & WEBAPP
 # ============================================================
 APP_HOST=0.0.0.0
 APP_PORT=3000
+WEBAPP_PORT=80
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80,http://localhost
 NODE_ENV=development
 LOG_LEVEL=info
 ```

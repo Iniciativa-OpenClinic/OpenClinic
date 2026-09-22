@@ -8,10 +8,12 @@ export const BOOTSTRAP_DEFAULTS = {
   DEV_DEFAULT_PASSWORD: 'temp1234',
 
   // Default Owner (UserRole.OWNER)
-  DEFAULT_OWNER_USERNAME: 'superadmin',
-  DEFAULT_OWNER_EMAIL: 'superadmin@acme.com',
-  DEFAULT_OWNER_FULL_NAME: 'Superadministrator',
-  DEFAULT_OWNER_JOB_TITLE: 'Platform Administrator',
+  DEFAULT_OWNER_USERNAME: 'joao.silva',
+  DEFAULT_OWNER_EMAIL: 'joao@clinica.com.br',
+  DEFAULT_OWNER_CPF: '12345678909',
+  DEFAULT_OWNER_CPF_FORMATTED: '123.456.789-09',
+  DEFAULT_OWNER_FULL_NAME: 'João Silva',
+  DEFAULT_OWNER_JOB_TITLE: 'Superadministrador / Proprietário',
 
   // Default Admin (UserRole.ADMIN)
   DEFAULT_ADMIN_USERNAME: 'admin',

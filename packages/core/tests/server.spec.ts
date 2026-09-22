@@ -55,13 +55,18 @@ describe('@openclinic/core/server', () => {
   });
 
   describe('secretsMode', () => {
-    it('returns env by default when no provider specified', () => {
-      expect(secretsMode({})).toBe('env');
+    it('returns file by default when no provider specified', () => {
+      expect(secretsMode({})).toBe('file');
     });
 
     it('normalizes SECRETS_PROVIDER', () => {
       expect(secretsMode({ SECRETS_PROVIDER: 'FILE' })).toBe('file');
-      expect(secretsMode({ SECRETS_PROVIDER: 'env' })).toBe('env');
+      expect(secretsMode({ SECRETS_PROVIDER: 'GSM' })).toBe('gsm');
+      expect(secretsMode({ SECRETS_PROVIDER: 'AWS' })).toBe('aws');
+    });
+
+    it('rejects legacy SECRETS_PROVIDER=env', () => {
+      expect(() => secretsMode({ SECRETS_PROVIDER: 'env' })).toThrow(/SECRETS_PROVIDER="env" is no longer supported/);
     });
 
     it('rejects obsolete provider selectors', () => {
@@ -74,19 +79,11 @@ describe('@openclinic/core/server', () => {
   });
 
   describe('loadSecretFiles', () => {
-    it('preserves existing env and synthesizes DATABASE_URL when SECRETS_PROVIDER is env', () => {
+    it('rejects plaintext secrets in environment variables per Secrets-First architecture', () => {
       const env: SecretEnvironment = {
-        JWT_KEY: 'test-key-value',
-        SECRETS_PROVIDER: 'env',
-        DB_HOST: '127.0.0.1',
-        DB_PORT: '5432',
-        DB_NAME: 'openclinic_test',
-        DB_USER: 'app_user',
-        DB_PASS: 'app_pass',
+        DB_PASS: 'plaintext_password',
       };
-      loadSecretFiles(env);
-      expect(env.JWT_KEY).toBe('test-key-value');
-      expect(env['DATABASE_URL']).toBe('postgresql://app_user:app_pass@127.0.0.1:5432/openclinic_test');
+      expect(() => loadSecretFiles(env)).toThrow(/must not be supplied in environment variables/);
     });
 
     it('resolves database and jwt secrets via custom secret names in file mode', () => {
@@ -124,7 +121,7 @@ describe('@openclinic/core/server', () => {
       const key = 'TEMPLATE_ENV_ISOLATION_TEST';
       const previous = process.env[key];
       try {
-        writeFileSync(file, key + '=synthetic\nSECRETS_PROVIDER=env\n');
+        writeFileSync(file, key + '=synthetic\nSECRETS_PROVIDER=file\n');
         const environment: Record<string, string | undefined> = {};
         const result = loadEnvironment({ environment, customEnvPath: file });
         expect(result[key]).toBe('synthetic');

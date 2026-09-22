@@ -19,7 +19,7 @@ export interface UserCreateAdminOptions {
   password?: string;
 }
 
-export async function ensureDefaultSuperAdmin(customDbUrl?: string): Promise<{ created: boolean; username: string }> {
+export async function ensureDefaultSuperAdmin(customDbUrl?: string): Promise<{ created: boolean; username: string; cpf: string }> {
   const config = getDatabaseConfig();
   const sql = customDbUrl
     ? postgres(customDbUrl)
@@ -33,13 +33,31 @@ export async function ensureDefaultSuperAdmin(customDbUrl?: string): Promise<{ c
 
   try {
     const [existingOwner] = await sql`
-      SELECT id, username FROM iam_users
+      SELECT id, username, cpf FROM iam_users
       WHERE role = ${UserRole.OWNER} AND deleted_at IS NULL
       LIMIT 1
     `;
 
+    const defaultCpf = BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_CPF;
+    const defaultUsername = BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_USERNAME;
+    const defaultEmail = BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_EMAIL;
+
     if (existingOwner) {
-      return { created: false, username: existingOwner.username };
+      if (!existingOwner.cpf || existingOwner.username === 'superadmin') {
+        await sql`
+          UPDATE iam_users
+          SET cpf = COALESCE(cpf, ${defaultCpf}),
+              username = CASE WHEN username = 'superadmin' THEN ${defaultUsername} ELSE username END,
+              email = CASE WHEN email = 'superadmin@acme.com' THEN ${defaultEmail} ELSE email END
+          WHERE id = ${existingOwner.id}
+        `;
+        return {
+          created: false,
+          username: existingOwner.username === 'superadmin' ? defaultUsername : existingOwner.username,
+          cpf: defaultCpf,
+        };
+      }
+      return { created: false, username: existingOwner.username, cpf: existingOwner.cpf };
     }
 
     const [defaultTenant] = await sql`
@@ -48,8 +66,8 @@ export async function ensureDefaultSuperAdmin(customDbUrl?: string): Promise<{ c
       LIMIT 1
     `;
 
-    const username = BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_USERNAME;
-    const email = BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_EMAIL;
+    const username = defaultUsername;
+    const email = defaultEmail;
     const fullName = BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_FULL_NAME;
     const defaultPassword = process.env['DEFAULT_ADMIN_PASSWORD'] ?? BOOTSTRAP_DEFAULTS.DEV_DEFAULT_PASSWORD;
     const hashedPassword = await hashPassword(defaultPassword);
@@ -58,13 +76,13 @@ export async function ensureDefaultSuperAdmin(customDbUrl?: string): Promise<{ c
     const [user] = await sql`
       INSERT INTO iam_users (
         id, email, username, full_name, display_name, hashed_password,
-        role, is_active, is_tenant_owner, job_title, tenant_id
+        role, is_active, is_tenant_owner, job_title, tenant_id, cpf
       )
       VALUES (
         ${userId}, ${email}, ${username}, ${fullName}, ${fullName}, ${hashedPassword},
-        ${UserRole.OWNER}, true, true, ${BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_JOB_TITLE}, ${defaultTenant?.id ?? null}
+        ${UserRole.OWNER}, true, true, ${BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_JOB_TITLE}, ${defaultTenant?.id ?? null}, ${defaultCpf}
       )
-      RETURNING id, email, username
+      RETURNING id, email, username, cpf
     `;
 
     if (user?.id) {
@@ -96,7 +114,7 @@ export async function ensureDefaultSuperAdmin(customDbUrl?: string): Promise<{ c
       `;
     }
 
-    return { created: true, username: user.username };
+    return { created: true, username: user.username, cpf: user.cpf };
   } finally {
     await sql.end();
   }
@@ -158,16 +176,17 @@ export async function userCreateAdmin(options: UserCreateAdminOptions = {}): Pro
     const hashedPassword = await hashPassword(password!);
     const userId = randomUUID();
 
+    const defaultCpf = BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_CPF;
     const [user] = await sql`
       INSERT INTO iam_users (
         id, email, username, full_name, display_name, hashed_password,
-        role, is_active, is_tenant_owner, job_title, tenant_id
+        role, is_active, is_tenant_owner, job_title, tenant_id, cpf
       )
       VALUES (
         ${userId}, ${email!.trim().toLowerCase()}, ${username!.trim()}, ${fullName!.trim()}, ${fullName!.trim()},
-        ${hashedPassword}, ${UserRole.OWNER}, true, true, ${BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_JOB_TITLE}, ${defaultTenant?.id ?? null}
+        ${hashedPassword}, ${UserRole.OWNER}, true, true, ${BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_JOB_TITLE}, ${defaultTenant?.id ?? null}, ${defaultCpf}
       )
-      RETURNING id, email, username
+      RETURNING id, email, username, cpf
     `;
 
     if (user?.id) {
@@ -204,6 +223,7 @@ export async function userCreateAdmin(options: UserCreateAdminOptions = {}): Pro
     console.log('  ID:', user?.id);
     console.log('  Email:', user?.email);
     console.log('  Username:', user?.username);
+    console.log('  CPF:', BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_CPF_FORMATTED);
     console.log(`  Role: ${UserRole.OWNER}`);
   } catch (error) {
     console.error('Failed to create admin:', error);

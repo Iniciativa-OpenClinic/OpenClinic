@@ -26,8 +26,8 @@ export function parseDatabaseSecret(
       return validateAndNormalizePgUrl(parsed.url, secretIdentifier);
     }
 
-    const host = (parsed.host as string) || environment?.['DB_HOST'] || 'localhost';
-    const port = parsed.port ? String(parsed.port) : environment?.['DB_PORT'] || '5432';
+    const host = environment?.['DB_HOST'] || (parsed.host as string) || 'localhost';
+    const port = environment?.['DB_PORT'] || (parsed.port ? String(parsed.port) : '5432');
     const database = (parsed.database as string) || (parsed.db as string) || environment?.['DB_NAME'];
     const user = (parsed.user as string) || (parsed.username as string);
     const pass = parsed.password !== undefined ? (parsed.password as string) : (parsed.pass as string);

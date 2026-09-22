@@ -6,7 +6,7 @@
  * @param {string} secretIdentifier
  * @returns {string} Fully encoded postgresql:// connection URL
  */
-export function parseDatabaseSecret(rawContent, secretIdentifier = 'database') {
+export function parseDatabaseSecret(rawContent, secretIdentifier = 'database', environment = process.env) {
   if (typeof rawContent !== 'string' || !rawContent.trim()) {
     throw new Error(`Database secret "${secretIdentifier}" is empty.`);
   }
@@ -26,8 +26,8 @@ export function parseDatabaseSecret(rawContent, secretIdentifier = 'database') {
       return validateAndNormalizePgUrl(parsed.url, secretIdentifier);
     }
 
-    const host = parsed.host || 'localhost';
-    const port = parsed.port ? String(parsed.port) : '5432';
+    const host = environment?.DB_HOST || parsed.host || 'localhost';
+    const port = environment?.DB_PORT || (parsed.port ? String(parsed.port) : '5432');
     const database = parsed.database || parsed.db;
     const user = parsed.user || parsed.username;
     const pass = parsed.password !== undefined ? parsed.password : parsed.pass;

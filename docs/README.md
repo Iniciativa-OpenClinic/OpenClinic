@@ -48,7 +48,7 @@ Bem-vindo à documentação oficial do projeto **OpenClinic**. Este repositório
 
 ### 7. 🔐 Credenciais, Secrets & Variáveis de Ambiente
 
-- [**Arquitetura de Secrets & Credenciais**](../secrets/README.md): Especificação dos provedores agnósticos suportados (`env`, `file`, `gsm`, `aws`), isolamento de roles (PoLP: `openclinic_owner` DDL vs `openclinic_app` DML), síntese dinâmica de `DATABASE_URL` em memória e padrão de arquivos `.credentials.json`.
+- [**Arquitetura de Secrets & Credenciais**](../secrets/README.md): Especificação dos provedores agnósticos suportados (`env`, `file`, `gsm`, `aws`), isolamento de roles (PoLP: `openclinic_owner` DDL vs `openclinic_app` DML), síntese dinâmica de `DATABASE_URL` em memória e padrão de arquivos de segredos (`.json` e `.txt`).
 - [**Arquivo de Configuração de Ambiente (.env.example)**](../.env.example): Template oficial com variáveis atômicas e identificadores lógicos de secrets para desenvolvimento e produção.
 
 ### 8. 📋 Auditorias e Conformidade

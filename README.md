@@ -149,19 +149,45 @@ npm run dev:webapp
 
 ## 🐳 Execução com Docker & Compose
 
-Você pode subir a stack completa (**Banco PostgreSQL 17**, **Backend API Fastify** e **Frontend Webapp React/Nginx**) com um único comando:
+Você pode subir a stack completa (**Banco PostgreSQL 17**, **Backend API Fastify** e **Frontend Webapp React/Nginx**) de forma imediata:
 
 ```bash
-docker compose up --build -d
+# Opção 1: Assistente interativo do projeto (Recomendado)
+npm run setup
+# Ou diretamente pelo terminal: .\setup.ps1 (Windows) ou ./setup.sh (Linux/macOS)
+
+# Opção 2: Execução direta da Stack Unificada Local (Build a partir do código-fonte)
+docker compose -f infra/docker/stacks/openclinic-db-api-webapp-local.yml up --build -d
 ```
+
+> 📖 **Documentação e Guias Oficiais de Infraestrutura:**
+>
+> - [**Catálogo Arquitetural das Stacks Docker**](./infra/docker/stacks/README.md): Matriz de decisão entre as 5 stacks (Desenvolvimento Local, VPS Única de Produção com Traefik/SSL e Clusters Desacoplados Swarm/Portainer), convenções de portas e gestão de secrets.
+> - [**Manual de Instalação e Operação via Docker**](./docs/docker-installation-guide.md): Guia passo a passo com fluxo de onboarding, migrações, scripts de seed e topologias de produção.
+
+### URLs de Acesso Local
 
 | Serviço | URL | Descrição |
 | :--- | :--- | :--- |
-| **Frontend Webapp** | [`http://localhost`](http://localhost) | Interface Web servida via Nginx reverso |
+| **Frontend Webapp** | [`http://localhost`](http://localhost) | Interface Web servida via Nginx reverso (porta 80) |
 | **Backend REST API** | [`http://localhost:3000`](http://localhost:3000) | API REST Fastify 5.x |
 | **Swagger UI** | [`http://localhost:3000/docs`](http://localhost:3000/docs) | Documentação interativa OpenAPI 3.0/3.1 |
+| **Health Check** | [`http://localhost:3000/health/live`](http://localhost:3000/health/live) | Verificação de integridade dos serviços |
+| **PostgreSQL Local** | `localhost:5432` | Banco acessível diretamente para ferramentas (DBeaver, psql) |
 
-> 📖 Para instruções aprofundadas sobre variáveis, volumes e deploy em produção, veja o [Manual de Instalação via Docker](./docs/docker-installation-guide.md).
+### Comandos Úteis do Compose
+
+```bash
+# Visualizar logs da stack local
+docker compose -f infra/docker/stacks/openclinic-db-api-webapp-local.yml logs -f
+
+# Parar os serviços locais
+docker compose -f infra/docker/stacks/openclinic-db-api-webapp-local.yml down
+
+# Estado e atualização incremental do banco
+npm run db:status
+npm run db:migrate
+```
 
 ---
 

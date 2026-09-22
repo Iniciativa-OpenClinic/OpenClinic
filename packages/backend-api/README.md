@@ -169,7 +169,7 @@ SECRETS_DIR=./secrets
 > 🛡️ **Invariantes P0**:
 >
 > - **Princípio do Menor Privilégio (PoLP)**: A API executa estritamente sob a role `openclinic_app` (DML). Migrações estruturais (DDL) exigem a role `openclinic_owner` via CLI/migration runner.
-> - **Zero Raw Secrets no Git**: Arquivos `.credentials.json` são ignorados no Git.
+> - **Zero Raw Secrets no Git**: Arquivos de segredos reais (`*.json`, `*.txt`) são ignorados no Git.
 > - Consulte o [**Guia de Secrets**](../../secrets/README.md) para detalhes completos de configuração em modo `file` e orquestração.
 
 ---

@@ -1,0 +1,84 @@
+# =============================================================================
+# 🐘 OPENCLINIC - DECOUPLED STATEFUL DATABASE STACK (POSTGRESQL)
+# =============================================================================
+# File: infra/docker/stacks/openclinic-db.yml
+# Purpose: Isolated stateful persistence layer. Decoupled lifecycle from the
+#          application for production or staging environments.
+# Lifecycle: Operational runtime (Phase 2). Operates over persistent volume
+#            initialized during bootstrap (openclinic-db-init.yml).
+# Security: Secrets-First Architecture (LGPD / HIPAA compliance):
+#           - Superuser password is read securely via POSTGRES_PASSWORD_FILE
+#             from mounted Docker Secret (/run/secrets/postgres_password).
+#           - Zero plaintext passwords in environment variables.
+#           - In production, port 5432 is NOT exposed to the host/public network.
+#             Application services connect strictly through the private overlay.
+# Network: postgres_network (Overlay in Swarm / Bridge in Compose with attachable)
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: openclinic-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-openclinic}
+      POSTGRES_USER: ${DB_USER:-${POSTGRES_USER:-postgres}}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    secrets:
+      - source: postgres_password
+        target: postgres_password
+        mode: 0400
+    volumes:
+      - openclinic_postgres_data:/var/lib/postgresql/data
+    networks:
+      postgres_network:
+        aliases:
+          - openclinic-db
+          - postgres
+    # Note: DB_HOST is consumed by client applications (api), not by the postgres engine itself.
+    # PostgreSQL listens on 0.0.0.0:5432 inside postgres_network under aliases 'postgres' and 'openclinic-db'.
+    # In production Swarm, database access is strictly internal via postgres_network.
+    # Uncomment the ports block only if you are debugging PostgreSQL locally on the host.
+    # ports:
+    #   - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-${POSTGRES_USER:-postgres}} -d ${DB_NAME:-openclinic}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "2.0"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
+
+networks:
+  postgres_network:
+    name: ${POSTGRES_NETWORK_NAME:-postgres_network}
+    driver: overlay
+    attachable: true
+
+volumes:
+  openclinic_postgres_data:
+    name: ${POSTGRES_VOLUME_NAME:-openclinic_postgres_data}
+
+secrets:
+  # PostgreSQL root superuser password (Secrets-First: mounted into /run/secrets/postgres_password)
+  postgres_password:
+    external: true
+    name: ${DB_ROOT_SECRET_NAME:-openclinic-${ENVIRONMENT:-prod}-postgres-password}

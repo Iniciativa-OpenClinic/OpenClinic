@@ -131,8 +131,8 @@ async function promptRemoteConfig(defaultHost?: string): Promise<PgConnectionCon
         host: p.hostname,
         port: p.port ? parseInt(p.port, 10) : 5432,
         database: p.pathname.replace(/^\//, '') || config.database,
-        user: decodeURIComponent(p.username || config.ownerUser),
-        password: decodeURIComponent(p.password || config.ownerPassword || ''),
+        user: p.username ? decodeURIComponent(p.username) : undefined,
+        password: p.password ? decodeURIComponent(p.password) : undefined,
       };
     } catch {
       // Keep defaults
@@ -164,13 +164,13 @@ async function promptRemoteConfig(defaultHost?: string): Promise<PgConnectionCon
       type: 'input',
       name: 'user',
       message: 'Remote user (owner with DDL privileges):',
-      default: parsedRemote.user || config.ownerUser,
+      default: parsedRemote.user || (config.database ? `${config.database}_owner` : undefined),
     },
     {
       type: 'password',
       name: 'password',
       message: 'Remote user password:',
-      default: parsedRemote.password || config.ownerPassword,
+      default: parsedRemote.password,
       mask: '*',
       validate: (v: string) => v.length > 0 || 'Password is required.',
     },

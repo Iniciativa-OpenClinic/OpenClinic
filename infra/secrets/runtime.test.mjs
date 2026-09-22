@@ -69,8 +69,8 @@ test('invalid mode fails without printing its value', () => {
 });
 
 test('resolves structured database JSON secrets for DB_APP_SECRET_NAME and DB_OWNER_SECRET_NAME', () => fixture((file, directory) => {
-  const appSecretPath = join(directory, 'database-secret-app.credentials.json');
-  const ownerSecretPath = join(directory, 'database-secret-owner.credentials.json');
+  const appSecretPath = join(directory, 'database-secret-app.json');
+  const ownerSecretPath = join(directory, 'database-secret-owner.json');
 
   writeFileSync(appSecretPath, JSON.stringify({
     host: 'db.internal',
@@ -96,13 +96,9 @@ test('resolves structured database JSON secrets for DB_APP_SECRET_NAME and DB_OW
   assert.equal(env.DATABASE_OWNER_URL, 'postgresql://owner_user:owner_pass@db.internal:5433/my_app_db');
 }));
 
-test('resolves structured JWT JSON secret for JWT_SECRET_NAME', () => fixture((file, directory) => {
-  const jwtSecretPath = join(directory, 'jwt.credentials.json');
-
-  writeFileSync(jwtSecretPath, JSON.stringify({
-    secretKey: 'my-super-secret-jwt-key-with-at-least-32-chars!!',
-    algorithm: 'HS256'
-  }));
+test('resolves raw text JWT secret for JWT_SECRET_NAME', () => fixture((file, directory) => {
+  const jwtSecretPath = join(directory, 'jwt.txt');
+  writeFileSync(jwtSecretPath, 'my-super-secret-jwt-key-with-at-least-32-chars!!\n');
 
   const env = {
     SECRETS_PROVIDER: 'file',
@@ -115,7 +111,7 @@ test('resolves structured JWT JSON secret for JWT_SECRET_NAME', () => fixture((f
 }));
 
 test('malformed JSON in database secret throws descriptive error', () => fixture((file, directory) => {
-  const badSecretPath = join(directory, 'database-secret-app.credentials.json');
+  const badSecretPath = join(directory, 'database-secret-app.json');
   writeFileSync(badSecretPath, '{ invalid json');
 
   const env = {
@@ -128,7 +124,7 @@ test('malformed JSON in database secret throws descriptive error', () => fixture
 }));
 
 test('rejects direct credentials atomically when SECRETS_PROVIDER=file', () => fixture((file, directory) => {
-  const appSecretPath = join(directory, 'database-secret-app.credentials.json');
+  const appSecretPath = join(directory, 'database-secret-app.json');
   writeFileSync(appSecretPath, JSON.stringify({
     host: 'db.internal',
     port: 5432,

@@ -10,6 +10,9 @@
   ],
   "scripts": {
     "cli": "tsx packages/backend-cli/src/index.ts",
+    "setup": "node scripts/setup.mjs",
+    "setup:quick": "node scripts/setup.mjs --quickstart",
+    "setup:docker": "node scripts/setup.mjs",
     "dev": "npm run dev:api",
     "dev:api": "npm run dev -w packages/backend-api",
     "dev:webapp": "npm run dev -w packages/frontend-webapp",

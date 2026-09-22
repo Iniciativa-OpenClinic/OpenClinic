@@ -56,12 +56,13 @@ DEFAULT_APP_PASS=$(get_env_val "DB_PASS" "openclinic_secret_pass")
 
 # Resolve owner credentials strictly from mounted secret file (DDL is file/secret-based only)
 OWNER_SECRET_FILE=""
+OWNER_SECRET_NAME="${DB_OWNER_SECRET_NAME:-database-secret-owner}"
 for candidate in \
-  "/secrets/database-secret-owner.credentials.json" \
-  "/secrets/database-secret-owner.json" \
-  "/secrets/database-owner.credentials.json" \
-  "/app/secrets/database-secret-owner.credentials.json" \
-  "./secrets/database-secret-owner.credentials.json"; do
+  "/run/secrets/${OWNER_SECRET_NAME}" \
+  "/run/secrets/${OWNER_SECRET_NAME}.json" \
+  "/secrets/${OWNER_SECRET_NAME}.json" \
+  "/secrets/${OWNER_SECRET_NAME}" \
+  "./secrets/${OWNER_SECRET_NAME}.json"; do
   if [ -f "$candidate" ]; then
     OWNER_SECRET_FILE="$candidate"
     break

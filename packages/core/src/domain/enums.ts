@@ -143,6 +143,13 @@ export const Environment = NodeEnvironment;
 export type Environment = NodeEnvironment;
 export type EnvironmentType = NodeEnvironment;
 
+export const DeploymentTier = {
+  DEV: 'dev',
+  PROD: 'prod',
+} as const;
+export type DeploymentTier = (typeof DeploymentTier)[keyof typeof DeploymentTier];
+export type DeploymentTierType = DeploymentTier;
+
 export const LogLevel = {
   FATAL: 'fatal',
   ERROR: 'error',

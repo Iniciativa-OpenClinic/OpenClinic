@@ -61,43 +61,9 @@ export class FileSecretProvider {
     const directories = this.getSearchDirectories(environment);
     const candidateFilenames = [
       logicalName,
-      `${logicalName}.credentials.json`,
       `${logicalName}.json`,
-      `${logicalName}.credentials`,
-      `${logicalName}.key`,
-      `${logicalName}.secret`,
+      `${logicalName}.txt`,
     ];
-
-    if (logicalName === 'database-secret-app' || logicalName === 'database-app') {
-      candidateFilenames.push(
-        'database-secret-app.credentials.json',
-        'database-secret-app.json',
-        'database-secret-app',
-        'database-app.credentials.json',
-        'database-app.json',
-        'database-app'
-      );
-    } else if (logicalName === 'database-secret-owner' || logicalName === 'database-owner') {
-      candidateFilenames.push(
-        'database-secret-owner.credentials.json',
-        'database-secret-owner.json',
-        'database-secret-owner',
-        'database-owner.credentials.json',
-        'database-owner.json',
-        'database-owner'
-      );
-    } else if (logicalName === 'jwt-secret' || logicalName === 'jwt_secret') {
-      candidateFilenames.push(
-        'jwt-secret.credentials.json',
-        'jwt-secret.json',
-        'jwt.credentials.json',
-        'jwt.json',
-        'jwt.key',
-        'jwt.secret'
-      );
-    } else if (logicalName === 'jwt') {
-      candidateFilenames.push('jwt-secret.credentials.json', 'jwt-secret.json', 'jwt_secret.credentials.json');
-    }
 
     for (const dir of directories) {
       for (const filename of candidateFilenames) {

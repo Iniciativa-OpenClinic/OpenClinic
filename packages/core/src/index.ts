@@ -78,6 +78,8 @@ export {
   type NodeEnvironmentType,
   Environment,
   type EnvironmentType,
+  DeploymentTier,
+  type DeploymentTierType,
   LogLevel,
   type LogLevelType,
   SecretsProvider,
@@ -147,3 +149,4 @@ export { createLogger, logger } from './logger/index.js';
 export type { LoggerConfig, Logger } from './logger/index.js';
 export { createPool, withTransaction, getDatabaseEnv, resolveDatabaseUrl, resolveDatabaseOwnerUrl, parseDatabaseUrl, isDdlRole } from './database/index.js';
 export type { DbConfig, DatabaseEnvironment, Pool, PoolClient } from './database/index.js';
+export { parseDatabaseSecret, parseJwtSecret } from './server/index.js';

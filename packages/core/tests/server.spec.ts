@@ -91,10 +91,10 @@ describe('@openclinic/core/server', () => {
 
     it('resolves database and jwt secrets via custom secret names in file mode', () => {
       const directory = mkdtempSync(join(tmpdir(), 'secrets-test-'));
-      const dbSecretFile = join(directory, 'database-secret-app.credentials.json');
-      const jwtSecretFile = join(directory, 'jwt-secret.credentials.json');
+      const dbSecretFile = join(directory, 'database-secret-app.json');
+      const jwtSecretFile = join(directory, 'jwt-secret.txt');
       writeFileSync(dbSecretFile, JSON.stringify({ host: 'db', database: 'prod_db', user: 'u', password: 'p' }));
-      writeFileSync(jwtSecretFile, JSON.stringify({ secretKey: '0123456789abcdef0123456789abcdef' }));
+      writeFileSync(jwtSecretFile, '0123456789abcdef0123456789abcdef');
       try {
         const env: SecretEnvironment = {
           SECRETS_PROVIDER: 'file',

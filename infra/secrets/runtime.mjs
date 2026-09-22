@@ -56,34 +56,26 @@ export function loadSecretFiles(environment = process.env) {
   // 1. Resolve structured logical secrets (DB_APP_SECRET_NAME, DB_OWNER_SECRET_NAME, JWT_SECRET_NAME)
   // When a secret provider is active (file, gsm, aws), resolve credentials from the provider.
   if (fileProvider.name !== 'env') {
-    const appSecretName = environment.DB_APP_SECRET_NAME || environment.DB_APP_SECRET || 'database-secret-app';
-    if (appSecretName) {
-      try {
-        const raw = fileProvider.getSecret(appSecretName, environment);
-        resolved['DATABASE_URL'] = parseDatabaseSecret(raw, appSecretName);
-      } catch (err) {
-        if (environment.DB_APP_SECRET_NAME || environment.DB_APP_SECRET) throw err;
-      }
+    const appSecretName = environment.DB_APP_SECRET_NAME || 'database-secret-app';
+    try {
+      const rawApp = fileProvider.getSecret(appSecretName, environment);
+      resolved['DATABASE_URL'] = parseDatabaseSecret(rawApp, appSecretName);
+    } catch (err) {
+      if (environment.DB_APP_SECRET_NAME) throw err;
     }
 
-    const ownerSecretName = environment.DB_OWNER_SECRET_NAME || environment.DB_OWNER_SECRET;
+    const ownerSecretName = environment.DB_OWNER_SECRET_NAME;
     if (ownerSecretName) {
-      try {
-        const raw = fileProvider.getSecret(ownerSecretName, environment);
-        resolved['DATABASE_OWNER_URL'] = parseDatabaseSecret(raw, ownerSecretName);
-      } catch (err) {
-        if (environment.DB_OWNER_SECRET_NAME || environment.DB_OWNER_SECRET) throw err;
-      }
+      const rawOwner = fileProvider.getSecret(ownerSecretName, environment);
+      resolved['DATABASE_OWNER_URL'] = parseDatabaseSecret(rawOwner, ownerSecretName);
     }
 
-    const jwtSecretName = environment.JWT_SECRET_NAME || environment.JWT_SECRET || 'jwt-secret';
-    if (jwtSecretName) {
-      try {
-        const raw = fileProvider.getSecret(jwtSecretName, environment);
-        resolved['JWT_KEY'] = parseJwtSecret(raw, jwtSecretName);
-      } catch (err) {
-        if (environment.JWT_SECRET_NAME || environment.JWT_SECRET) throw err;
-      }
+    const jwtSecretName = environment.JWT_SECRET_NAME || 'jwt-secret';
+    try {
+      const rawJwt = fileProvider.getSecret(jwtSecretName, environment);
+      resolved['JWT_KEY'] = parseJwtSecret(rawJwt, jwtSecretName);
+    } catch (err) {
+      if (environment.JWT_SECRET_NAME) throw err;
     }
   } else {
     // Security advisory when running with SECRETS_PROVIDER=env in production

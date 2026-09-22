@@ -6,6 +6,7 @@ import {
   resolveDatabaseOwnerUrl,
   parseDatabaseUrl,
   isDdlRole,
+  parseDatabaseSecret,
   type DatabaseEnvironment,
 } from '@openclinic/core';
 import { executePgDump, formatBackupTimestamp } from './pg-runner.js';
@@ -66,97 +67,60 @@ export function isLocalHost(hostname: string): boolean {
  */
 function tryLoadLocalSecret(
   targetEnvKey: 'DATABASE_URL' | 'DATABASE_OWNER_URL',
-  secretNameEnvVar: 'DB_APP_SECRET_NAME' | 'DB_OWNER_SECRET_NAME',
-  defaultSecretName: string,
-  legacyBaseName: string,
+  secretName: string,
   environment: Record<string, string | undefined>
 ): void {
   if (environment[targetEnvKey]) return;
 
   const customDir = environment['SECRETS_DIR'];
-  const secretName = environment[secretNameEnvVar] || defaultSecretName;
-
-  const candidates: string[] = [
-    // 1. Container / Swarm volume mounts (/run/secrets/)
-    `/run/secrets/${secretName}`,
-    `/run/secrets/${secretName}.credentials.json`,
-    `/run/secrets/${secretName}.json`,
-    `/run/secrets/${legacyBaseName}`,
-    `/run/secrets/${legacyBaseName}.credentials.json`,
-    `/run/secrets/${legacyBaseName}.json`,
-
-    // 2. Custom directory if explicitly configured via SECRETS_DIR
-    ...(customDir
-      ? [
-          path.resolve(process.cwd(), customDir, `${secretName}.credentials.json`),
-          path.resolve(process.cwd(), customDir, `${secretName}.json`),
-          path.resolve(process.cwd(), customDir, `${legacyBaseName}.credentials.json`),
-          path.resolve(process.cwd(), customDir, `${legacyBaseName}.json`),
-        ]
-      : []),
-
-    // 3. Current working directory (./secrets/)
-    path.resolve(process.cwd(), 'secrets', `${secretName}.credentials.json`),
-    path.resolve(process.cwd(), 'secrets', `${secretName}.json`),
-    path.resolve(process.cwd(), 'secrets', `${legacyBaseName}.credentials.json`),
-    path.resolve(process.cwd(), 'secrets', `${legacyBaseName}.json`),
-
-    // 4. One directory level up (../secrets/ - package execution context)
-    path.resolve(process.cwd(), '../secrets', `${secretName}.credentials.json`),
-    path.resolve(process.cwd(), '../secrets', `${secretName}.json`),
-    path.resolve(process.cwd(), '../secrets', `${legacyBaseName}.credentials.json`),
-    path.resolve(process.cwd(), '../secrets', `${legacyBaseName}.json`),
-
-    // 5. Two directory levels up (../../secrets/ - nested build/dist context)
-    path.resolve(process.cwd(), '../../secrets', `${secretName}.credentials.json`),
-    path.resolve(process.cwd(), '../../secrets', `${secretName}.json`),
-    path.resolve(process.cwd(), '../../secrets', `${legacyBaseName}.credentials.json`),
-    path.resolve(process.cwd(), '../../secrets', `${legacyBaseName}.json`),
+  const searchDirs: string[] = [
+    '/run/secrets',
+    ...(customDir ? [path.resolve(process.cwd(), customDir)] : []),
+    path.resolve(process.cwd(), 'secrets'),
+    path.resolve(process.cwd(), '../secrets'),
+    path.resolve(process.cwd(), '../../secrets'),
   ];
 
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
-      try {
-        const raw = fs.readFileSync(candidate, 'utf8').trim();
-        if (!raw) continue;
+  const candidateFilenames = [
+    secretName,
+    `${secretName}.json`,
+    `${secretName}.txt`,
+  ];
 
-        // Support direct postgres connection URL format if raw secret contains it
-        if (raw.startsWith('postgres://') || raw.startsWith('postgresql://')) {
-          environment[targetEnvKey] = raw;
-          break;
-        }
+  for (const dir of searchDirs) {
+    for (const filename of candidateFilenames) {
+      const candidatePath = path.resolve(dir, filename);
+      if (fs.existsSync(candidatePath)) {
+        try {
+          const raw = fs.readFileSync(candidatePath, 'utf8').trim();
+          if (!raw) continue;
 
-        const parsed = JSON.parse(raw);
-        if (parsed.user && parsed.password) {
-          const host = parsed.host || environment['DB_HOST'] || SYSTEM_DEFAULTS.DEFAULT_DB_HOST;
-          const port = parsed.port || (environment['DB_PORT'] ? parseInt(environment['DB_PORT'], 10) : SYSTEM_DEFAULTS.DEFAULT_DB_PORT);
-          const database = environment['DB_NAME'] || parsed.database || '';
-          const encodedUser = encodeURIComponent(parsed.user);
-          const encodedPass = encodeURIComponent(parsed.password);
-          environment[targetEnvKey] = `${SYSTEM_DEFAULTS.DATABASE_PROTOCOL_PREFIX}${encodedUser}:${encodedPass}@${host}:${port}/${database}`;
-          break;
+          environment[targetEnvKey] = parseDatabaseSecret(raw, secretName, environment);
+          return;
+        } catch {
+          // Continue searching if parse fails
         }
-      } catch {
-        // Continue if parse fails
       }
     }
   }
 }
 
 /**
- * Attempts to transparently load owner (DDL) credentials from local secrets directory
+ * Attempts to load owner (DDL) credentials from secrets directory
  * if DATABASE_OWNER_URL is not explicitly populated.
  */
 export function tryLoadLocalOwnerSecret(environment: Record<string, string | undefined> = process.env): void {
-  tryLoadLocalSecret('DATABASE_OWNER_URL', 'DB_OWNER_SECRET_NAME', 'database-secret-owner', 'database-owner', environment);
+  const secretName = environment['DB_OWNER_SECRET_NAME'] || 'database-secret-owner';
+  tryLoadLocalSecret('DATABASE_OWNER_URL', secretName, environment);
 }
 
 /**
- * Attempts to transparently load runtime (DML) app credentials from local secrets directory
+ * Attempts to load runtime (DML) app credentials from secrets directory
  * if DATABASE_URL is not explicitly populated.
  */
 export function tryLoadLocalAppSecret(environment: Record<string, string | undefined> = process.env): void {
-  tryLoadLocalSecret('DATABASE_URL', 'DB_APP_SECRET_NAME', 'database-secret-app', 'database-app', environment);
+  const secretName = environment['DB_APP_SECRET_NAME'] || 'database-secret-app';
+  tryLoadLocalSecret('DATABASE_URL', secretName, environment);
 }
 
 /**
@@ -166,7 +130,7 @@ export function tryLoadLocalAppSecret(environment: Record<string, string | undef
  * Invariant: Owner (DDL) credentials are NEVER stored in .env.
  * - Runtime/App (DML) credentials come strictly from atomic DB_USER and DB_PASS.
  * - Owner (DDL) credentials must be provided dynamically by the operator via CLI options/prompts,
- *   resolved via secrets manager, or auto-discovered from ./secrets/database-secret-owner.credentials.json.
+ *   resolved via secrets manager, or auto-discovered from ./secrets/<DB_OWNER_SECRET_NAME>.json.
  *
  * Checks if DB_USER is configured with DDL vs DML privileges and emits appropriate warnings.
  */

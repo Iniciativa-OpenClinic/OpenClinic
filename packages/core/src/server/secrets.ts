@@ -3,7 +3,11 @@ import path from 'node:path';
 import { parseDatabaseSecret, parseJwtSecret } from './parsers.js';
 
 import { resolveDatabaseUrl } from '../database/index.js';
-import { SecretsProvider, type SecretsProvider as SecretsProviderValue } from '../domain/enums.js';
+import {
+  SecretsProvider,
+  type SecretsProvider as SecretsProviderValue,
+  NodeEnvironment,
+} from '../domain/enums.js';
 
 export const SECRET_NAMES = Object.freeze([
   'DATABASE_URL',
@@ -98,43 +102,9 @@ export class FileSecretProvider implements SecretProvider {
     const directories = this.getSearchDirectories(environment);
     const candidateFilenames = [
       logicalName,
-      `${logicalName}.credentials.json`,
       `${logicalName}.json`,
-      `${logicalName}.credentials`,
-      `${logicalName}.key`,
-      `${logicalName}.secret`,
+      `${logicalName}.txt`,
     ];
-
-    if (logicalName === 'database-secret-app' || logicalName === 'database-app') {
-      candidateFilenames.push(
-        'database-secret-app.credentials.json',
-        'database-secret-app.json',
-        'database-secret-app',
-        'database-app.credentials.json',
-        'database-app.json',
-        'database-app'
-      );
-    } else if (logicalName === 'database-secret-owner' || logicalName === 'database-owner') {
-      candidateFilenames.push(
-        'database-secret-owner.credentials.json',
-        'database-secret-owner.json',
-        'database-secret-owner',
-        'database-owner.credentials.json',
-        'database-owner.json',
-        'database-owner'
-      );
-    } else if (logicalName === 'jwt-secret' || logicalName === 'jwt_secret') {
-      candidateFilenames.push(
-        'jwt-secret.credentials.json',
-        'jwt-secret.json',
-        'jwt.credentials.json',
-        'jwt.json',
-        'jwt.key',
-        'jwt.secret'
-      );
-    } else if (logicalName === 'jwt') {
-      candidateFilenames.push('jwt-secret.credentials.json', 'jwt-secret.json', 'jwt_secret.credentials.json');
-    }
 
     for (const dir of directories) {
       for (const filename of candidateFilenames) {
@@ -237,40 +207,26 @@ export function loadSecretFiles(environment: SecretEnvironment = process.env): v
 
   // 1. Resolve structured logical secrets (DB_APP_SECRET_NAME, DB_OWNER_SECRET_NAME, JWT_SECRET_NAME)
   if (fileProvider.name !== 'env') {
-    const appSecretName = environment['DB_APP_SECRET_NAME'] || environment['DB_APP_SECRET'] || 'database-secret-app';
-    if (appSecretName) {
-      try {
-        const raw = fileProvider.getSecret(appSecretName, environment);
-        resolved['DATABASE_URL'] = parseDatabaseSecret(raw, appSecretName);
-      } catch (error) {
-        if (environment['DB_APP_SECRET_NAME'] || environment['DB_APP_SECRET']) {
-          throw error;
-        }
-      }
+    const appSecretName = environment['DB_APP_SECRET_NAME'] || 'database-secret-app';
+    try {
+      const rawAppSecret = fileProvider.getSecret(appSecretName, environment);
+      resolved['DATABASE_URL'] = parseDatabaseSecret(rawAppSecret, appSecretName);
+    } catch (err) {
+      if (environment['DB_APP_SECRET_NAME']) throw err;
     }
 
-    const ownerSecretName = environment['DB_OWNER_SECRET_NAME'] || environment['DB_OWNER_SECRET'];
+    const ownerSecretName = environment['DB_OWNER_SECRET_NAME'];
     if (ownerSecretName) {
-      try {
-        const raw = fileProvider.getSecret(ownerSecretName, environment);
-        resolved['DATABASE_OWNER_URL'] = parseDatabaseSecret(raw, ownerSecretName);
-      } catch (error) {
-        if (environment['DB_OWNER_SECRET_NAME'] || environment['DB_OWNER_SECRET']) {
-          throw error;
-        }
-      }
+      const rawOwnerSecret = fileProvider.getSecret(ownerSecretName, environment);
+      resolved['DATABASE_OWNER_URL'] = parseDatabaseSecret(rawOwnerSecret, ownerSecretName);
     }
 
-    const jwtSecretName = environment['JWT_SECRET_NAME'] || environment['JWT_SECRET'] || 'jwt-secret';
-    if (jwtSecretName) {
-      try {
-        const raw = fileProvider.getSecret(jwtSecretName, environment);
-        resolved['JWT_KEY'] = parseJwtSecret(raw, jwtSecretName);
-      } catch (error) {
-        if (environment['JWT_SECRET_NAME'] || environment['JWT_SECRET']) {
-          throw error;
-        }
-      }
+    const jwtSecretName = environment['JWT_SECRET_NAME'] || 'jwt-secret';
+    try {
+      const rawJwtSecret = fileProvider.getSecret(jwtSecretName, environment);
+      resolved['JWT_KEY'] = parseJwtSecret(rawJwtSecret, jwtSecretName);
+    } catch (err) {
+      if (environment['JWT_SECRET_NAME']) throw err;
     }
   } else {
     // In SECRETS_PROVIDER=env: DATABASE_URL is never stored in .env; synthesize dynamically from atomic variables
@@ -282,7 +238,7 @@ export function loadSecretFiles(environment: SecretEnvironment = process.env): v
     }
 
     // Security advisory when running with SECRETS_PROVIDER=env in production
-    if (environment['NODE_ENV'] === 'production') {
+    if (environment['NODE_ENV'] === NodeEnvironment.PRODUCTION) {
       console.warn(
         '⚠️ [SECURITY ADVISORY] SECRETS_PROVIDER=env is active in production. Plaintext credentials in environment variables may increase exposure risks. Consider using file (Docker Secrets), gsm, or aws in production.'
       );

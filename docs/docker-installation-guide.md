@@ -17,7 +17,7 @@ Este documento é o guia oficial e definitivo para baixar, configurar e executar
 7. [Passo 5: URLs de Acesso e Serviços](#-passo-5-urls-de-acesso-e-serviços)
 8. [Passo 6: Credenciais de Acesso Padrão](#-passo-6-credenciais-de-acesso-padrão)
 9. [Operação e Comandos Úteis do Docker](#-operação-e-comandos-úteis-do-docker)
-10. [Deploy em Produção (Portainer / Docker Swarm)](#-deploy-em-produção-portainer--docker-swarm)
+10. [Deploy em Produção (Portainer / Docker Swarm / VPS)](#-deploy-em-produção-portainer--docker-swarm--vps)
 11. [Resolução de Problemas (Troubleshooting & FAQ)](#-resolução-de-problemas-troubleshooting--faq)
 
 ---
@@ -46,14 +46,14 @@ A stack do **OpenClinic** é composta por três serviços desacoplados e orquest
                                                   ▼
                         ┌──────────────────────────────────────────────────┐
                         │           Porta 5432 (TCP)                       │
-                        │   openclinic-postgres (PostgreSQL 17 Alpine)     │
-                        │   Volume Persistente: openclinic_data            │
+                        │   openclinic-db (PostgreSQL 17 Alpine)           │
+                        │   Volume Persistente: openclinic_postgres_data   │
                         └──────────────────────────────────────────────────┘
 ```
 
 | Container | Imagem Base | Porta Exposta | Função |
 | :--- | :--- | :--- | :--- |
-| **`openclinic-postgres`** | `postgres:17-alpine` | `5432:5432` | Banco de dados relacional com isolamento de roles (Owner DDL / App DML) |
+| **`openclinic-db`** | `postgres:17-alpine` | `5432:5432` | Banco de dados relacional com isolamento de roles (Owner DDL / App DML) |
 | **`openclinic-api`** | `node:20-alpine` (multi-stage) | `3000:3000` | Backend REST Fastify com Clean Architecture, Argon2id e JWT |
 | **`openclinic-webapp`** | `nginx:alpine` (multi-stage) | `80:80` | Frontend SPA React 19 compilado via Vite e servido com Nginx |
 
@@ -152,9 +152,7 @@ LOG_LEVEL=info
 2. **Isolamento de Roles de Banco (PoLP)**:
    - **Runtime da API (`openclinic_app`)**: Permissões estritamente restritas a DML (`SELECT`, `INSERT`, `UPDATE`, `DELETE`). Sem privilégios de DDL ou superuser.
    - **Migrações e Governança (`openclinic_owner`)**: Permissões de DDL para criação/alteração de tabelas e schemas. Utilizado exclusivamente pelo container de migrações ou tarefas CLI administrativas via `DB_OWNER_SECRET_NAME`.
-3. **Modo Arquivos Locais (`SECRETS_PROVIDER=file`)**:
-
-   Para simular o ambiente de containers ou orquestradores (Swarm/K8s), copie os templates de `secrets/*.credentials.example.json` para `secrets/*.credentials.json`. Consulte a especificação completa em [**`secrets/README.md`**](../secrets/README.md).
+   Para simular o ambiente de containers ou orquestradores (Swarm/K8s), copie os templates de `secrets/*.example.*` para seus respectivos arquivos reais (`secrets/*.json` e `secrets/*.txt`). Consulte a especificação completa em [**`secrets/README.md`**](../secrets/README.md).
 
 > ⚠️ **Atenção (Segurança P0):** Em ambientes de homologação ou produção, altere obrigatoriamente a `JWT_KEY` e as senhas das roles `openclinic_app` e `openclinic_owner`!
 
@@ -162,32 +160,57 @@ LOG_LEVEL=info
 
 ## 🚀 Passo 3: Inicialização da Stack
 
-Execute o comando do Docker Compose na raiz do projeto para compilar as imagens e iniciar os containers em segundo plano:
+O OpenClinic oferece duas formas de inicialização: o **Assistente Automatizado Interativo** (recomendado para desenvolvedores) ou os comandos manuais do Docker Compose.
+
+### Opção A: Via Assistente Interativo (Recomendado — 1 Comando)
+
+O assistente verifica automaticamente os pré-requisitos (Docker CLI, Docker Daemon ativo, Compose v2 e portas livres), inicializa os segredos locais se necessário, sobe os containers monitorando o healthcheck e executa o provisionamento do banco:
 
 ```bash
-docker compose up --build -d
+# Via NPM (multiplataforma)
+npm run setup
+
+# Ou diretamente pelo terminal:
+.\setup.ps1    # No Windows (PowerShell)
+./setup.sh     # No Linux ou macOS (Bash)
 ```
 
-O Docker realizará:
+O assistente apresentará um menu interativo com confirmação a cada passo:
 
-1. Download da imagem oficial do `postgres:17-alpine`.
-2. Compilação multi-stage da API Backend (`infra/docker/Dockerfile`).
-3. Compilação multi-stage do Frontend Webapp (`infra/docker/Dockerfile.webapp`).
-4. Criação da rede virtual `openclinic_network` e do volume persistente `openclinic_data`.
-5. Inicialização ordenada e monitorada por healthchecks.
+1. **Quickstart Local Completo:** Sobe a stack unificada local (`openclinic-db-api-webapp-local.yml`), pergunta se você quer provisionar apenas o **Superadmin** ou incluir os **dados de demonstração/teste**, aguarda o banco e finaliza o setup.
+2. **Produção VPS Standalone:** Sobe `openclinic-db-api-webapp.yml` (para VPS única com Traefik e HTTPS automático).
+3. **Apenas Banco de Dados:** Sobe `openclinic-db.yml` (porta 5432).
+4. **Apenas Aplicação:** Sobe `openclinic-api-webapp.yml`.
+5. **Gerador de Secrets:** Exibe comandos prontos para criação de secrets no Docker Swarm / Portainer.
+6. **Parar Containers / Limpar Stacks:** Finaliza containers locais ou de produção.
+
+---
+
+### Opção B: Via Docker Compose Direto
+
+Caso prefira gerenciar os containers manualmente via CLI:
+
+```bash
+# 1. Subir a stack unificada local (compila a partir do código-fonte)
+docker compose -f infra/docker/stacks/openclinic-db-api-webapp-local.yml up --build -d
+
+# 2. Provisionar o banco de dados (migrações + superadmin inicial)
+npm run db:setup
+# (ou para incluir massa de dados de teste: npm run cli -- db:setup --demo)
+```
 
 Para verificar se todos os containers estão saudáveis (`healthy`):
 
 ```bash
-docker compose ps
+docker compose -f infra/docker/stacks/openclinic-db-api-webapp-local.yml ps
 ```
 
 Saída esperada:
 
 ```text
 NAME                  IMAGE                    COMMAND                  SERVICE   STATUS                    PORTS
-openclinic-postgres   postgres:17-alpine       "docker-entrypoint.s…"   db        Up (healthy)              0.0.0.0:5432->5432/tcp
-openclinic-api        openclinic-api:latest    "docker-entrypoint.s…"   api       Up (healthy)              0.0.0.0:3000->3000/tcp
+openclinic-db         postgres:17-alpine       "docker-entrypoint.s…"   postgres  Up (healthy)              0.0.0.0:5432->5432/tcp
+openclinic-api        openclinic-api:latest    "node packages/backen…"  api       Up (healthy)              0.0.0.0:3000->3000/tcp
 openclinic-webapp     openclinic-webapp:latest "/docker-entrypoint.…"   webapp    Up (healthy)              0.0.0.0:80->80/tcp
 ```
 
@@ -287,21 +310,77 @@ docker compose exec db psql -U openclinic_owner -d openclinic
 
 ---
 
-## 🚢 Deploy em Produção (Portainer / Docker Swarm)
+## 🔐 Arquitetura Secrets-First & Conformidade LGPD / HIPAA
 
-Para ambientes de produção com suporte a alta disponibilidade, terminação TLS/HTTPS automática com Let's Encrypt e orquestração Docker Swarm, o OpenClinic disponibiliza uma stack dedicada:
+Por ser um sistema de gestão em saúde voltado a clínicas médicas, o OpenClinic manipula dados altamente sensíveis de pacientes (prontuários, laudos e histórico clínico). Em estrita conformidade com a **LGPD (Lei Geral de Proteção de Dados - Lei 13.709/2018, Art. 46)** e o padrão internacional de segurança **HIPAA Security Rule (§ 164.312)**, o projeto adota o padrão **Secrets-First**:
 
-- **Arquivo da Stack:** [`infra/stacks/openclinic-production.yml`](../infra/stacks/openclinic-production.yml)
-- **Variáveis da Stack:** [`infra/stacks/openclinic-production.env.example`](../infra/stacks/openclinic-production.env.example)
-- **Imagens Oficiais no Docker Hub:**
-  - `openclinic/openclinic-webapp:latest`
-  - `openclinic/openclinic-api:latest`
+1. **Eliminação de Parâmetros e Credenciais no `.env` da Aplicação:** Arquivos `.env` das stacks de aplicação contêm exclusivamente metadados de orquestração (portas HTTP, domínios e identificadores de segredos). Parâmetros do banco de dados (host, porta, nome do banco, usuário e senha) são completamente desconsiderados do `.env` da aplicação, residindo de forma 100% encapsulada no payload JSON do secret.
+2. **Ambiente Local (Desenvolvedor / Docker Desktop):**
+   - Ao executar `npm run setup`, o script lê os templates da pasta `./secrets/*.example.*` e inicializa os arquivos locais de credenciais em `./secrets/` (protegidos pelo `.gitignore`).
+   - A stack local monta a pasta `./secrets` como volume somente leitura (`/app/secrets:ro`).
+   - O desenvolvedor não precisa criar segredos manuais no Docker Desktop: a aplicação consome os arquivos montados automaticamente.
+3. **Ambiente VPS / Produção (Docker Swarm / Portainer):**
+   - Os segredos são gerenciados nativamente pelo Docker Swarm criptografados em repouso no cluster e injetados em memória (`/run/secrets/`).
+   - Para registrar os segredos no Swarm a partir da máquina VPS, utilize o gerador interativo:
+
+     ```bash
+     npm run setup -- --secrets
+     ```
+
+     Ou crie diretamente a partir dos arquivos locais:
+
+     ```bash
+     docker secret create openclinic-prod-app-postgres-credentials ./secrets/openclinic-prod-app-postgres-credentials.json
+     docker secret create openclinic-prod-owner-postgres-credentials ./secrets/openclinic-prod-owner-postgres-credentials.json
+     printf 'SUA_SENHA_FORTE_POSTGRES' | docker secret create openclinic-prod-postgres-password -
+     docker secret create openclinic-prod-jwt-secret ./secrets/openclinic-prod-jwt-secret.txt
+     ```
+
+---
+
+## 🚢 Deploy em Produção (Portainer / Docker Swarm / VPS)
+
+Para produção, o OpenClinic oferece duas topologias oficiais pré-configuradas:
+
+### Topologia A: VPS Única / Clínica Pequena (Produção Standalone VPS)
+
+Ideal para consultórios ou clínicas de pequeno e médio porte em uma única VPS (ex: Hetzner, Contabo, DigitalOcean, AWS Lightsail de 2 vCPUs e 4GB RAM). Roda o banco, backend e frontend com HTTPS automático via Traefik. A porta 5432 do PostgreSQL fica isolada internamente (não aberta na internet).
+
+- **Arquivo da Stack:** [`infra/docker/stacks/openclinic-db-api-webapp.yml`](../infra/docker/stacks/openclinic-db-api-webapp.yml)
+- **Variáveis da Stack:** [`infra/docker/stacks/openclinic-db-api-webapp.env.example`](../infra/docker/stacks/openclinic-db-api-webapp.env.example)
+- **Comando de Deploy:**
+
+  ```bash
+  docker stack deploy -c infra/docker/stacks/openclinic-db-api-webapp.yml openclinic
+  # ou via Docker Compose Standalone na VPS:
+  docker compose -f infra/docker/stacks/openclinic-db-api-webapp.yml up -d
+  ```
+
+---
+
+### Topologia B: Produção Desacoplada Enterprise (Multi-Node / Swarm)
+
+Para clínicas maiores, hospitais ou redes com múltiplos servidores, onde a persistência do banco é isolada dos nós de aplicação stateless:
+
+- **Stack da Aplicação (Fastify + React com réplicas):** [`infra/docker/stacks/openclinic-api-webapp.yml`](../infra/docker/stacks/openclinic-api-webapp.yml)
+- **Variáveis da Aplicação:** [`infra/docker/stacks/openclinic-api-webapp.env.example`](../infra/docker/stacks/openclinic-api-webapp.env.example)
+- **Stack do Banco Dedicado (Fase 2 - Operacional):** [`infra/docker/stacks/openclinic-db.yml`](../infra/docker/stacks/openclinic-db.yml)
+- **Stack de Bootstrap Inicial (Fase 1 - Efêmera):** [`infra/docker/stacks/openclinic-db-init.yml`](../infra/docker/stacks/openclinic-db-init.yml)
+- **Variáveis do Bootstrap:** [`infra/docker/stacks/openclinic-db-init.env.example`](../infra/docker/stacks/openclinic-db-init.env.example)
+
+> [!WARNING]
+> **Segurança Mandatória em Produção / VPS / Servidor Remoto:**
+> Enquanto em desenvolvimento local o banco suporta inicialização com senha vazia (`DB_PASS=`) e `POSTGRES_HOST_AUTH_METHOD=trust` para máxima fluidez, **em qualquer ambiente remoto, VPS ou produção é TERMINANTEMENTE PROIBIDO deixar a senha em branco ou usar trust**.
+>
+> 1. Na stack de bootstrap inicial (`openclinic-db-init`), defina uma senha forte para o superusuário `postgres` na variável `DB_PASS`.
+> 2. Configure obrigatoriamente `POSTGRES_HOST_AUTH_METHOD=scram-sha-256`.
+> 3. Após o container de bootstrap finalizar a inicialização do volume, ele é descartado e você sobe a stack operacional (`openclinic-db.yml`), que opera sem senhas no YAML.
 
 ### Passos de Instalação no Portainer
 
 1. Acesse o **Portainer** → **Stacks** → **Add Stack**.
-2. Cole o conteúdo de `infra/stacks/openclinic-production.yml`.
-3. Defina as variáveis de ambiente utilizando o modelo `infra/stacks/openclinic-production.env.example`.
+2. Cole o conteúdo da stack escolhida (`openclinic-db-api-webapp.yml` para VPS única ou `openclinic-api-webapp.yml` para cluster desacoplado).
+3. Defina as variáveis de ambiente utilizando o modelo `.env.example` correspondente.
 4. Clique em **Deploy the stack**.
 
 ---

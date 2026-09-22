@@ -1,4 +1,5 @@
 import { ensureDefaultSuperAdmin } from '../../../packages/backend-cli/src/commands/user-create-admin.js';
+import { BOOTSTRAP_DEFAULTS } from '@openclinic/core';
 import { testDatabaseUrl } from '../test-connection.mjs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -202,9 +203,10 @@ test('initial OWNER has canonical identity and repeated provisioning preserves a
     const first = await ensureDefaultSuperAdmin(url);
     assert.equal(first.created, true);
     const [owner] = await sql`SELECT * FROM iam_users WHERE role = 'OWNER'`;
-    assert.equal(owner!.username, 'superadmin');
-    assert.equal(owner!.full_name, 'Superadministrator');
-    assert.equal(owner!.job_title, 'Platform Administrator');
+    assert.equal(owner!.username, BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_USERNAME);
+    assert.equal(owner!.full_name, BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_FULL_NAME);
+    assert.equal(owner!.job_title, BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_JOB_TITLE);
+    assert.equal(owner!.cpf, BOOTSTRAP_DEFAULTS.DEFAULT_OWNER_CPF);
     const memberships = await sql`SELECT * FROM iam_user_groups ORDER BY id`;
     const permissions = await sql`SELECT * FROM iam_permissions ORDER BY id`;
     assert.equal((await ensureDefaultSuperAdmin(url)).created, false);

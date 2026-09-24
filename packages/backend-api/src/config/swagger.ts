@@ -35,6 +35,7 @@ export const swaggerOptions: FastifyDynamicSwaggerOptions = {
       { name: 'User Groups', description: 'Functional group administration, role inheritance, and member associations' },
       { name: 'Platform & Applications', description: 'System application configuration and public settings' },
       { name: 'Tenants', description: 'Multi-tenancy administration and organization isolation' },
+      { name: 'Patients', description: 'Patient registration, pagination and soft deletion within the authenticated tenant' },
       { name: 'Health & Monitoring', description: 'API health check and service status' },
     ],
     components: {

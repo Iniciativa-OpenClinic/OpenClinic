@@ -1,0 +1,60 @@
+﻿# Development override for openclinic-db-api-webapp-local.yml (see dev-docker.cmd).
+services:
+  api:
+    image: openclinic-api:dev
+    build:
+      target: development
+    environment:
+      NODE_ENV: development
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../../../packages/backend-api
+          target: /app/packages/backend-api
+          initial_sync: true
+          ignore: [node_modules/, dist/, tests/, package.json]
+        - action: sync+restart
+          path: ../../../packages/core
+          target: /app/packages/core
+          initial_sync: true
+          ignore: [node_modules/, dist/, tests/, package.json]
+        - action: sync+restart
+          path: ../../../infra/secrets
+          target: /app/infra/secrets
+          initial_sync: true
+        - action: sync+restart
+          path: ../../../tsconfig.base.json
+          target: /app/tsconfig.base.json
+          initial_sync: true
+        - action: rebuild
+          path: ../../../package.json
+        - action: rebuild
+          path: ../../../package-lock.json
+        - action: rebuild
+          path: ../../../packages/backend-api/package.json
+        - action: rebuild
+          path: ../../../packages/core/package.json
+        - action: rebuild
+          path: ../../../packages/backend-cli/package.json
+        - action: rebuild
+          path: ../../../packages/frontend-webapp/package.json
+        - action: rebuild
+          path: ../../../infra/docker/Dockerfile
+  webapp:
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../../packages/frontend-webapp
+          ignore: [node_modules/, dist/, tests/]
+        - action: rebuild
+          path: ../../../packages/core
+          ignore: [node_modules/, dist/, tests/]
+        - action: rebuild
+          path: ../../../package.json
+        - action: rebuild
+          path: ../../../package-lock.json
+        - action: rebuild
+          path: ../../../tsconfig.base.json
+        - action: rebuild
+          path: ../../../infra/docker/Dockerfile.webapp
+

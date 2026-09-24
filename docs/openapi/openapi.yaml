@@ -4297,6 +4297,1340 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/def-0"
+  /api/v1/business/patients:
+    get:
+      summary: List patients
+      tags:
+        - Patients
+      description: Lists non-deleted patients in the authenticated tenant. Requires
+        op_patients READ permission.
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            default: 0
+          in: query
+          name: offset
+          required: false
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          in: query
+          name: limit
+          required: false
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tenant_id:
+                          type: string
+                        full_name:
+                          type: string
+                        cpf:
+                          type: string
+                          nullable: true
+                        cns:
+                          type: string
+                          nullable: true
+                        birth_date:
+                          type: string
+                          nullable: true
+                          format: date
+                        gender:
+                          type: string
+                          nullable: true
+                        email:
+                          type: string
+                          nullable: true
+                        phone:
+                          type: string
+                          nullable: true
+                        address:
+                          type: string
+                          nullable: true
+                        emergency_contact:
+                          type: string
+                          nullable: true
+                        insurance_name:
+                          type: string
+                          nullable: true
+                        insurance_number:
+                          type: string
+                          nullable: true
+                        allergies_notes:
+                          type: string
+                          nullable: true
+                        is_active:
+                          type: boolean
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                        deleted_at:
+                          type: string
+                          nullable: true
+                          format: date-time
+                  total:
+                    type: integer
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or patient permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or patient permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Patient not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Patient not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    post:
+      summary: Create patient
+      tags:
+        - Patients
+      description: Creates a patient in the authenticated tenant. Requires op_patients
+        WRITE permission. tenant_id is assigned by the server.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - full_name
+              additionalProperties: false
+              properties:
+                full_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  pattern: \S
+                cpf:
+                  type: string
+                  nullable: true
+                  maxLength: 11
+                cns:
+                  type: string
+                  nullable: true
+                  maxLength: 15
+                birth_date:
+                  type: string
+                  nullable: true
+                  format: date
+                gender:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+                email:
+                  type: string
+                  nullable: true
+                  format: email
+                  maxLength: 255
+                phone:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+                address:
+                  type: string
+                  nullable: true
+                emergency_contact:
+                  type: string
+                  nullable: true
+                  maxLength: 255
+                insurance_name:
+                  type: string
+                  nullable: true
+                  maxLength: 100
+                insurance_number:
+                  type: string
+                  nullable: true
+                  maxLength: 100
+                allergies_notes:
+                  type: string
+                  nullable: true
+      security:
+        - BearerAuth: []
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  full_name:
+                    type: string
+                  cpf:
+                    type: string
+                    nullable: true
+                  cns:
+                    type: string
+                    nullable: true
+                  birth_date:
+                    type: string
+                    nullable: true
+                    format: date
+                  gender:
+                    type: string
+                    nullable: true
+                  email:
+                    type: string
+                    nullable: true
+                  phone:
+                    type: string
+                    nullable: true
+                  address:
+                    type: string
+                    nullable: true
+                  emergency_contact:
+                    type: string
+                    nullable: true
+                  insurance_name:
+                    type: string
+                    nullable: true
+                  insurance_number:
+                    type: string
+                    nullable: true
+                  allergies_notes:
+                    type: string
+                    nullable: true
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or patient permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or patient permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Patient not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Patient not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+  /api/v1/business/patients/{id}:
+    get:
+      summary: Get patient
+      tags:
+        - Patients
+      description: Requires op_patients READ permission. Deleted patients and patients
+        in other tenants return 404.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  full_name:
+                    type: string
+                  cpf:
+                    type: string
+                    nullable: true
+                  cns:
+                    type: string
+                    nullable: true
+                  birth_date:
+                    type: string
+                    nullable: true
+                    format: date
+                  gender:
+                    type: string
+                    nullable: true
+                  email:
+                    type: string
+                    nullable: true
+                  phone:
+                    type: string
+                    nullable: true
+                  address:
+                    type: string
+                    nullable: true
+                  emergency_contact:
+                    type: string
+                    nullable: true
+                  insurance_name:
+                    type: string
+                    nullable: true
+                  insurance_number:
+                    type: string
+                    nullable: true
+                  allergies_notes:
+                    type: string
+                    nullable: true
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or patient permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or patient permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Patient not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Patient not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    put:
+      summary: Update patient
+      tags:
+        - Patients
+      description: Updates supplied fields; omitted fields remain unchanged. Requires
+        op_patients WRITE permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              additionalProperties: false
+              properties:
+                full_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  pattern: \S
+                cpf:
+                  type: string
+                  nullable: true
+                  maxLength: 11
+                cns:
+                  type: string
+                  nullable: true
+                  maxLength: 15
+                birth_date:
+                  type: string
+                  nullable: true
+                  format: date
+                gender:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+                email:
+                  type: string
+                  nullable: true
+                  format: email
+                  maxLength: 255
+                phone:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+                address:
+                  type: string
+                  nullable: true
+                emergency_contact:
+                  type: string
+                  nullable: true
+                  maxLength: 255
+                insurance_name:
+                  type: string
+                  nullable: true
+                  maxLength: 100
+                insurance_number:
+                  type: string
+                  nullable: true
+                  maxLength: 100
+                allergies_notes:
+                  type: string
+                  nullable: true
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  full_name:
+                    type: string
+                  cpf:
+                    type: string
+                    nullable: true
+                  cns:
+                    type: string
+                    nullable: true
+                  birth_date:
+                    type: string
+                    nullable: true
+                    format: date
+                  gender:
+                    type: string
+                    nullable: true
+                  email:
+                    type: string
+                    nullable: true
+                  phone:
+                    type: string
+                    nullable: true
+                  address:
+                    type: string
+                    nullable: true
+                  emergency_contact:
+                    type: string
+                    nullable: true
+                  insurance_name:
+                    type: string
+                    nullable: true
+                  insurance_number:
+                    type: string
+                    nullable: true
+                  allergies_notes:
+                    type: string
+                    nullable: true
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or patient permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or patient permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Patient not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Patient not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    delete:
+      summary: Delete patient
+      tags:
+        - Patients
+      description: Soft-deletes a patient in the authenticated tenant. Requires
+        op_patients DELETE permission.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Patient deleted; empty response
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or patient permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or patient permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Patient not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Patient not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
 servers:
   - url: /
     description: Current Origin (Domain / Reverse Proxy)
@@ -4316,5 +5650,8 @@ tags:
     description: System application configuration and public settings
   - name: Tenants
     description: Multi-tenancy administration and organization isolation
+  - name: Patients
+    description: Patient registration, pagination and soft deletion within the
+      authenticated tenant
   - name: Health & Monitoring
     description: API health check and service status

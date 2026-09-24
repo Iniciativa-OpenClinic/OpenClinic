@@ -5,7 +5,7 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import type { JwtConfig } from '@openclinic/core';
+import { AccessDeniedError, ErrorCode, ResourceAction, type JwtConfig } from '@openclinic/core';
 import { env } from './config/env.js';
 import { swaggerOptions, swaggerUiOptions } from './config/swagger.js';
 import { ProblemDetailsSchema } from './arch/presentation/openapi.schemas.js';
@@ -17,6 +17,9 @@ import { registerIamRoutes } from './arch/presentation/iam.router.js';
 import { registerApplicationRoutes } from './arch/presentation/application.router.js';
 import { registerTenantRoutes } from './arch/presentation/tenant.router.js';
 import { errorHandler } from './arch/presentation/error-handler.js';
+import { registerPatientRoutes } from './arch/presentation/patient.router.js';
+import { createAuthenticateJwt } from './arch/presentation/middlewares/authenticate-jwt.js';
+import { requirePermission } from './arch/presentation/middlewares/require-permission.js';
 
 export interface BuildAppOptions {
   jwtConfig?: JwtConfig;
@@ -177,6 +180,19 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerIamRoutes(app, uow, jwtConfig);
   registerApplicationRoutes(app, uow, jwtConfig);
   registerTenantRoutes(app, uow, jwtConfig);
+
+  await app.register(async (patientApp) => {
+    patientApp.addHook('onRequest', createAuthenticateJwt(jwtConfig, uow));
+    patientApp.addHook('preHandler', async (request, reply) => {
+      if (!request.user?.tenant_id) throw new AccessDeniedError(ErrorCode.FORBIDDEN);
+      const action = request.method === 'DELETE' ? ResourceAction.DELETE
+        : request.method === 'GET' || request.method === 'HEAD' ? ResourceAction.READ : ResourceAction.WRITE;
+      await requirePermission(uow, 'op_patients', action)(request, reply);
+    });
+    registerPatientRoutes(patientApp, {
+      patients: (request) => uow.patientsForTenant(request.user!.tenant_id!),
+    });
+  });
 
   return app;
 }

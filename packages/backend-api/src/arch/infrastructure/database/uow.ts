@@ -11,6 +11,7 @@ import type { IAMUnitOfWork, ILockoutRepository, IAuditLogRepository } from '../
 import type { LockoutEntity, AuditLogEntry } from '../../domain/entities.js';
 import { iamLockouts, sysAuditLogs } from './drizzle-schema.js';
 import { eq } from 'drizzle-orm';
+import { PostgresPatientRepository } from './patient.repository.js';
 
 class LockoutRepository implements ILockoutRepository {
   constructor(private readonly db: PostgresJsDatabase) {}
@@ -68,5 +69,8 @@ export class UnitOfWork implements IAMUnitOfWork {
   }
 
   async commit(): Promise<void> {}
+  patientsForTenant(tenantId: string): PostgresPatientRepository {
+    return new PostgresPatientRepository(this.db, tenantId);
+  }
   async rollback(): Promise<void> {}
 }

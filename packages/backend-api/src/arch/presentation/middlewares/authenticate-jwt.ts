@@ -43,8 +43,8 @@ export function createAuthenticateJwt(jwtConfig: JwtConfig, uow?: IAMUnitOfWork)
         payload = { ...payload, role: user.role };
       }
 
-      if (user.tenant_id && user.tenant_id !== payload.tenant_id) {
-        payload = { ...payload, tenant_id: user.tenant_id };
+      if (user.tenant_id !== payload.tenant_id) {
+        payload = { ...payload, tenant_id: user.tenant_id ?? undefined };
       }
     }
 

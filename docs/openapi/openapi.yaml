@@ -5,7 +5,7 @@ info:
     Clinical Management API with hybrid access control (RBAC + ACL),
     multi-tenancy, dynamic capabilities resolution, and enterprise security
     (Argon2id + in-memory JWT).
-  version: 0.1.1
+  version: 0.1.0
   contact:
     name: Iniciativa OpenClinic
     url: https://github.com/Iniciativa-OpenClinic/OpenClinic
@@ -5631,6 +5631,1584 @@ paths:
                   - status
                   - detail
                   - code
+  /api/v1/business/practitioners:
+    get:
+      summary: List practitioners
+      tags:
+        - Practitioners
+      description: Lists non-deleted practitioners in the authenticated tenant.
+        Requires base_staff READ permission.
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            default: 0
+          in: query
+          name: offset
+          required: false
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          in: query
+          name: limit
+          required: false
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tenant_id:
+                          type: string
+                        full_name:
+                          type: string
+                        user_id:
+                          type: string
+                          nullable: true
+                        cpf:
+                          type: string
+                          nullable: true
+                        email:
+                          type: string
+                          nullable: true
+                        phone:
+                          type: string
+                          nullable: true
+                        practitioner_type:
+                          type: string
+                        job_title:
+                          type: string
+                          nullable: true
+                        council_type:
+                          type: string
+                          nullable: true
+                        council_number:
+                          type: string
+                          nullable: true
+                        council_uf:
+                          type: string
+                          nullable: true
+                        primary_specialty:
+                          type: string
+                          nullable: true
+                        is_clinical_staff:
+                          type: boolean
+                        is_active:
+                          type: boolean
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                        deleted_at:
+                          type: string
+                          nullable: true
+                          format: date-time
+                  total:
+                    type: integer
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or practitioner permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or practitioner permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Practitioner not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Practitioner not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "422":
+          description: Invalid CPF check digits
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid CPF check digits
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    post:
+      summary: Create practitioner
+      tags:
+        - Practitioners
+      description: Creates a practitioner in the authenticated tenant. Requires
+        base_staff WRITE permission. tenant_id is assigned by the server.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - full_name
+                - practitioner_type
+              additionalProperties: false
+              properties:
+                full_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  pattern: \S
+                cpf:
+                  type: string
+                  nullable: true
+                  pattern: ^[0-9]{11}$
+                practitioner_type:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  pattern: \S
+                job_title:
+                  type: string
+                  nullable: true
+                  maxLength: 100
+                council_type:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+                council_number:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+                council_uf:
+                  type: string
+                  nullable: true
+                  enum:
+                    - null
+                    - AC
+                    - AL
+                    - AP
+                    - AM
+                    - BA
+                    - CE
+                    - DF
+                    - ES
+                    - GO
+                    - MA
+                    - MT
+                    - MS
+                    - MG
+                    - PA
+                    - PB
+                    - PR
+                    - PE
+                    - PI
+                    - RJ
+                    - RN
+                    - RS
+                    - RO
+                    - RR
+                    - SC
+                    - SP
+                    - SE
+                    - TO
+                primary_specialty:
+                  type: string
+                  nullable: true
+                  maxLength: 150
+                is_clinical_staff:
+                  type: boolean
+                email:
+                  type: string
+                  nullable: true
+                  format: email
+                  maxLength: 255
+                phone:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+      security:
+        - BearerAuth: []
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  full_name:
+                    type: string
+                  user_id:
+                    type: string
+                    nullable: true
+                  cpf:
+                    type: string
+                    nullable: true
+                  email:
+                    type: string
+                    nullable: true
+                  phone:
+                    type: string
+                    nullable: true
+                  practitioner_type:
+                    type: string
+                  job_title:
+                    type: string
+                    nullable: true
+                  council_type:
+                    type: string
+                    nullable: true
+                  council_number:
+                    type: string
+                    nullable: true
+                  council_uf:
+                    type: string
+                    nullable: true
+                  primary_specialty:
+                    type: string
+                    nullable: true
+                  is_clinical_staff:
+                    type: boolean
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or practitioner permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or practitioner permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Practitioner not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Practitioner not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "422":
+          description: Invalid CPF check digits
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid CPF check digits
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+  /api/v1/business/practitioners/{id}:
+    get:
+      summary: Get practitioner
+      tags:
+        - Practitioners
+      description: Requires base_staff READ permission. Deleted practitioners and
+        practitioners in other tenants return 404.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  full_name:
+                    type: string
+                  user_id:
+                    type: string
+                    nullable: true
+                  cpf:
+                    type: string
+                    nullable: true
+                  email:
+                    type: string
+                    nullable: true
+                  phone:
+                    type: string
+                    nullable: true
+                  practitioner_type:
+                    type: string
+                  job_title:
+                    type: string
+                    nullable: true
+                  council_type:
+                    type: string
+                    nullable: true
+                  council_number:
+                    type: string
+                    nullable: true
+                  council_uf:
+                    type: string
+                    nullable: true
+                  primary_specialty:
+                    type: string
+                    nullable: true
+                  is_clinical_staff:
+                    type: boolean
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or practitioner permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or practitioner permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Practitioner not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Practitioner not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "422":
+          description: Invalid CPF check digits
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid CPF check digits
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    put:
+      summary: Update practitioner
+      tags:
+        - Practitioners
+      description: Updates supplied fields; omitted fields remain unchanged. Requires
+        base_staff WRITE permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              additionalProperties: false
+              properties:
+                full_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  pattern: \S
+                cpf:
+                  type: string
+                  nullable: true
+                  pattern: ^[0-9]{11}$
+                practitioner_type:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  pattern: \S
+                job_title:
+                  type: string
+                  nullable: true
+                  maxLength: 100
+                council_type:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+                council_number:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+                council_uf:
+                  type: string
+                  nullable: true
+                  enum:
+                    - null
+                    - AC
+                    - AL
+                    - AP
+                    - AM
+                    - BA
+                    - CE
+                    - DF
+                    - ES
+                    - GO
+                    - MA
+                    - MT
+                    - MS
+                    - MG
+                    - PA
+                    - PB
+                    - PR
+                    - PE
+                    - PI
+                    - RJ
+                    - RN
+                    - RS
+                    - RO
+                    - RR
+                    - SC
+                    - SP
+                    - SE
+                    - TO
+                primary_specialty:
+                  type: string
+                  nullable: true
+                  maxLength: 150
+                is_clinical_staff:
+                  type: boolean
+                email:
+                  type: string
+                  nullable: true
+                  format: email
+                  maxLength: 255
+                phone:
+                  type: string
+                  nullable: true
+                  maxLength: 20
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  full_name:
+                    type: string
+                  user_id:
+                    type: string
+                    nullable: true
+                  cpf:
+                    type: string
+                    nullable: true
+                  email:
+                    type: string
+                    nullable: true
+                  phone:
+                    type: string
+                    nullable: true
+                  practitioner_type:
+                    type: string
+                  job_title:
+                    type: string
+                    nullable: true
+                  council_type:
+                    type: string
+                    nullable: true
+                  council_number:
+                    type: string
+                    nullable: true
+                  council_uf:
+                    type: string
+                    nullable: true
+                  primary_specialty:
+                    type: string
+                    nullable: true
+                  is_clinical_staff:
+                    type: boolean
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or practitioner permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or practitioner permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Practitioner not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Practitioner not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "422":
+          description: Invalid CPF check digits
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid CPF check digits
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    delete:
+      summary: Delete practitioner
+      tags:
+        - Practitioners
+      description: Soft-deletes a practitioner in the authenticated tenant. Requires
+        base_staff DELETE permission.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Practitioner deleted; empty response
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing or invalid bearer token
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Missing tenant or practitioner permission
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Missing tenant or practitioner permission
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Practitioner not found in the current tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Practitioner not found in the current tenant
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "422":
+          description: Invalid CPF check digits
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid CPF check digits
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
 servers:
   - url: /
     description: Current Origin (Domain / Reverse Proxy)
@@ -5650,6 +7228,9 @@ tags:
     description: System application configuration and public settings
   - name: Tenants
     description: Multi-tenancy administration and organization isolation
+  - name: Practitioners
+    description: Practitioner registration, pagination and soft deletion within the
+      authenticated tenant
   - name: Patients
     description: Patient registration, pagination and soft deletion within the
       authenticated tenant

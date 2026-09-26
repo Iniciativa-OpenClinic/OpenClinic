@@ -1,6 +1,6 @@
 # Visão
 
-*v0.3, documento vivo, escrito na fase de fundação do projeto.*
+## v0.3, documento vivo, escrito na fase de fundação do projeto
 
 ## Missão
 

@@ -1,0 +1,38 @@
+# ============================================================
+# OpenClinic Webapp - Multi-stage Docker Build (Vite + Nginx)
+# ============================================================
+
+# Stage 1: Build Frontend Assets
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+# Dependency resolution
+COPY package.json package-lock.json* ./
+COPY packages/core/package.json packages/core/
+COPY packages/backend-api/package.json packages/backend-api/
+COPY packages/backend-cli/package.json packages/backend-cli/
+COPY packages/frontend-webapp/package.json packages/frontend-webapp/
+RUN npm ci
+
+# Source files & compilation
+COPY tsconfig.base.json ./
+COPY packages/core/ packages/core/
+COPY packages/frontend-webapp/ packages/frontend-webapp/
+RUN npm run build -w packages/core && npm run build -w packages/frontend-webapp
+
+# Stage 2: Production Nginx Runtime
+FROM nginx:alpine AS runtime
+LABEL maintainer="Iniciativa OpenClinic"
+
+# Remove default nginx configs
+RUN rm -rf /etc/nginx/conf.d/* /usr/share/nginx/html/*
+
+# Copy build artifacts and custom nginx configuration
+COPY --from=builder /app/packages/frontend-webapp/dist /usr/share/nginx/html
+COPY infra/docker/nginx.webapp.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget --spider -q http://127.0.0.1/healthz || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

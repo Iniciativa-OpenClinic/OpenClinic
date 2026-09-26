@@ -1,0 +1,2 @@
+FROM postgres:17-alpine
+COPY infra/docker/init-evaluation-db.sh /docker-entrypoint-initdb.d/010-evaluation-roles.sh

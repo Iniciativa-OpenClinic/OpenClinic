@@ -1,6 +1,6 @@
 # Governança
 
-*v0.3, documento vivo.*
+## v0.3, documento vivo
 
 ## Modelo atual: liderança do fundador
 

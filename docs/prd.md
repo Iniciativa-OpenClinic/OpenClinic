@@ -1,6 +1,6 @@
 # Requisitos de Produto
 
-*v0.7, documento vivo.*
+## v0.7, documento vivo
 
 > [!NOTE]
 > **Este documento acompanha o projeto.** Ele reflete o que está decidido até a revisão indicada acima, inclusive as escolhas de tecnologia já fechadas, e é atualizado a cada nova decisão. Como se chegou a cada uma fica registrado nas atas de [`reunioes/`](./reunioes/) e em [`decisions/`](./decisions/).

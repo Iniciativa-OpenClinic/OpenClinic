@@ -22,7 +22,7 @@ export const RoomSchema = {
 // Inline errors also allow the router to be registered in isolation.
 const { $id: _id, ...problem } = ProblemDetailsSchema;
 export const roomErrors = {
-  409: { ...problem, description: 'Room cannot change unit while availability history exists' },
+  409: { ...problem, description: 'Room cannot change unit while availability history or unit-scoped block records exist' },
   400: { ...problem, description: 'Invalid request' },
   422: { ...problem, description: 'Invalid room data or unit outside the current tenant' },
   401: { ...problem, description: 'Missing or invalid bearer token' },

@@ -1,5 +1,16 @@
 # OpenClinic — Dicionário e Referência do Esquema de Banco de Dados
 
+## Bloqueios (migração 0005)
+
+`app_schedule_blocks` armazena períodos indisponíveis de profissional ou sala,
+unidade opcional, início/fim com fuso, motivo e recorrência diária/semanal em
+JSONB. Checks exigem um único recurso e um período positivo. Chaves compostas
+garantem o tenant dos vínculos e, quando indicada, a unidade da sala.
+Ocorrências são calculadas por período, sem materialização de séries infinitas.
+
+Ver [contrato de Bloqueio](./schedule-block-api.md) e
+[migração 0005](../infra/database/migrations/0005_schedule_blocks.sql).
+
 ## Disponibilidade (migração 0004)
 
 `app_availabilities` representa janelas semanais por unidade e por profissional

@@ -42,6 +42,8 @@ null, números e strings não substituem valores booleanos no corpo.
 Alterar a unidade exige novamente uma unidade ativa e do mesmo tenant.
 Se já houver histórico de disponibilidade para a sala, a troca de unidade retorna
 409 para preservar a localização histórica; cadastrar outra sala na unidade de destino.
+Bloqueios com unidade explícita também impedem a transferência da sala e retornam
+409, inclusive quando excluídos logicamente e preservados no banco.
 Vínculo inválido retorna 422, sem gravar alterações parciais.
 
 IDs, tenant e timestamps são definidos pelo servidor. A resposta inclui

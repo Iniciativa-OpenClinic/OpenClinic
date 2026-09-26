@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { AppError, ErrorCode, ValidationError } from '@openclinic/core';
-import { and, asc, count, eq, ilike, isNull } from 'drizzle-orm';
+import { and, asc, count, eq, ilike, isNull, isNotNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { RoomInput, RoomListOptions, RoomRepository } from '../../domain/room.js';
-import { appAvailabilities, appOrganizationUnits, appRooms } from './drizzle-schema.js';
+import { appAvailabilities, appOrganizationUnits, appRooms, appScheduleBlocks } from './drizzle-schema.js';
 
 type Transaction = Parameters<Parameters<PostgresJsDatabase['transaction']>[0]>[0];
 
@@ -59,6 +59,9 @@ export class PostgresRoomRepository implements RoomRepository {
         const [availability] = await tx.select({ id: appAvailabilities.id }).from(appAvailabilities)
           .where(and(eq(appAvailabilities.tenant_id, this.tenantId), eq(appAvailabilities.room_id, id))).limit(1);
         if (availability) throw new AppError(ErrorCode.BUSINESS_RULE_VIOLATION, 'Room unit cannot change after availability history exists', 409);
+        const [block] = await tx.select({ id: appScheduleBlocks.id }).from(appScheduleBlocks)
+          .where(and(eq(appScheduleBlocks.tenant_id, this.tenantId), eq(appScheduleBlocks.room_id, id), isNotNull(appScheduleBlocks.unit_id))).limit(1);
+        if (block) throw new AppError(ErrorCode.BUSINESS_RULE_VIOLATION, 'Room unit cannot change while unit-scoped block records exist', 409);
       }
       if (input.unit_id !== undefined) await this.validateUnit(tx, input.unit_id);
       const [room] = await tx.update(appRooms).set({ ...input, updated_at: new Date() })

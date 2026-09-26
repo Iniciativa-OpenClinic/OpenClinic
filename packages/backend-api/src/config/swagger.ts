@@ -36,6 +36,7 @@ export const swaggerOptions: FastifyDynamicSwaggerOptions = {
       { name: 'Platform & Applications', description: 'System application configuration and public settings' },
       { name: 'Tenants', description: 'Multi-tenancy administration and organization isolation' },
       { name: 'Availabilities', description: 'Weekly resource availability with validity periods and version history' },
+      { name: 'ScheduleBlocks', description: 'Resource unavailability and recurring block occurrences' },
       { name: 'Rooms', description: 'Room registration and equipment within tenant care units' },
       { name: 'Procedures', description: 'Procedure catalog, qualified practitioners and soft deletion within the authenticated tenant' },
       { name: 'Units', description: 'Care units within the authenticated tenant' },

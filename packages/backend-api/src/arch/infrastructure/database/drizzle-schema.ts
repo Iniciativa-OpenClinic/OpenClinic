@@ -1,4 +1,5 @@
 import { UserRole } from '@openclinic/core/enums';
+import type { BlockRecurrence } from '../../domain/schedule-block.js';
 import { sql } from 'drizzle-orm';
 import { pgTable, varchar, text, boolean, integer, timestamp, jsonb, date, uniqueIndex, index, foreignKey, unique, check } from 'drizzle-orm/pg-core';
 
@@ -322,6 +323,7 @@ export const appRooms = pgTable('app_rooms', {
 }, (table) => [
   index('idx_app_rooms_tenant_name').on(table.tenant_id, table.name, table.id),
   unique('uq_app_rooms_tenant_unit_id').on(table.tenant_id, table.unit_id, table.id),
+  unique('uq_app_rooms_tenant_id').on(table.tenant_id, table.id),
   index('idx_app_rooms_tenant_unit').on(table.tenant_id, table.unit_id),
   foreignKey({ name: 'fk_app_rooms_unit', columns: [table.tenant_id, table.unit_id], foreignColumns: [appOrganizationUnits.tenant_id, appOrganizationUnits.id] }).onDelete('restrict'),
   check('app_rooms_name_check', sql`length(trim(${table.name})) > 0`),
@@ -457,6 +459,33 @@ export const appAvailabilities = pgTable('app_availabilities', {
   check('app_availabilities_time_check', sql`${table.start_time} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' AND ${table.end_time} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' AND ${table.start_time} < ${table.end_time}`),
   check('app_availabilities_slot_check', sql`${table.slot_duration_minutes} BETWEEN 1 AND 1439`),
   check('app_availabilities_validity_check', sql`${table.valid_until} IS NULL OR ${table.valid_until} > ${table.valid_from}`),
+]);
+
+export const appScheduleBlocks = pgTable('app_schedule_blocks', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  tenant_id: varchar('tenant_id', { length: 36 }).notNull(),
+  unit_id: varchar('unit_id', { length: 36 }),
+  practitioner_id: varchar('practitioner_id', { length: 36 }),
+  room_id: varchar('room_id', { length: 36 }),
+  starts_at: timestamp('starts_at', { withTimezone: true }).notNull(),
+  ends_at: timestamp('ends_at', { withTimezone: true }).notNull(),
+  timezone: varchar('timezone', { length: 100 }).notNull(),
+  reason: text('reason'),
+  recurrence: jsonb('recurrence').$type<BlockRecurrence>(),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deleted_at: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => [
+  index('idx_app_schedule_blocks_tenant_start').on(table.tenant_id, table.starts_at, table.id),
+  index('idx_app_schedule_blocks_resource').on(table.tenant_id, table.practitioner_id, table.room_id),
+  foreignKey({ name: 'fk_app_schedule_blocks_tenant', columns: [table.tenant_id], foreignColumns: [sysTenants.id] }).onDelete('restrict'),
+  foreignKey({ name: 'fk_app_schedule_blocks_unit', columns: [table.tenant_id, table.unit_id], foreignColumns: [appOrganizationUnits.tenant_id, appOrganizationUnits.id] }).onDelete('restrict'),
+  foreignKey({ name: 'fk_app_schedule_blocks_practitioner', columns: [table.tenant_id, table.practitioner_id], foreignColumns: [appPractitioners.tenant_id, appPractitioners.id] }).onDelete('restrict'),
+  foreignKey({ name: 'fk_app_schedule_blocks_room', columns: [table.tenant_id, table.room_id], foreignColumns: [appRooms.tenant_id, appRooms.id] }).onDelete('restrict'),
+  foreignKey({ name: 'fk_app_schedule_blocks_room_unit', columns: [table.tenant_id, table.unit_id, table.room_id], foreignColumns: [appRooms.tenant_id, appRooms.unit_id, appRooms.id] }).onDelete('restrict'),
+  check('app_schedule_blocks_resource_check', sql`(${table.practitioner_id} IS NULL) <> (${table.room_id} IS NULL)`),
+  check('app_schedule_blocks_period_check', sql`${table.ends_at} > ${table.starts_at}`),
+  check('app_schedule_blocks_recurrence_check', sql`${table.recurrence} IS NULL OR (jsonb_typeof(${table.recurrence}) = 'object' AND ${table.recurrence} ? 'frequency' AND ${table.recurrence} ? 'interval' AND ${table.recurrence}->>'frequency' IN ('DAILY', 'WEEKLY') AND jsonb_typeof(${table.recurrence}->'interval') = 'number' AND (${table.recurrence}->>'interval')::numeric BETWEEN 1 AND 52 AND trunc((${table.recurrence}->>'interval')::numeric) = (${table.recurrence}->>'interval')::numeric)`),
 ]);
 
 export const appAppointments = pgTable('app_appointments', {

@@ -11,6 +11,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { PostgresProcedureRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/procedure.repository.js';
 import { PostgresRoomRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/room.repository.js';
 import { PostgresAvailabilityRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/availability.repository.js';
+import { PostgresScheduleBlockRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/schedule-block.repository.js';
 import { baselineDatabase, inspectMigrations, loadMigrations, migrateDatabase, migrationsDirectory,
   MIGRATION_LOCK, schemaSignature, signatureDifferences, databaseDirectory } from '../../../packages/backend-cli/src/utils/migration-runner.js';
 import { seedDemoDatabase } from '../../../packages/backend-cli/src/commands/db-seed.js';
@@ -39,7 +40,7 @@ test('fresh install, reference catalog and repeated migration preserve customize
   await isolated(async (url, sql) => {
     assert.equal((await migrateDatabase(url)).length, loadMigrations().length);
     const [tables] = await sql`SELECT count(*)::int AS count FROM pg_tables WHERE schemaname = 'public'`;
-    assert.equal(tables!.count, 23);
+    assert.equal(tables!.count, 24);
     const [users] = await sql`SELECT count(*)::int AS count FROM iam_users`;
     assert.equal(users!.count, 0);
     const [bindings] = await sql`SELECT count(*)::int AS count FROM iam_groups g JOIN sys_tenants t ON t.id = g.tenant_id WHERE t.slug = 'acme-organization'`;
@@ -170,6 +171,59 @@ test('availability versions preserve history, validate resources and serialize c
     assert.equal((await repo.history(latest!.id, { offset: 0, limit: 20 }))!.total, 2);
     assert.ok((await repo.history(original.id, { offset: 0, limit: 20 }))!.items[1]!.deleted_at);
     assert.equal((await repo.list({ offset: 0, limit: 20, practitioner_id: 'av-p1', on_date: '2026-11-02' })).total, 0);
+  });
+});
+
+test('schedule blocks enforce scope and expand calendar recurrence across DST', async () => {
+  await isolated(async (url, sql) => {
+    await migrateDatabase(url);
+    await sql`INSERT INTO sys_tenants (id, name) VALUES ('block-a', 'A'), ('block-b', 'B')`;
+    await sql`INSERT INTO app_organizations (id, tenant_id, legal_name, trade_name) VALUES ('block-org', 'block-a', 'A', 'A')`;
+    await sql`INSERT INTO app_organization_units (id, tenant_id, organization_id, name) VALUES
+      ('block-u1', 'block-a', 'block-org', 'U1'), ('block-u2', 'block-a', 'block-org', 'U2')`;
+    await sql`INSERT INTO app_practitioners (id, tenant_id, full_name, practitioner_type) VALUES
+      ('block-p1', 'block-a', 'A', 'CLINICAL'), ('block-p2', 'block-b', 'B', 'CLINICAL')`;
+    await sql`INSERT INTO app_rooms (id, tenant_id, unit_id, name, is_schedulable) VALUES
+      ('block-r1', 'block-a', 'block-u1', 'R1', true), ('block-r2', 'block-a', 'block-u2', 'R2', true)`;
+    const repo = new PostgresScheduleBlockRepository(drizzle(sql), 'block-a');
+    const foreign = new PostgresScheduleBlockRepository(drizzle(sql), 'block-b');
+    const input = { practitioner_id: 'block-p1', starts_at: '2026-03-01T14:00:00Z', ends_at: '2026-03-01T15:00:00Z',
+      timezone: 'America/New_York', reason: 'Meeting', recurrence: { frequency: 'WEEKLY' as const, interval: 1, until: '2026-03-15T13:00:00Z' } };
+    const created = await repo.create(input);
+    assert.equal(created.unit_id, null);
+    assert.equal(await foreign.getById(created.id), null);
+    assert.equal(await foreign.update(created.id, { reason: 'Forbidden' }), null);
+    assert.equal(await foreign.softDelete(created.id), false);
+    await assert.rejects(repo.create({ ...input, practitioner_id: 'block-p2' }), /Practitioner/);
+    await assert.rejects(repo.create({ ...input, practitioner_id: null, room_id: 'block-r2', unit_id: 'block-u1' }), /Room/);
+    const range = { from: '2026-03-01T00:00:00Z', to: '2026-03-23T00:00:00Z', offset: 0, limit: 20 };
+    const occurrences = await repo.occurrences({ ...range, unit_id: 'block-u1' });
+    assert.equal(occurrences.total, 3);
+    assert.deepEqual(occurrences.items.map(item => item.starts_at.toISOString()), ['2026-03-01T14:00:00.000Z', '2026-03-08T13:00:00.000Z', '2026-03-15T13:00:00.000Z']);
+    assert.equal((await repo.occurrences({ ...range, offset: 50 })).total, 3);
+    assert.deepEqual((await repo.occurrences({ ...range, offset: 50 })).items, []);
+    assert.equal((await foreign.occurrences(range)).total, 0);
+    await assert.rejects(repo.update(created.id, { ends_at: '2026-02-28T10:00:00Z', reason: 'Rollback' }), /period/);
+    assert.equal((await repo.getById(created.id))!.reason, 'Meeting');
+    const globalRoom = await repo.create({ ...input, practitioner_id: null, room_id: 'block-r2', recurrence: null });
+    assert.equal((await repo.list({ offset: 0, limit: 20, unit_id: 'block-u1' })).total, 1);
+    assert.equal((await repo.occurrences({ ...range, unit_id: 'block-u1' })).total, 3);
+    assert.equal((await repo.occurrences({ ...range, unit_id: 'block-u2' })).total, 4);
+    await repo.update(globalRoom.id, { unit_id: 'block-u2' });
+    await assert.rejects(new PostgresRoomRepository(drizzle(sql), 'block-a').update('block-r2', { unit_id: 'block-u1' }), /block records/);
+    await assert.rejects(sql`UPDATE app_schedule_blocks SET unit_id = 'block-u1' WHERE id = ${globalRoom.id}`, /foreign key/);
+    await repo.update(created.id, { recurrence: null, reason: null });
+    assert.equal((await repo.occurrences({ ...range, practitioner_id: 'block-p1' })).total, 1);
+    assert.equal((await repo.occurrences({ ...range, practitioner_id: 'block-p1', from: input.ends_at })).total, 0);
+    assert.equal((await repo.occurrences({ ...range, practitioner_id: 'block-p1', to: input.starts_at })).total, 0);
+    assert.equal(await repo.softDelete(created.id), true);
+    assert.equal(await repo.getById(created.id), null);
+    assert.equal(await repo.softDelete(created.id), false);
+    assert.equal((await repo.occurrences({ ...range, practitioner_id: 'block-p1' })).total, 0);
+    const daily = await repo.create({ ...input, starts_at: '2000-01-01T10:00:00Z', ends_at: '2000-01-01T11:00:00Z', timezone: 'UTC', recurrence: { frequency: 'DAILY', interval: 2 } });
+    const future = await repo.occurrences({ from: '2050-01-01T00:00:00Z', to: '2050-01-08T00:00:00Z', offset: 0, limit: 20 });
+    assert.ok(future.total >= 3 && future.total <= 4);
+    assert.ok(future.items.every(item => item.block_id === daily.id));
   });
 });
 

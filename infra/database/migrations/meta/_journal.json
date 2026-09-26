@@ -36,6 +36,13 @@
       "when": 1790443552585,
       "tag": "0004_availability_schedule",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790444435936,
+      "tag": "0005_schedule_blocks",
+      "breakpoints": true
     }
   ]
 }

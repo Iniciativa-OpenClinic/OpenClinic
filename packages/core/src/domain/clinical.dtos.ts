@@ -178,6 +178,22 @@ export interface AvailabilityDTO {
   deleted_at: string | null;
 }
 
+export interface ScheduleBlockDTO {
+  id: string;
+  tenant_id: string;
+  unit_id?: string | null;
+  practitioner_id?: string | null;
+  room_id?: string | null;
+  starts_at: string;
+  ends_at: string;
+  timezone: string;
+  reason?: string | null;
+  recurrence?: { frequency: 'DAILY' | 'WEEKLY'; interval: number; until?: string | null } | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 export interface ProcedureDTO {
   id: string;
   tenant_id: string;

@@ -144,10 +144,20 @@ export interface HealthPlanDTO {
 
 export interface ProcedureDTO {
   id: string;
-  tuss_code: string;
-  description: string;
-  specialty?: string | null;
-  base_price_cents?: number | null;
-  estimated_duration_minutes?: number | null;
+  tenant_id: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  tuss_code?: string | null;
+  estimated_duration_minutes: number;
+  requires_room: boolean;
+  preparation_instructions?: string | null;
+  return_after_days?: number | null;
+  minimum_interval_days?: number | null;
+  calendar_color?: string | null;
+  practitioner_ids: string[];
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
 }

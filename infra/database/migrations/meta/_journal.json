@@ -15,6 +15,13 @@
       "when": 1788982384144,
       "tag": "0001_reference_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790421078181,
+      "tag": "0002_procedure_catalog",
+      "breakpoints": true
     }
   ]
 }

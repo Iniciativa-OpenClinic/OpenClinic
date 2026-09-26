@@ -7,6 +7,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { PostgresProcedureRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/procedure.repository.js';
 import { baselineDatabase, inspectMigrations, loadMigrations, migrateDatabase, migrationsDirectory,
   MIGRATION_LOCK, schemaSignature, signatureDifferences, databaseDirectory } from '../../../packages/backend-cli/src/utils/migration-runner.js';
 import { seedDemoDatabase } from '../../../packages/backend-cli/src/commands/db-seed.js';
@@ -35,7 +37,7 @@ test('fresh install, reference catalog and repeated migration preserve customize
   await isolated(async (url, sql) => {
     assert.equal((await migrateDatabase(url)).length, loadMigrations().length);
     const [tables] = await sql`SELECT count(*)::int AS count FROM pg_tables WHERE schemaname = 'public'`;
-    assert.equal(tables!.count, 19);
+    assert.equal(tables!.count, 21);
     const [users] = await sql`SELECT count(*)::int AS count FROM iam_users`;
     assert.equal(users!.count, 0);
     const [bindings] = await sql`SELECT count(*)::int AS count FROM iam_groups g JOIN sys_tenants t ON t.id = g.tenant_id WHERE t.slug = 'acme-organization'`;
@@ -46,9 +48,67 @@ test('fresh install, reference catalog and repeated migration preserve customize
     assert.deepEqual(await migrateDatabase(url), []);
     const [app] = await sql`SELECT app_name FROM sys_applications`;
     assert.equal(app!.app_name, 'Customized by testers');
+  });
+});
+
+test('original baseline still matches its immutable schema signature', async () => {
+  await isolated(async (_url, sql) => {
+    for (const statement of loadMigrations()[0]!.sql) await sql.unsafe(statement);
     const actual = await sql.begin(tx => schemaSignature(tx));
     const expected = JSON.parse(fs.readFileSync(path.join(databaseDirectory, 'baseline-schema.json'), 'utf8'));
     assert.deepEqual(signatureDifferences(expected.signature, actual), []);
+  });
+});
+
+test('procedure catalog persists relationships atomically and isolates tenants', async () => {
+  await isolated(async (_url, sql) => {
+    await migrateDatabase(_url);
+    await sql`INSERT INTO sys_tenants (id, name) VALUES ('procedure-tenant-a', 'A'), ('procedure-tenant-b', 'B')`;
+    await sql`INSERT INTO app_practitioners (id, tenant_id, full_name, practitioner_type) VALUES
+      ('professional-a', 'procedure-tenant-a', 'A', 'CLINICAL'),
+      ('professional-b', 'procedure-tenant-b', 'B', 'CLINICAL'),
+      ('professional-deleted', 'procedure-tenant-a', 'Deleted', 'CLINICAL')`;
+    await sql`UPDATE app_practitioners SET deleted_at = now(), is_active = false WHERE id = 'professional-deleted'`;
+    const repo = new PostgresProcedureRepository(drizzle(sql), 'procedure-tenant-a');
+    const foreign = new PostgresProcedureRepository(drizzle(sql), 'procedure-tenant-b');
+    const input = { name: 'Consulta 100%', estimated_duration_minutes: 30, requires_room: true, tuss_code: '10101012', practitioner_ids: ['professional-a'] };
+    const created = await repo.create(input);
+    assert.equal(created.tenant_id, 'procedure-tenant-a');
+    assert.deepEqual(created.practitioner_ids, ['professional-a']);
+    assert.deepEqual((await repo.getById(created.id))!.practitioner_ids, ['professional-a']);
+    assert.equal(await foreign.getById(created.id), null);
+    assert.equal(await foreign.update(created.id, { name: 'Forbidden' }), null);
+    assert.equal(await foreign.softDelete(created.id), false);
+    assert.equal((await foreign.list({ offset: 0, limit: 20 })).total, 0);
+    for (const practitioner of ['professional-b', 'professional-deleted', 'missing']) {
+      await assert.rejects(repo.create({ ...input, practitioner_ids: [practitioner] }), /practitioners/);
+      await assert.rejects(repo.update(created.id, { name: 'Rolled back', practitioner_ids: [practitioner] }), /practitioners/);
+    }
+    assert.equal((await repo.list({ offset: 0, limit: 20 })).total, 1);
+    assert.equal((await repo.getById(created.id))!.name, input.name);
+    assert.deepEqual((await repo.getById(created.id))!.practitioner_ids, ['professional-a']);
+    // Composite foreign keys also reject cross-tenant links outside the API.
+    await assert.rejects(sql`INSERT INTO app_procedure_practitioners (tenant_id, procedure_id, practitioner_id)
+      VALUES ('procedure-tenant-a', ${created.id}, 'professional-b')`, /foreign key/);
+    await assert.rejects(sql`UPDATE app_procedures SET estimated_duration_minutes = 0 WHERE id = ${created.id}`, /check constraint/);
+    await repo.create({ ...input, name: 'Outra consulta', practitioner_ids: [] });
+    assert.equal((await repo.list({ offset: 0, limit: 1, q: '%' })).total, 1);
+    assert.equal((await repo.list({ offset: 0, limit: 1, q: '10101012' })).total, 2);
+    assert.equal((await repo.list({ offset: 1, limit: 1 })).items.length, 1);
+    const inactive = await repo.update(created.id, { is_active: false, description: null });
+    assert.equal(inactive!.is_active, false);
+    assert.deepEqual(inactive!.practitioner_ids, ['professional-a']);
+    assert.equal((await repo.list({ offset: 0, limit: 20, is_active: true })).total, 1);
+    assert.equal((await repo.list({ offset: 0, limit: 20, is_active: false })).total, 1);
+    await repo.update(created.id, { practitioner_ids: [], is_active: true });
+    assert.deepEqual((await repo.getById(created.id))!.practitioner_ids, []);
+    assert.equal(await repo.softDelete(created.id), true);
+    assert.equal(await repo.getById(created.id), null);
+    assert.equal(await repo.update(created.id, { is_active: true }), null);
+    assert.equal(await repo.softDelete(created.id), false);
+    const [stored] = await sql`SELECT is_active, deleted_at FROM app_procedures WHERE id = ${created.id}`;
+    assert.equal(stored!.is_active, false);
+    assert.ok(stored!.deleted_at);
   });
 });
 

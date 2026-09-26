@@ -1,5 +1,21 @@
 # OpenClinic — Dicionário e Referência do Esquema de Banco de Dados
 
+## Catálogo de procedimentos (migração 0002)
+
+`app_procedures` armazena o catálogo por tenant: nome, descrição, categoria,
+código TUSS, duração em minutos, exigência de sala, preparo, retorno e intervalo
+em dias, cor na agenda, atividade e timestamps com exclusão lógica.
+Não armazena preços. Duração é obrigatória e positiva; retorno e intervalo
+são opcionais e não negativos. Nome é obrigatório. Cor e TUSS têm checks de formato.
+
+`app_procedure_practitioners` associa procedimentos aos profissionais habilitados,
+com unicidade `(tenant_id, procedure_id, practitioner_id)` e chaves estrangeiras
+compostas que impedem vínculos entre tenants, inclusive em escritas SQL diretas.
+As duas entidades referenciadas têm unicidade adicional `(tenant_id, id)`.
+
+Campos, limites e operações estão no [contrato de Procedimento](./procedure-api.md).
+DDL versionado: [0002_procedure_catalog.sql](../infra/database/migrations/0002_procedure_catalog.sql).
+
 > **Padrão Arquitetural**: ANSI SQL Agnóstico (Zero Vendor Lock-in).  
 > **Identificadores (PK/FK)**: `VARCHAR(36)` gerados estritamente na camada de aplicação via `crypto.randomUUID()`.  
 > **Campos de Controle e Enum**: `VARCHAR(20)` / `VARCHAR(50)` validados por domínio/código (Zod e TypeScript).  

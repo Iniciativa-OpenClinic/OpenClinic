@@ -1,3 +1,4 @@
+import { PostgresProcedureRepository } from './procedure.repository.js';
 import { PostgresUnitRepository } from './unit.repository.js';
 import { TenantRepository } from './tenant.repository.js';
 import { ResourceRepository } from './resource.repository.js';
@@ -79,6 +80,9 @@ export class UnitOfWork implements IAMUnitOfWork {
   }
   unitsForTenant(tenantId: string): PostgresUnitRepository {
     return new PostgresUnitRepository(this.db, tenantId);
+  }
+  proceduresForTenant(tenantId: string): PostgresProcedureRepository {
+    return new PostgresProcedureRepository(this.db, tenantId);
   }
   async rollback(): Promise<void> {}
 }

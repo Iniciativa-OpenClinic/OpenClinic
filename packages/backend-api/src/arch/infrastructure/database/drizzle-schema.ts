@@ -352,11 +352,53 @@ export const appPractitioners = pgTable('app_practitioners', {
   deleted_at: timestamp('deleted_at', { withTimezone: true }),
 }, (table) => [
   index('idx_app_practitioners_tenant_id').on(table.tenant_id),
+  unique('uq_app_practitioners_tenant_id_id').on(table.tenant_id, table.id),
   index('idx_app_practitioners_user_id').on(table.user_id),
   index('idx_app_practitioners_cpf').on(table.cpf),
   index('idx_app_practitioners_type').on(table.practitioner_type),
   foreignKey({ name: 'fk_app_practitioners_tenant', columns: [table.tenant_id], foreignColumns: [sysTenants.id] }).onDelete('restrict'),
   foreignKey({ name: 'fk_app_practitioners_user', columns: [table.user_id], foreignColumns: [iamUsers.id] }).onDelete('set null'),
+]);
+
+export const appProcedures = pgTable('app_procedures', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  tenant_id: varchar('tenant_id', { length: 36 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  category: varchar('category', { length: 100 }),
+  tuss_code: varchar('tuss_code', { length: 8 }),
+  estimated_duration_minutes: integer('estimated_duration_minutes').notNull(),
+  requires_room: boolean('requires_room').notNull().default(false),
+  preparation_instructions: text('preparation_instructions'),
+  return_after_days: integer('return_after_days'),
+  minimum_interval_days: integer('minimum_interval_days'),
+  calendar_color: varchar('calendar_color', { length: 7 }),
+  is_active: boolean('is_active').notNull().default(true),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deleted_at: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => [
+  unique('uq_app_procedures_tenant_id_id').on(table.tenant_id, table.id),
+  index('idx_app_procedures_tenant_name').on(table.tenant_id, table.name, table.id),
+  index('idx_app_procedures_tenant_tuss').on(table.tenant_id, table.tuss_code),
+  foreignKey({ name: 'fk_app_procedures_tenant', columns: [table.tenant_id], foreignColumns: [sysTenants.id] }).onDelete('restrict'),
+  check('app_procedures_name_check', sql`length(trim(${table.name})) > 0`),
+  check('app_procedures_duration_check', sql`${table.estimated_duration_minutes} > 0`),
+  check('app_procedures_return_check', sql`${table.return_after_days} >= 0`),
+  check('app_procedures_interval_check', sql`${table.minimum_interval_days} >= 0`),
+  check('app_procedures_tuss_check', sql`${table.tuss_code} ~ '^[0-9]{8}$'`),
+  check('app_procedures_color_check', sql`${table.calendar_color} ~ '^#[0-9A-Fa-f]{6}$'`),
+]);
+
+export const appProcedurePractitioners = pgTable('app_procedure_practitioners', {
+  tenant_id: varchar('tenant_id', { length: 36 }).notNull(),
+  procedure_id: varchar('procedure_id', { length: 36 }).notNull(),
+  practitioner_id: varchar('practitioner_id', { length: 36 }).notNull(),
+}, (table) => [
+  unique('uq_app_procedure_practitioners').on(table.tenant_id, table.procedure_id, table.practitioner_id),
+  index('idx_app_procedure_practitioners_practitioner').on(table.tenant_id, table.practitioner_id),
+  foreignKey({ name: 'fk_app_procedure_practitioners_procedure', columns: [table.tenant_id, table.procedure_id], foreignColumns: [appProcedures.tenant_id, appProcedures.id] }).onDelete('cascade'),
+  foreignKey({ name: 'fk_app_procedure_practitioners_practitioner', columns: [table.tenant_id, table.practitioner_id], foreignColumns: [appPractitioners.tenant_id, appPractitioners.id] }).onDelete('restrict'),
 ]);
 
 export const appAppointments = pgTable('app_appointments', {

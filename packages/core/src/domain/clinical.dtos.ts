@@ -142,6 +142,21 @@ export interface HealthPlanDTO {
   is_active: boolean;
 }
 
+export interface RoomDTO {
+  id: string;
+  tenant_id: string;
+  unit_id: string;
+  name: string;
+  room_type?: string | null;
+  is_schedulable: boolean;
+  equipment: string[];
+  notes?: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 export interface ProcedureDTO {
   id: string;
   tenant_id: string;

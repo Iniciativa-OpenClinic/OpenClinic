@@ -1,5 +1,16 @@
 # OpenClinic — Dicionário e Referência do Esquema de Banco de Dados
 
+## Salas (migração 0003)
+
+`app_rooms` armazena nome, unidade, tipo local, indicação de agendamento,
+equipamentos/recursos (`text[]`), observações, atividade e timestamps com exclusão
+lógica. Nome, unidade e indicação de agendamento são obrigatórios. Equipamentos
+assumem lista vazia. A chave estrangeira composta `(tenant_id, unit_id)` aponta
+para `app_organization_units(tenant_id, id)`, impedindo vínculos entre tenants.
+
+Campos e operações estão no [contrato de Sala](./room-api.md).
+DDL versionado: [0003_room_catalog.sql](../infra/database/migrations/0003_room_catalog.sql).
+
 ## Catálogo de procedimentos (migração 0002)
 
 `app_procedures` armazena o catálogo por tenant: nome, descrição, categoria,

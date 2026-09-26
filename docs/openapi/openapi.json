@@ -13046,6 +13046,4279 @@
           }
         }
       }
+    },
+    "/api/v1/business/procedures": {
+      "get": {
+        "summary": "List procedures",
+        "tags": [
+          "Procedures"
+        ],
+        "description": "Lists non-deleted procedures in the authenticated tenant. Requires base_procedures READ permission.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "\\S"
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "is_active",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "tenant_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "category": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "tuss_code": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "estimated_duration_minutes": {
+                            "type": "integer"
+                          },
+                          "requires_room": {
+                            "type": "boolean"
+                          },
+                          "preparation_instructions": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "return_after_days": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "minimum_interval_days": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "calendar_color": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "practitioner_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "is_active": {
+                            "type": "boolean"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "deleted_at": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or procedure permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or procedure permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Procedure not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Procedure not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid procedure data or practitioners outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid procedure data or practitioners outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create procedure",
+        "tags": [
+          "Procedures"
+        ],
+        "description": "Creates a procedure in the authenticated tenant. Requires base_procedures WRITE permission. tenant_id is assigned by the server.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "estimated_duration_minutes",
+                  "requires_room"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "pattern": "\\S"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 10000
+                  },
+                  "category": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  },
+                  "tuss_code": {
+                    "type": "string",
+                    "nullable": true,
+                    "pattern": "^[0-9]{8}$"
+                  },
+                  "estimated_duration_minutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  "requires_room": {
+                    "type": "boolean"
+                  },
+                  "preparation_instructions": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 10000
+                  },
+                  "return_after_days": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "minimum_interval_days": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "calendar_color": {
+                    "type": "string",
+                    "nullable": true,
+                    "pattern": "^#[0-9A-Fa-f]{6}$"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "practitioner_ids": {
+                    "type": "array",
+                    "maxItems": 500,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 36,
+                      "pattern": "\\S"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "category": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "tuss_code": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "estimated_duration_minutes": {
+                      "type": "integer"
+                    },
+                    "requires_room": {
+                      "type": "boolean"
+                    },
+                    "preparation_instructions": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "return_after_days": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "minimum_interval_days": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "calendar_color": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "practitioner_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deleted_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or procedure permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or procedure permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Procedure not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Procedure not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid procedure data or practitioners outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid procedure data or practitioners outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business/procedures/{id}": {
+      "get": {
+        "summary": "Get procedure",
+        "tags": [
+          "Procedures"
+        ],
+        "description": "Requires base_procedures READ permission. Deleted procedures and procedures in other tenants return 404.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "category": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "tuss_code": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "estimated_duration_minutes": {
+                      "type": "integer"
+                    },
+                    "requires_room": {
+                      "type": "boolean"
+                    },
+                    "preparation_instructions": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "return_after_days": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "minimum_interval_days": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "calendar_color": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "practitioner_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deleted_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or procedure permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or procedure permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Procedure not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Procedure not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid procedure data or practitioners outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid procedure data or practitioners outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update procedure",
+        "tags": [
+          "Procedures"
+        ],
+        "description": "Updates supplied fields; omitted fields remain unchanged. Requires base_procedures WRITE permission.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "pattern": "\\S"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 10000
+                  },
+                  "category": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  },
+                  "tuss_code": {
+                    "type": "string",
+                    "nullable": true,
+                    "pattern": "^[0-9]{8}$"
+                  },
+                  "estimated_duration_minutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  "requires_room": {
+                    "type": "boolean"
+                  },
+                  "preparation_instructions": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 10000
+                  },
+                  "return_after_days": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "minimum_interval_days": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "calendar_color": {
+                    "type": "string",
+                    "nullable": true,
+                    "pattern": "^#[0-9A-Fa-f]{6}$"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "practitioner_ids": {
+                    "type": "array",
+                    "maxItems": 500,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 36,
+                      "pattern": "\\S"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "category": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "tuss_code": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "estimated_duration_minutes": {
+                      "type": "integer"
+                    },
+                    "requires_room": {
+                      "type": "boolean"
+                    },
+                    "preparation_instructions": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "return_after_days": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "minimum_interval_days": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "calendar_color": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "practitioner_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deleted_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or procedure permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or procedure permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Procedure not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Procedure not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid procedure data or practitioners outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid procedure data or practitioners outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete procedure",
+        "tags": [
+          "Procedures"
+        ],
+        "description": "Soft-deletes a procedure in the authenticated tenant. Requires base_procedures DELETE permission.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Procedure deleted; empty response"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or procedure permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or procedure permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Procedure not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Procedure not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid procedure data or practitioners outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid procedure data or practitioners outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business/rooms": {
+      "get": {
+        "summary": "List rooms",
+        "tags": [
+          "Rooms"
+        ],
+        "description": "Lists non-deleted rooms in the authenticated tenant. Requires menu_sys_institution READ permission.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "\\S"
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 36,
+              "pattern": "\\S"
+            },
+            "in": "query",
+            "name": "unit_id",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "is_schedulable",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "is_active",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "tenant_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "unit_id": {
+                            "type": "string"
+                          },
+                          "room_type": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "is_schedulable": {
+                            "type": "boolean"
+                          },
+                          "equipment": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "notes": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "is_active": {
+                            "type": "boolean"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "deleted_at": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or room permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or room permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Room not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Room not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid room data or unit outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid room data or unit outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create room",
+        "tags": [
+          "Rooms"
+        ],
+        "description": "Creates a room in the authenticated tenant. Requires menu_sys_institution WRITE permission. tenant_id is assigned by the server.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "unit_id",
+                  "is_schedulable"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "pattern": "\\S"
+                  },
+                  "unit_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 36,
+                    "pattern": "\\S"
+                  },
+                  "room_type": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  },
+                  "is_schedulable": {
+                    "type": "boolean"
+                  },
+                  "equipment": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 10000
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "unit_id": {
+                      "type": "string"
+                    },
+                    "room_type": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "is_schedulable": {
+                      "type": "boolean"
+                    },
+                    "equipment": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deleted_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or room permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or room permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Room not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Room not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid room data or unit outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid room data or unit outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business/rooms/{id}": {
+      "get": {
+        "summary": "Get room",
+        "tags": [
+          "Rooms"
+        ],
+        "description": "Requires menu_sys_institution READ permission. Deleted rooms and rooms in other tenants return 404.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "unit_id": {
+                      "type": "string"
+                    },
+                    "room_type": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "is_schedulable": {
+                      "type": "boolean"
+                    },
+                    "equipment": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deleted_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or room permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or room permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Room not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Room not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid room data or unit outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid room data or unit outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update room",
+        "tags": [
+          "Rooms"
+        ],
+        "description": "Updates supplied fields; omitted fields remain unchanged. Requires menu_sys_institution WRITE permission.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "pattern": "\\S"
+                  },
+                  "unit_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 36,
+                    "pattern": "\\S"
+                  },
+                  "room_type": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 100
+                  },
+                  "is_schedulable": {
+                    "type": "boolean"
+                  },
+                  "equipment": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 10000
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "unit_id": {
+                      "type": "string"
+                    },
+                    "room_type": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "is_schedulable": {
+                      "type": "boolean"
+                    },
+                    "equipment": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deleted_at": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or room permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or room permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Room not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Room not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid room data or unit outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid room data or unit outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete room",
+        "tags": [
+          "Rooms"
+        ],
+        "description": "Soft-deletes a room in the authenticated tenant. Requires menu_sys_institution DELETE permission.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Room deleted; empty response"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid request",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing or invalid bearer token",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing tenant or room permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Missing tenant or room permission",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Room not found in the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Room not found in the current tenant",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid room data or unit outside the current tenant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Invalid room data or unit outside the current tenant",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Internal server error",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "URI identifier for the error type"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable summary of the error"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status code"
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Detailed and localized error description"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)"
+                    },
+                    "instance": {
+                      "type": "string",
+                      "description": "URI of the endpoint where the error occurred"
+                    },
+                    "invalid_params": {
+                      "type": "array",
+                      "description": "List of parameters that failed validation",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "code"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "servers": [
@@ -13082,6 +17355,14 @@
     {
       "name": "Tenants",
       "description": "Multi-tenancy administration and organization isolation"
+    },
+    {
+      "name": "Rooms",
+      "description": "Room registration and equipment within tenant care units"
+    },
+    {
+      "name": "Procedures",
+      "description": "Procedure catalog, qualified practitioners and soft deletion within the authenticated tenant"
     },
     {
       "name": "Units",

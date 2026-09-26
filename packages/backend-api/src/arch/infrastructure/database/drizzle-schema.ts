@@ -296,6 +296,7 @@ export const appOrganizationUnits = pgTable('app_organization_units', {
   deleted_at: timestamp('deleted_at', { withTimezone: true }),
 }, (table) => [
   index('idx_app_org_units_tenant_id').on(table.tenant_id),
+  unique('uq_app_org_units_tenant_id_id').on(table.tenant_id, table.id),
   index('idx_app_org_units_organization_id').on(table.organization_id),
   index('idx_app_org_units_cnes').on(table.cnes_code),
   index('idx_app_org_units_tax_id').on(table.tax_id),
@@ -303,6 +304,26 @@ export const appOrganizationUnits = pgTable('app_organization_units', {
   index('idx_app_org_units_name').on(table.organization_id, table.name),
   foreignKey({ name: 'fk_app_org_units_tenant', columns: [table.tenant_id], foreignColumns: [sysTenants.id] }).onDelete('restrict'),
   foreignKey({ name: 'fk_app_org_units_organization', columns: [table.organization_id], foreignColumns: [appOrganizations.id] }).onDelete('restrict'),
+]);
+
+export const appRooms = pgTable('app_rooms', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  tenant_id: varchar('tenant_id', { length: 36 }).notNull(),
+  unit_id: varchar('unit_id', { length: 36 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  room_type: varchar('room_type', { length: 100 }),
+  is_schedulable: boolean('is_schedulable').notNull(),
+  equipment: text('equipment').array().notNull().default(sql`'{}'::text[]`),
+  notes: text('notes'),
+  is_active: boolean('is_active').notNull().default(true),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deleted_at: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => [
+  index('idx_app_rooms_tenant_name').on(table.tenant_id, table.name, table.id),
+  index('idx_app_rooms_tenant_unit').on(table.tenant_id, table.unit_id),
+  foreignKey({ name: 'fk_app_rooms_unit', columns: [table.tenant_id, table.unit_id], foreignColumns: [appOrganizationUnits.tenant_id, appOrganizationUnits.id] }).onDelete('restrict'),
+  check('app_rooms_name_check', sql`length(trim(${table.name})) > 0`),
 ]);
 
 export const appPatients = pgTable('app_patients', {

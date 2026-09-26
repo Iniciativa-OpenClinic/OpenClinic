@@ -105,6 +105,7 @@ export type {
   CreateEncounterDTO,
   HealthPlanDTO,
   ProcedureDTO,
+  RoomDTO,
 } from './domain/clinical.dtos.js';
 export {
   APP_RESOURCE_MANIFEST,

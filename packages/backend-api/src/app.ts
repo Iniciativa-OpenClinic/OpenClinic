@@ -1,3 +1,4 @@
+import { registerRoomRoutes } from './arch/presentation/room.router.js';
 import { registerProcedureRoutes } from './arch/presentation/procedure.router.js';
 import { registerUnitRoutes } from './arch/presentation/unit.router.js';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -233,6 +234,19 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     });
     registerProcedureRoutes(procedureApp, {
       procedures: (request) => uow.proceduresForTenant(request.user!.tenant_id!),
+    });
+  });
+
+  await app.register(async (roomApp) => {
+    roomApp.addHook('onRequest', createAuthenticateJwt(jwtConfig, uow));
+    roomApp.addHook('preHandler', async (request, reply) => {
+      if (!request.user?.tenant_id) throw new AccessDeniedError(ErrorCode.FORBIDDEN);
+      const action = request.method === 'DELETE' ? ResourceAction.DELETE
+        : request.method === 'GET' || request.method === 'HEAD' ? ResourceAction.READ : ResourceAction.WRITE;
+      await requirePermission(uow, 'menu_sys_institution', action)(request, reply);
+    });
+    registerRoomRoutes(roomApp, {
+      rooms: (request) => uow.roomsForTenant(request.user!.tenant_id!),
     });
   });
 

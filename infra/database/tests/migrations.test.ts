@@ -9,6 +9,7 @@ import { randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { PostgresProcedureRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/procedure.repository.js';
+import { PostgresRoomRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/room.repository.js';
 import { baselineDatabase, inspectMigrations, loadMigrations, migrateDatabase, migrationsDirectory,
   MIGRATION_LOCK, schemaSignature, signatureDifferences, databaseDirectory } from '../../../packages/backend-cli/src/utils/migration-runner.js';
 import { seedDemoDatabase } from '../../../packages/backend-cli/src/commands/db-seed.js';
@@ -37,7 +38,7 @@ test('fresh install, reference catalog and repeated migration preserve customize
   await isolated(async (url, sql) => {
     assert.equal((await migrateDatabase(url)).length, loadMigrations().length);
     const [tables] = await sql`SELECT count(*)::int AS count FROM pg_tables WHERE schemaname = 'public'`;
-    assert.equal(tables!.count, 21);
+    assert.equal(tables!.count, 22);
     const [users] = await sql`SELECT count(*)::int AS count FROM iam_users`;
     assert.equal(users!.count, 0);
     const [bindings] = await sql`SELECT count(*)::int AS count FROM iam_groups g JOIN sys_tenants t ON t.id = g.tenant_id WHERE t.slug = 'acme-organization'`;
@@ -48,6 +49,63 @@ test('fresh install, reference catalog and repeated migration preserve customize
     assert.deepEqual(await migrateDatabase(url), []);
     const [app] = await sql`SELECT app_name FROM sys_applications`;
     assert.equal(app!.app_name, 'Customized by testers');
+  });
+});
+
+test('rooms persist equipment and reject invalid units without partial updates', async () => {
+  await isolated(async (url, sql) => {
+    await migrateDatabase(url);
+    await sql`INSERT INTO sys_tenants (id, name) VALUES ('room-tenant-a', 'A'), ('room-tenant-b', 'B')`;
+    await sql`INSERT INTO app_organizations (id, tenant_id, legal_name, trade_name) VALUES
+      ('room-org-a', 'room-tenant-a', 'A', 'A'), ('room-org-b', 'room-tenant-b', 'B', 'B')`;
+    await sql`INSERT INTO app_organization_units (id, tenant_id, organization_id, name) VALUES
+      ('room-unit-a', 'room-tenant-a', 'room-org-a', 'A'),
+      ('room-unit-a2', 'room-tenant-a', 'room-org-a', 'A2'),
+      ('room-unit-b', 'room-tenant-b', 'room-org-b', 'B'),
+      ('room-unit-deleted', 'room-tenant-a', 'room-org-a', 'Deleted'),
+      ('room-unit-inactive', 'room-tenant-a', 'room-org-a', 'Inactive')`;
+    await sql`UPDATE app_organization_units SET deleted_at = now() WHERE id = 'room-unit-deleted'`;
+    await sql`UPDATE app_organization_units SET is_active = false WHERE id = 'room-unit-inactive'`;
+    const repo = new PostgresRoomRepository(drizzle(sql), 'room-tenant-a');
+    const foreign = new PostgresRoomRepository(drizzle(sql), 'room-tenant-b');
+    const input = { name: 'Sala 100%', unit_id: 'room-unit-a', is_schedulable: true, equipment: ['Maca', 'Ultrassom'] };
+    const created = await repo.create(input);
+    assert.equal(created.tenant_id, 'room-tenant-a');
+    assert.deepEqual(created.equipment, input.equipment);
+    assert.deepEqual((await repo.getById(created.id))!.equipment, input.equipment);
+    assert.equal(await foreign.getById(created.id), null);
+    assert.equal(await foreign.update(created.id, { name: 'Forbidden' }), null);
+    assert.equal(await foreign.softDelete(created.id), false);
+    assert.equal((await foreign.list({ offset: 0, limit: 20 })).total, 0);
+    for (const unit of ['room-unit-b', 'room-unit-deleted', 'room-unit-inactive', 'missing']) {
+      await assert.rejects(repo.create({ ...input, unit_id: unit }), /Unit must be active/);
+      await assert.rejects(repo.update(created.id, { name: 'Rolled back', unit_id: unit }), /Unit must be active/);
+    }
+    assert.equal((await repo.list({ offset: 0, limit: 20 })).total, 1);
+    assert.equal((await repo.getById(created.id))!.name, input.name);
+    assert.equal((await repo.getById(created.id))!.unit_id, input.unit_id);
+    await assert.rejects(sql`UPDATE app_rooms SET unit_id = 'room-unit-b' WHERE id = ${created.id}`, /foreign key/);
+    await assert.rejects(sql`UPDATE app_rooms SET name = ' ' WHERE id = ${created.id}`, /check constraint/);
+    const other = await repo.create({ name: 'Sala 2', unit_id: 'room-unit-a2', is_schedulable: false });
+    assert.deepEqual(other.equipment, []);
+    assert.equal((await repo.list({ offset: 0, limit: 20, q: '%' })).total, 1);
+    assert.equal((await repo.list({ offset: 1, limit: 1 })).items.length, 1);
+    assert.equal((await repo.list({ offset: 0, limit: 20, unit_id: 'room-unit-a' })).total, 1);
+    assert.equal((await repo.list({ offset: 0, limit: 20, unit_id: 'room-unit-b' })).total, 0);
+    assert.equal((await repo.list({ offset: 0, limit: 20, is_schedulable: false })).total, 1);
+    await repo.update(created.id, { notes: null, is_active: false });
+    assert.deepEqual((await repo.getById(created.id))!.equipment, input.equipment);
+    assert.equal((await repo.list({ offset: 0, limit: 20, is_active: false })).total, 1);
+    const moved = await repo.update(created.id, { unit_id: 'room-unit-a2', equipment: [], is_active: true });
+    assert.equal(moved!.unit_id, 'room-unit-a2');
+    assert.deepEqual(moved!.equipment, []);
+    assert.equal(await repo.softDelete(created.id), true);
+    assert.equal(await repo.getById(created.id), null);
+    assert.equal(await repo.update(created.id, { is_active: true }), null);
+    assert.equal(await repo.softDelete(created.id), false);
+    const [stored] = await sql`SELECT is_active, deleted_at FROM app_rooms WHERE id = ${created.id}`;
+    assert.equal(stored!.is_active, false);
+    assert.ok(stored!.deleted_at);
   });
 });
 

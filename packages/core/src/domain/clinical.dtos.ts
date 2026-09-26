@@ -157,6 +157,27 @@ export interface RoomDTO {
   deleted_at: string | null;
 }
 
+export interface AvailabilityDTO {
+  id: string;
+  tenant_id: string;
+  unit_id: string;
+  practitioner_id?: string | null;
+  room_id?: string | null;
+  series_id: string;
+  replaces_id: string | null;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  slot_duration_minutes: number;
+  timezone: string;
+  valid_from: string;
+  valid_until?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 export interface ProcedureDTO {
   id: string;
   tenant_id: string;

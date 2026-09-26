@@ -10,6 +10,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { PostgresProcedureRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/procedure.repository.js';
 import { PostgresRoomRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/room.repository.js';
+import { PostgresAvailabilityRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/availability.repository.js';
 import { baselineDatabase, inspectMigrations, loadMigrations, migrateDatabase, migrationsDirectory,
   MIGRATION_LOCK, schemaSignature, signatureDifferences, databaseDirectory } from '../../../packages/backend-cli/src/utils/migration-runner.js';
 import { seedDemoDatabase } from '../../../packages/backend-cli/src/commands/db-seed.js';
@@ -38,7 +39,7 @@ test('fresh install, reference catalog and repeated migration preserve customize
   await isolated(async (url, sql) => {
     assert.equal((await migrateDatabase(url)).length, loadMigrations().length);
     const [tables] = await sql`SELECT count(*)::int AS count FROM pg_tables WHERE schemaname = 'public'`;
-    assert.equal(tables!.count, 22);
+    assert.equal(tables!.count, 23);
     const [users] = await sql`SELECT count(*)::int AS count FROM iam_users`;
     assert.equal(users!.count, 0);
     const [bindings] = await sql`SELECT count(*)::int AS count FROM iam_groups g JOIN sys_tenants t ON t.id = g.tenant_id WHERE t.slug = 'acme-organization'`;
@@ -106,6 +107,69 @@ test('rooms persist equipment and reject invalid units without partial updates',
     const [stored] = await sql`SELECT is_active, deleted_at FROM app_rooms WHERE id = ${created.id}`;
     assert.equal(stored!.is_active, false);
     assert.ok(stored!.deleted_at);
+  });
+});
+
+test('availability versions preserve history, validate resources and serialize concurrent edits', async () => {
+  await isolated(async (url, sql) => {
+    await migrateDatabase(url);
+    await sql`INSERT INTO sys_tenants (id, name) VALUES ('av-a', 'A'), ('av-b', 'B')`;
+    await sql`INSERT INTO app_organizations (id, tenant_id, legal_name, trade_name) VALUES ('av-org', 'av-a', 'A', 'A')`;
+    await sql`INSERT INTO app_organization_units (id, tenant_id, organization_id, name) VALUES
+      ('av-u1', 'av-a', 'av-org', 'U1'), ('av-u2', 'av-a', 'av-org', 'U2')`;
+    await sql`INSERT INTO app_practitioners (id, tenant_id, full_name, practitioner_type) VALUES
+      ('av-p1', 'av-a', 'A', 'CLINICAL'), ('av-p2', 'av-b', 'B', 'CLINICAL')`;
+    await sql`INSERT INTO app_rooms (id, tenant_id, unit_id, name, is_schedulable) VALUES
+      ('av-r1', 'av-a', 'av-u1', 'R1', true), ('av-r2', 'av-a', 'av-u2', 'R2', true), ('av-r3', 'av-a', 'av-u1', 'R3', false)`;
+    const repo = new PostgresAvailabilityRepository(drizzle(sql), 'av-a');
+    const foreign = new PostgresAvailabilityRepository(drizzle(sql), 'av-b');
+    const input = { unit_id: 'av-u1', practitioner_id: 'av-p1', day_of_week: 1,
+      start_time: '08:00', end_time: '12:00', slot_duration_minutes: 30, timezone: 'America/Fortaleza', valid_from: '2026-10-01' };
+    const original = await repo.create(input);
+    assert.equal(original.id, original.series_id);
+    assert.equal(await foreign.getById(original.id), null);
+    assert.equal(await foreign.history(original.id, { offset: 0, limit: 20 }), null);
+    assert.equal(await foreign.version(original.id, { valid_from: '2026-11-01' }), null);
+    assert.equal(await foreign.softDelete(original.id), false);
+    await assert.rejects(repo.create({ ...input, practitioner_id: 'av-p2' }), /Practitioner/);
+    await assert.rejects(repo.create({ ...input, unit_id: 'missing' }), /Unit/);
+    for (const room_id of ['av-r2', 'av-r3', 'missing']) {
+      await assert.rejects(repo.create({ ...input, practitioner_id: null, room_id }), /Room/);
+    }
+    const room = await repo.create({ ...input, practitioner_id: null, room_id: 'av-r1' });
+    assert.equal(room.room_id, 'av-r1');
+    await assert.rejects(new PostgresRoomRepository(drizzle(sql), 'av-a').update('av-r1', { unit_id: 'av-u2' }), /availability history/);
+    await assert.rejects(sql`UPDATE app_availabilities SET unit_id = 'av-u2' WHERE id = ${room.id}`, /foreign key/);
+    await assert.rejects(repo.version(original.id, { valid_from: '2026-10-01' }), /valid_from/);
+    await assert.rejects(repo.version(original.id, { valid_from: '2026-11-01', start_time: '11:50' }), /slot_duration_minutes/);
+    assert.equal((await repo.getById(original.id))!.valid_until, null);
+    // Different connections exercise the row lock and single-successor constraint.
+    const pool = postgres(url, { max: 2 });
+    try {
+      const concurrent = new PostgresAvailabilityRepository(drizzle(pool), 'av-a');
+      const results = await Promise.allSettled([
+        concurrent.version(original.id, { valid_from: '2026-11-01', start_time: '09:00' }),
+        concurrent.version(original.id, { valid_from: '2026-11-01', start_time: '10:00' }),
+      ]);
+      assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
+      assert.equal(results.filter(result => result.status === 'rejected').length, 1);
+    } finally { await pool.end(); }
+    const history = await repo.history(original.id, { offset: 0, limit: 20 });
+    assert.equal(history!.total, 2);
+    const [old, latest] = history!.items;
+    assert.equal(old!.start_time, '08:00');
+    assert.equal(old!.valid_until, '2026-11-01');
+    assert.equal(latest!.replaces_id, original.id);
+    assert.equal(latest!.series_id, original.id);
+    assert.equal((await repo.list({ offset: 0, limit: 20, practitioner_id: 'av-p1', on_date: '2026-10-26' })).items[0]!.id, old!.id);
+    assert.equal((await repo.list({ offset: 0, limit: 20, practitioner_id: 'av-p1', on_date: '2026-11-02' })).items[0]!.id, latest!.id);
+    assert.equal((await repo.list({ offset: 0, limit: 20, on_date: '2026-11-03' })).total, 0);
+    await assert.rejects(repo.softDelete(original.id), /latest/);
+    assert.equal(await repo.softDelete(latest!.id), true);
+    assert.equal(await repo.getById(latest!.id), null);
+    assert.equal((await repo.history(latest!.id, { offset: 0, limit: 20 }))!.total, 2);
+    assert.ok((await repo.history(original.id, { offset: 0, limit: 20 }))!.items[1]!.deleted_at);
+    assert.equal((await repo.list({ offset: 0, limit: 20, practitioner_id: 'av-p1', on_date: '2026-11-02' })).total, 0);
   });
 });
 

@@ -40,6 +40,8 @@ PUT preserva campos omitidos. `equipment: []` limpa a lista; `room_type: null`
 e `notes: null` limpam os textos opcionais. Booleanos exigem true/false;
 null, números e strings não substituem valores booleanos no corpo.
 Alterar a unidade exige novamente uma unidade ativa e do mesmo tenant.
+Se já houver histórico de disponibilidade para a sala, a troca de unidade retorna
+409 para preservar a localização histórica; cadastrar outra sala na unidade de destino.
 Vínculo inválido retorna 422, sem gravar alterações parciais.
 
 IDs, tenant e timestamps são definidos pelo servidor. A resposta inclui

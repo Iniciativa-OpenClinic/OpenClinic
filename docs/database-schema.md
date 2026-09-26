@@ -1,5 +1,17 @@
 # OpenClinic — Dicionário e Referência do Esquema de Banco de Dados
 
+## Disponibilidade (migração 0004)
+
+`app_availabilities` representa janelas semanais por unidade e por profissional
+ou sala (exatamente um recurso), com fuso, duração de slot e vigência de datas
+com fim exclusivo. `series_id` e `replaces_id` preservam a sequência de versões;
+uma chave única limita cada versão a um sucessor. Chaves compostas impedem
+vínculos entre tenants e salas de outra unidade. Alterações de horário criam
+novos registros e encerram a vigência anterior em uma transação.
+
+Ver [contrato de disponibilidade](./availability-api.md) e
+[migração 0004](../infra/database/migrations/0004_availability_schedule.sql).
+
 ## Salas (migração 0003)
 
 `app_rooms` armazena nome, unidade, tipo local, indicação de agendamento,

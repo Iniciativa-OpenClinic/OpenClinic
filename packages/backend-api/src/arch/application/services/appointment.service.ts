@@ -2,7 +2,7 @@ import { AppError, ErrorCode, ValidationError } from '@openclinic/core';
 import type { AppointmentFilters, AppointmentInput, AppointmentStatus } from '../../domain/appointment.js';
 
 export const appointmentConflict = (message: string) => new AppError(ErrorCode.BUSINESS_RULE_VIOLATION, message, 409);
-export function validateAppointment(input: AppointmentInput): void {
+export function validateAppointment(input: Omit<AppointmentInput, 'source_channel'> & { source_channel: string }, allowLegacySource = false): void {
   for (const key of ['patient_id', 'procedure_id', 'practitioner_id', 'unit_id'] as const) {
     if (!input[key]?.trim()) throw new ValidationError(key);
   }
@@ -11,7 +11,7 @@ export function validateAppointment(input: AppointmentInput): void {
     throw new ValidationError('duration_minutes', 'Duration must be between 1 and 1440 minutes');
   }
   if (input.payer_type !== 'PARTICULAR') throw new ValidationError('payer_type');
-  if (!['RECEPTION', 'PHONE', 'API'].includes(input.source_channel)) throw new ValidationError('source_channel');
+  if (!['RECEPTION', 'PHONE', 'API'].includes(input.source_channel) && !(allowLegacySource && input.source_channel === 'LEGACY')) throw new ValidationError('source_channel');
 }
 export function validateAppointmentFilters({ from, to }: AppointmentFilters): void {
   if ((from && !Number.isFinite(Date.parse(from))) || (to && !Number.isFinite(Date.parse(to))) ||

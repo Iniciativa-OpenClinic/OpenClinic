@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { ValidationError } from '@openclinic/core';
 import { and, asc, count, eq, isNull, ne, or, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import type { AppointmentFilters, AppointmentInput, AppointmentRepository, AppointmentStatus } from '../../domain/appointment.js';
+import type { AppointmentFilters, AppointmentInput, AppointmentRepository, AppointmentStatus, AppointmentUpdateInput } from '../../domain/appointment.js';
 import { appointmentConflict, validateAppointment, validateAppointmentFilters, validateAppointmentTransition } from '../../application/services/appointment.service.js';
 import { appAppointments, appPatients, appPractitioners, appProcedures, appProcedurePractitioners, appOrganizationUnits, appRooms } from './drizzle-schema.js';
 import { PostgresScheduleBlockRepository } from './schedule-block.repository.js';
@@ -98,17 +98,18 @@ export class PostgresAppointmentRepository implements AppointmentRepository {
       return row;
     });
   }
-  async update(id: string, input: Partial<AppointmentInput>) {
+  async update(id: string, input: AppointmentUpdateInput) {
     return this.db.transaction(async tx => {
       await this.lock(tx);
       const [old] = await tx.select().from(appAppointments).where(this.scope(id)).limit(1).for('update');
       if (!old) return null;
+      if ('source_channel' in input) throw appointmentConflict('Appointment source_channel is immutable');
       if (!['SCHEDULED', 'CONFIRMED'].includes(old.status)) throw appointmentConflict('Only scheduled or confirmed appointments may be edited');
       const merged = { ...old, ...input, appointment_date: input.appointment_date ?? old.appointment_date.toISOString() } as AppointmentInput;
-      validateAppointment(merged);
+      validateAppointment(merged, true);
       const procedure = await this.validateResources(tx, merged);
       const complete = { ...merged, duration_minutes: input.duration_minutes ?? (input.procedure_id && input.procedure_id !== old.procedure_id ? procedure.estimated_duration_minutes : old.duration_minutes) };
-      validateAppointment(complete);
+      validateAppointment(complete, true);
       await this.checkSchedule(tx, complete, id);
       const [row] = await tx.update(appAppointments).set({ ...input, duration_minutes: complete.duration_minutes,
         appointment_date: new Date(complete.appointment_date), updated_at: new Date() }).where(this.scope(id)).returning();

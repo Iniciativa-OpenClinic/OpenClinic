@@ -53,3 +53,7 @@ jobs:
         env:
           TEST_PG_CLIENT: '1'
         run: npm run test:migrations
+      - name: Functional API tests (real HTTP, authentication and PostgreSQL)
+        run: npm run test:api:functional
+      - name: Agenda specification readiness (fails on uncovered requirements)
+        run: npm run verify:agenda-readiness

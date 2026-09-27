@@ -42,7 +42,8 @@ describe('Appointment application integration', () => {
     const { app, uow, headers } = await fixture('tenant-a', UserRole.USER);
     const response = await app.inject({ method, url: '/api/v1/business/appointments' + suffix, headers,
       ...(method === 'PATCH' ? { payload: { status: 'CONFIRMED' } } : {}),
-      ...(['POST', 'PUT'].includes(method) ? { payload: { patient_id: 'patient-1', practitioner_id: 'p-1', procedure_id: 'procedure-1', unit_id: 'u-1', appointment_date: '2026-10-01T08:00:00Z', payer_type: 'PARTICULAR', source_channel: 'RECEPTION' } } : {}) });
+      ...(method === 'PUT' ? { payload: { notes: 'Updated reception notes' } } : {}),
+      ...(method === 'POST' ? { payload: { patient_id: 'patient-1', practitioner_id: 'p-1', procedure_id: 'procedure-1', unit_id: 'u-1', appointment_date: '2026-10-01T08:00:00Z', payer_type: 'PARTICULAR', source_channel: 'RECEPTION' } } : {}) });
     expect(response.statusCode).toBe(403);
     expect(permission).toHaveBeenCalledWith('user-1', 'op_schedule', action);
     expect(uow.appointmentsForTenant).not.toHaveBeenCalled();

@@ -1,5 +1,9 @@
 # API de agendamentos
 
+Este documento descreve o contrato implementado, que ainda atende apenas parte
+da especificação da branch principal. A [revisão de conformidade](./appointment-review.md)
+lista os requisitos pendentes; testes passando não significam conformidade integral.
+
 Base: `/api/v1/business/appointments`. Todos os endpoints exigem JWT, tenant
 e a permissão indicada no recurso `op_schedule`.
 
@@ -46,6 +50,8 @@ Na V1 o pagador aceito é `PARTICULAR`. `source_channel` aceita `RECEPTION`,
 `PHONE` ou `API`. O status inicial é sempre `SCHEDULED` e não pode ser enviado
 para pular etapas na criação. Identificador, tenant e timestamps são definidos
 pelo servidor.
+Campos não previstos no contrato são rejeitados com 400, inclusive status no
+POST, referências de sessão ainda não suportadas e campos controlados pelo servidor.
 
 ## Agenda e conflitos
 
@@ -77,7 +83,9 @@ não cancelam nem deslocam reservas existentes.
 ## Alteração e status
 
 PUT preserva campos omitidos e só permite editar agendamentos `SCHEDULED` ou
-`CONFIRMED`. Trocar o procedimento sem enviar duração herda a duração do novo
+`CONFIRMED`. `source_channel` é imutável e não é aceito no PUT (400). Registros
+legados mantêm `LEGACY`; editar um registro não inventa sua origem histórica.
+Trocar o procedimento sem enviar duração herda a duração do novo
 procedimento. Sem troca, mantém a duração já gravada. `room_id: null` libera
 a sala apenas quando o procedimento não a exige. A alteração revalida os
 recursos e a agenda; falha deixa o registro anterior intacto.
@@ -123,14 +131,17 @@ adiciona campos e chaves estrangeiras por tenant à tabela existente, preserva
 os registros e mantém o campo legado `type` internamente. Novos registros usam
 `type=PROCEDURE`. Unidade/procedimento ficam nullable no banco para não inventar
 vínculos em agendamentos antigos; a nova API exige ambos. Registros antigos
-recebem canal `LEGACY` e precisam dos dados obrigatórios ao serem editados.
+recebem canal `LEGACY` e precisam de unidade/procedimento ao serem editados,
+preservando esse canal original.
 Inconsistências antigas de tenant nas referências impedem a migração e devem
 ser corrigidas previamente. Sala com histórico de agendamento não pode mudar
 de unidade (409), inclusive após exclusão lógica.
 
-Vínculo com pacote/sessão planejada, cadastro de planos pagadores, identificação
-individual de parceiros, auditoria de transições, webhooks e criação de
-atendimento dependem de seus módulos e não são criados por estas rotas.
+Vínculo com pacote/sessão planejada, referências a pagadores, identificação
+individual de parceiros, autoria, auditoria, histórico de versões, conformidade
+FHIR e webhooks ainda estão pendentes frente à especificação principal. Essa
+ausência não é uma dispensa de escopo concedida pela documentação do produto.
+Criação de atendimento não é executada por estas rotas.
 Lembretes e mensagens de confirmação permanecem responsabilidade das integrações.
 
 Contrato completo no [OpenAPI](./openapi/openapi.yaml).

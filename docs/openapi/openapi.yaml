@@ -17144,7 +17144,8 @@ paths:
       tags:
         - Appointments
       description: Requires op_schedule WRITE. Only scheduled or confirmed
-        appointments may be edited. Omitted fields are preserved.
+        appointments may be edited. Omitted fields and the original
+        source_channel are preserved.
       requestBody:
         required: true
         content:
@@ -17194,12 +17195,6 @@ paths:
                   type: string
                   enum:
                     - PARTICULAR
-                source_channel:
-                  type: string
-                  enum:
-                    - RECEPTION
-                    - PHONE
-                    - API
                 notes:
                   type: string
                   nullable: true

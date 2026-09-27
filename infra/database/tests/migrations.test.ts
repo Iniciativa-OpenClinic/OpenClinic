@@ -49,6 +49,8 @@ test('appointments enforce scheduling, lifecycle, isolation and concurrent reser
     const first = await repo.create(input);
     assert.equal(first.duration_minutes, 30);
     assert.equal(first.status, 'SCHEDULED');
+    await assert.rejects(repo.update(first.id, { notes: 'attempted rewrite', ...{ source_channel: 'PHONE' } }), /immutable/);
+    assert.equal((await repo.getById(first.id))!.source_channel, 'RECEPTION');
     assert.equal(await foreign.getById(first.id), null);
     assert.equal(await foreign.update(first.id, { notes: 'wrong tenant' }), null);
     assert.equal(await foreign.changeStatus(first.id, 'CANCELLED'), null);
@@ -119,6 +121,13 @@ test('appointment migration preserves legacy appointments without inventing reso
     assert.equal(row!.procedure_id, null);
     assert.equal(row!.unit_id, null);
     assert.equal(row!.source_channel, 'LEGACY');
+    await sql`INSERT INTO app_organizations (id, tenant_id, legal_name, trade_name) VALUES ('legacy-org', 'legacy-appt', 'A', 'A')`;
+    await sql`INSERT INTO app_organization_units (id, tenant_id, organization_id, name) VALUES ('legacy-unit', 'legacy-appt', 'legacy-org', 'Unit')`;
+    await sql`INSERT INTO app_procedures (id, tenant_id, name, estimated_duration_minutes) VALUES ('legacy-procedure', 'legacy-appt', 'Procedure', 30)`;
+    const repo = new PostgresAppointmentRepository(drizzle(sql), 'legacy-appt');
+    const updated = await repo.update('legacy-appointment', { unit_id: 'legacy-unit', procedure_id: 'legacy-procedure', is_overbook: true, notes: 'Corrected' });
+    assert.equal(updated!.source_channel, 'LEGACY');
+    assert.equal(updated!.duration_minutes, 30);
   });
 });
 

@@ -13,6 +13,7 @@ export interface AppointmentInput {
   source_channel: 'RECEPTION' | 'PHONE' | 'API';
   notes?: string | null;
 }
+export type AppointmentUpdateInput = Partial<Omit<AppointmentInput, 'source_channel'>>;
 export interface Appointment extends Omit<AppointmentInput, 'appointment_date' | 'procedure_id' | 'unit_id' | 'source_channel'> {
   id: string;
   tenant_id: string;
@@ -37,7 +38,7 @@ export interface AppointmentRepository {
   list(options: AppointmentFilters): Promise<{ items: Appointment[]; total: number }>;
   getById(id: string): Promise<Appointment | null>;
   create(input: AppointmentInput): Promise<Appointment>;
-  update(id: string, input: Partial<AppointmentInput>): Promise<Appointment | null>;
+  update(id: string, input: AppointmentUpdateInput): Promise<Appointment | null>;
   changeStatus(id: string, status: AppointmentStatus): Promise<Appointment | null>;
   softDelete(id: string): Promise<boolean>;
 }

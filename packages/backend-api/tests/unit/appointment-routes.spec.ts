@@ -14,6 +14,19 @@ function fixture() {
   return { app, appointments };
 }
 describe('Appointment routes', () => {
+  it.each([
+    ['POST', '', { ...input, status: 'COMPLETED' }],
+    ['POST', '', { ...input, session_id: 'unsupported-session' }],
+    ['PUT', '/a-1', { tenant_id: 'another-tenant' }],
+    ['PUT', '/a-1', { notes: 'valid', source_channel: 'PHONE' }],
+    ['PATCH', '/a-1/status', { status: 'CONFIRMED', notes: 'silently discarded' }],
+  ] as const)('rejects unsupported or immutable fields in %s %s', async (method, suffix, payload) => {
+    const { app, appointments } = fixture();
+    expect((await app.inject({ method, url: base + suffix, payload })).statusCode).toBe(400);
+    expect(appointments.create).not.toHaveBeenCalled();
+    expect(appointments.update).not.toHaveBeenCalled();
+    expect(appointments.changeStatus).not.toHaveBeenCalled();
+  });
   it('creates and serializes the procedure duration and server status', async () => {
     const { app, appointments } = fixture();
     const response = await app.inject({ method: 'POST', url: base, payload: input });

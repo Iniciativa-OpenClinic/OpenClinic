@@ -10620,14 +10620,14 @@ paths:
                   message:
                     type: string
         "409":
-          description: Room cannot change unit while availability history or unit-scoped
-            block records exist
+          description: Room cannot change unit while availability, appointment history or
+            unit-scoped block records exist
           content:
             application/json:
               schema:
                 type: object
-                description: Room cannot change unit while availability history or unit-scoped
-                  block records exist
+                description: Room cannot change unit while availability, appointment history or
+                  unit-scoped block records exist
                 properties:
                   type:
                     type: string
@@ -10974,14 +10974,14 @@ paths:
                   message:
                     type: string
         "409":
-          description: Room cannot change unit while availability history or unit-scoped
-            block records exist
+          description: Room cannot change unit while availability, appointment history or
+            unit-scoped block records exist
           content:
             application/json:
               schema:
                 type: object
-                description: Room cannot change unit while availability history or unit-scoped
-                  block records exist
+                description: Room cannot change unit while availability, appointment history or
+                  unit-scoped block records exist
                 properties:
                   type:
                     type: string
@@ -11292,14 +11292,14 @@ paths:
                   message:
                     type: string
         "409":
-          description: Room cannot change unit while availability history or unit-scoped
-            block records exist
+          description: Room cannot change unit while availability, appointment history or
+            unit-scoped block records exist
           content:
             application/json:
               schema:
                 type: object
-                description: Room cannot change unit while availability history or unit-scoped
-                  block records exist
+                description: Room cannot change unit while availability, appointment history or
+                  unit-scoped block records exist
                 properties:
                   type:
                     type: string
@@ -11649,14 +11649,14 @@ paths:
                   message:
                     type: string
         "409":
-          description: Room cannot change unit while availability history or unit-scoped
-            block records exist
+          description: Room cannot change unit while availability, appointment history or
+            unit-scoped block records exist
           content:
             application/json:
               schema:
                 type: object
-                description: Room cannot change unit while availability history or unit-scoped
-                  block records exist
+                description: Room cannot change unit while availability, appointment history or
+                  unit-scoped block records exist
                 properties:
                   type:
                     type: string
@@ -11929,14 +11929,14 @@ paths:
                   message:
                     type: string
         "409":
-          description: Room cannot change unit while availability history or unit-scoped
-            block records exist
+          description: Room cannot change unit while availability, appointment history or
+            unit-scoped block records exist
           content:
             application/json:
               schema:
                 type: object
-                description: Room cannot change unit while availability history or unit-scoped
-                  block records exist
+                description: Room cannot change unit while availability, appointment history or
+                  unit-scoped block records exist
                 properties:
                   type:
                     type: string
@@ -16022,6 +16022,2140 @@ paths:
                   - status
                   - detail
                   - code
+  /api/v1/business/appointments:
+    get:
+      summary: List appointments
+      tags:
+        - Appointments
+      description: Requires op_schedule READ. Date filters select overlapping
+        half-open periods.
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            default: 0
+          in: query
+          name: offset
+          required: false
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          in: query
+          name: limit
+          required: false
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+            pattern: \S
+          in: query
+          name: patient_id
+          required: false
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+            pattern: \S
+          in: query
+          name: practitioner_id
+          required: false
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+            pattern: \S
+          in: query
+          name: unit_id
+          required: false
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+            pattern: \S
+          in: query
+          name: room_id
+          required: false
+        - schema:
+            type: string
+            enum:
+              - SCHEDULED
+              - CONFIRMED
+              - ARRIVED
+              - IN_PROGRESS
+              - COMPLETED
+              - NO_SHOW
+              - CANCELLED
+          in: query
+          name: status
+          required: false
+        - schema:
+            type: string
+            format: date-time
+            pattern: (Z|[+-][0-9]{2}:[0-9]{2})$
+          in: query
+          name: from
+          required: false
+        - schema:
+            type: string
+            format: date-time
+            pattern: (Z|[+-][0-9]{2}:[0-9]{2})$
+          in: query
+          name: to
+          required: false
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tenant_id:
+                          type: string
+                        patient_id:
+                          type: string
+                        practitioner_id:
+                          type: string
+                        procedure_id:
+                          type: string
+                          nullable: true
+                        unit_id:
+                          type: string
+                          nullable: true
+                        room_id:
+                          type: string
+                          nullable: true
+                        appointment_date:
+                          type: string
+                          format: date-time
+                        duration_minutes:
+                          type: integer
+                        status:
+                          type: string
+                        is_overbook:
+                          type: boolean
+                        payer_type:
+                          type: string
+                        source_channel:
+                          type: string
+                        notes:
+                          type: string
+                          nullable: true
+                        is_active:
+                          type: boolean
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                        deleted_at:
+                          type: string
+                          nullable: true
+                          format: date-time
+                  total:
+                    type: integer
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Authentication required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Tenant and op_schedule permission required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Tenant and op_schedule permission required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "409":
+          description: Resource conflict, unavailable period or invalid status transition
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Resource conflict, unavailable period or invalid status transition
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "422":
+          description: Invalid appointment or related resource
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid appointment or related resource
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    post:
+      summary: Create appointment
+      tags:
+        - Appointments
+      description: Requires op_schedule WRITE. Starts SCHEDULED. Duration defaults to
+        the procedure. Fit-ins bypass availability only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - patient_id
+                - procedure_id
+                - practitioner_id
+                - unit_id
+                - appointment_date
+                - payer_type
+                - source_channel
+              properties:
+                patient_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                practitioner_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                procedure_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                unit_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                room_id:
+                  type: string
+                  nullable: true
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                appointment_date:
+                  type: string
+                  format: date-time
+                  pattern: (Z|[+-][0-9]{2}:[0-9]{2})$
+                duration_minutes:
+                  type: integer
+                  minimum: 1
+                  maximum: 1440
+                is_overbook:
+                  type: boolean
+                payer_type:
+                  type: string
+                  enum:
+                    - PARTICULAR
+                source_channel:
+                  type: string
+                  enum:
+                    - RECEPTION
+                    - PHONE
+                    - API
+                notes:
+                  type: string
+                  nullable: true
+                  maxLength: 10000
+      security:
+        - BearerAuth: []
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  patient_id:
+                    type: string
+                  practitioner_id:
+                    type: string
+                  procedure_id:
+                    type: string
+                    nullable: true
+                  unit_id:
+                    type: string
+                    nullable: true
+                  room_id:
+                    type: string
+                    nullable: true
+                  appointment_date:
+                    type: string
+                    format: date-time
+                  duration_minutes:
+                    type: integer
+                  status:
+                    type: string
+                  is_overbook:
+                    type: boolean
+                  payer_type:
+                    type: string
+                  source_channel:
+                    type: string
+                  notes:
+                    type: string
+                    nullable: true
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Authentication required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Tenant and op_schedule permission required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Tenant and op_schedule permission required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "409":
+          description: Resource conflict, unavailable period or invalid status transition
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Resource conflict, unavailable period or invalid status transition
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "422":
+          description: Invalid appointment or related resource
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid appointment or related resource
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+  /api/v1/business/appointments/{id}:
+    get:
+      summary: Get appointment
+      tags:
+        - Appointments
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+            pattern: \S
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  patient_id:
+                    type: string
+                  practitioner_id:
+                    type: string
+                  procedure_id:
+                    type: string
+                    nullable: true
+                  unit_id:
+                    type: string
+                    nullable: true
+                  room_id:
+                    type: string
+                    nullable: true
+                  appointment_date:
+                    type: string
+                    format: date-time
+                  duration_minutes:
+                    type: integer
+                  status:
+                    type: string
+                  is_overbook:
+                    type: boolean
+                  payer_type:
+                    type: string
+                  source_channel:
+                    type: string
+                  notes:
+                    type: string
+                    nullable: true
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Authentication required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Tenant and op_schedule permission required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Tenant and op_schedule permission required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "409":
+          description: Resource conflict, unavailable period or invalid status transition
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Resource conflict, unavailable period or invalid status transition
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "422":
+          description: Invalid appointment or related resource
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid appointment or related resource
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    put:
+      summary: Update appointment
+      tags:
+        - Appointments
+      description: Requires op_schedule WRITE. Only scheduled or confirmed
+        appointments may be edited. Omitted fields are preserved.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                patient_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                practitioner_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                procedure_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                unit_id:
+                  type: string
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                room_id:
+                  type: string
+                  nullable: true
+                  minLength: 1
+                  maxLength: 36
+                  pattern: \S
+                appointment_date:
+                  type: string
+                  format: date-time
+                  pattern: (Z|[+-][0-9]{2}:[0-9]{2})$
+                duration_minutes:
+                  type: integer
+                  minimum: 1
+                  maximum: 1440
+                is_overbook:
+                  type: boolean
+                payer_type:
+                  type: string
+                  enum:
+                    - PARTICULAR
+                source_channel:
+                  type: string
+                  enum:
+                    - RECEPTION
+                    - PHONE
+                    - API
+                notes:
+                  type: string
+                  nullable: true
+                  maxLength: 10000
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+            pattern: \S
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  patient_id:
+                    type: string
+                  practitioner_id:
+                    type: string
+                  procedure_id:
+                    type: string
+                    nullable: true
+                  unit_id:
+                    type: string
+                    nullable: true
+                  room_id:
+                    type: string
+                    nullable: true
+                  appointment_date:
+                    type: string
+                    format: date-time
+                  duration_minutes:
+                    type: integer
+                  status:
+                    type: string
+                  is_overbook:
+                    type: boolean
+                  payer_type:
+                    type: string
+                  source_channel:
+                    type: string
+                  notes:
+                    type: string
+                    nullable: true
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Authentication required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Tenant and op_schedule permission required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Tenant and op_schedule permission required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "409":
+          description: Resource conflict, unavailable period or invalid status transition
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Resource conflict, unavailable period or invalid status transition
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "422":
+          description: Invalid appointment or related resource
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid appointment or related resource
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+    delete:
+      summary: Delete appointment
+      tags:
+        - Appointments
+      description: Requires op_schedule DELETE. Soft-deletes and cancels an
+        appointment before arrival; preserves history.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+            pattern: \S
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Empty response
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Authentication required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Tenant and op_schedule permission required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Tenant and op_schedule permission required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "409":
+          description: Resource conflict, unavailable period or invalid status transition
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Resource conflict, unavailable period or invalid status transition
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "422":
+          description: Invalid appointment or related resource
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid appointment or related resource
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+  /api/v1/business/appointments/{id}/status:
+    patch:
+      summary: Change appointment status
+      tags:
+        - Appointments
+      description: Requires op_schedule WRITE. Enforces the documented lifecycle;
+        terminal states cannot be reopened.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - SCHEDULED
+                    - CONFIRMED
+                    - ARRIVED
+                    - IN_PROGRESS
+                    - COMPLETED
+                    - NO_SHOW
+                    - CANCELLED
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+            pattern: \S
+          in: path
+          name: id
+          required: true
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  tenant_id:
+                    type: string
+                  patient_id:
+                    type: string
+                  practitioner_id:
+                    type: string
+                  procedure_id:
+                    type: string
+                    nullable: true
+                  unit_id:
+                    type: string
+                    nullable: true
+                  room_id:
+                    type: string
+                    nullable: true
+                  appointment_date:
+                    type: string
+                    format: date-time
+                  duration_minutes:
+                    type: integer
+                  status:
+                    type: string
+                  is_overbook:
+                    type: boolean
+                  payer_type:
+                    type: string
+                  source_channel:
+                    type: string
+                  notes:
+                    type: string
+                    nullable: true
+                  is_active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  deleted_at:
+                    type: string
+                    nullable: true
+                    format: date-time
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid request
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Authentication required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "403":
+          description: Tenant and op_schedule permission required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Tenant and op_schedule permission required
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  message:
+                    type: string
+        "409":
+          description: Resource conflict, unavailable period or invalid status transition
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Resource conflict, unavailable period or invalid status transition
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "422":
+          description: Invalid appointment or related resource
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Invalid appointment or related resource
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Internal server error
+                properties:
+                  type:
+                    type: string
+                    description: URI identifier for the error type
+                  title:
+                    type: string
+                    description: Human-readable summary of the error
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Detailed and localized error description
+                  code:
+                    type: string
+                    description: Unique application error code (e.g. ERR_AUTH_INVALID_CREDENTIALS)
+                  instance:
+                    type: string
+                    description: URI of the endpoint where the error occurred
+                  invalid_params:
+                    type: array
+                    description: List of parameters that failed validation
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        reason:
+                          type: string
+                required:
+                  - title
+                  - status
+                  - detail
+                  - code
 servers:
   - url: /
     description: Current Origin (Domain / Reverse Proxy)
@@ -16043,6 +18177,8 @@ tags:
     description: Multi-tenancy administration and organization isolation
   - name: Availabilities
     description: Weekly resource availability with validity periods and version history
+  - name: Appointments
+    description: Appointments, scheduling conflicts and lifecycle
   - name: ScheduleBlocks
     description: Resource unavailability and recurring block occurrences
   - name: Rooms

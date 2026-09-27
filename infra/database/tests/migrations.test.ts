@@ -12,6 +12,7 @@ import { PostgresProcedureRepository } from '../../../packages/backend-api/src/a
 import { PostgresRoomRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/room.repository.js';
 import { PostgresAvailabilityRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/availability.repository.js';
 import { PostgresScheduleBlockRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/schedule-block.repository.js';
+import { PostgresAppointmentRepository } from '../../../packages/backend-api/src/arch/infrastructure/database/appointment.repository.js';
 import { baselineDatabase, inspectMigrations, loadMigrations, migrateDatabase, migrationsDirectory,
   MIGRATION_LOCK, schemaSignature, signatureDifferences, databaseDirectory } from '../../../packages/backend-cli/src/utils/migration-runner.js';
 import { seedDemoDatabase } from '../../../packages/backend-cli/src/commands/db-seed.js';
@@ -20,6 +21,107 @@ import { cloneVersionedDatabase } from '../../../packages/backend-cli/src/utils/
 import { executePgRestore } from '../../../packages/backend-cli/src/utils/pg-runner.js';
 
 const adminUrl = testDatabaseUrl();
+
+test('appointments enforce scheduling, lifecycle, isolation and concurrent reservations', async () => {
+  await isolated(async (url, sql) => {
+    await migrateDatabase(url);
+    await sql`INSERT INTO sys_tenants (id, name) VALUES ('appt-a', 'A'), ('appt-b', 'B')`;
+    await sql`INSERT INTO app_organizations (id, tenant_id, legal_name, trade_name) VALUES ('appt-org', 'appt-a', 'A', 'A')`;
+    await sql`INSERT INTO app_organization_units (id, tenant_id, organization_id, name) VALUES ('appt-unit', 'appt-a', 'appt-org', 'A'), ('appt-unit2', 'appt-a', 'appt-org', 'B')`;
+    await sql`INSERT INTO app_patients (id, tenant_id, full_name) VALUES ('appt-patient', 'appt-a', 'Patient'), ('appt-foreign', 'appt-b', 'Foreign')`;
+    await sql`INSERT INTO app_practitioners (id, tenant_id, full_name, practitioner_type) VALUES ('appt-practitioner', 'appt-a', 'Professional', 'PHYSICIAN'), ('appt-practitioner2', 'appt-a', 'Other', 'PHYSICIAN')`;
+    await sql`INSERT INTO app_procedures (id, tenant_id, name, estimated_duration_minutes, requires_room) VALUES ('appt-procedure', 'appt-a', 'Consultation', 30, true)`;
+    await sql`INSERT INTO app_rooms (id, tenant_id, unit_id, name, is_schedulable) VALUES ('appt-room', 'appt-a', 'appt-unit', 'Room', true), ('appt-room2', 'appt-a', 'appt-unit2', 'Other room', true)`;
+    const repo = new PostgresAppointmentRepository(drizzle(sql), 'appt-a');
+    const foreign = new PostgresAppointmentRepository(drizzle(sql), 'appt-b');
+    const input = { patient_id: 'appt-patient', practitioner_id: 'appt-practitioner', procedure_id: 'appt-procedure', unit_id: 'appt-unit', room_id: 'appt-room', appointment_date: '2026-10-05T09:00:00Z', payer_type: 'PARTICULAR' as const, source_channel: 'RECEPTION' as const };
+    await assert.rejects(repo.create(input), /availability/);
+    await assert.rejects(repo.create({ ...input, patient_id: 'appt-foreign', is_overbook: true }));
+    await assert.rejects(repo.create({ ...input, room_id: null, is_overbook: true }));
+    await assert.rejects(repo.create({ ...input, room_id: 'appt-room2', is_overbook: true }));
+    const availability = new PostgresAvailabilityRepository(drizzle(sql), 'appt-a');
+    for (const resource of [{ practitioner_id: 'appt-practitioner' }, { room_id: 'appt-room' }]) {
+      for (const [start_time, end_time] of [['09:00', '09:15'], ['09:15', '12:00']]) {
+        await availability.create({ ...resource, unit_id: 'appt-unit', day_of_week: 1, start_time, end_time, slot_duration_minutes: 15, timezone: 'UTC', valid_from: '2026-10-01', valid_until: '2026-11-01' });
+      }
+    }
+    // Adjacent availability windows cover a single appointment without a gap.
+    const first = await repo.create(input);
+    assert.equal(first.duration_minutes, 30);
+    assert.equal(first.status, 'SCHEDULED');
+    assert.equal(await foreign.getById(first.id), null);
+    assert.equal(await foreign.update(first.id, { notes: 'wrong tenant' }), null);
+    assert.equal(await foreign.changeStatus(first.id, 'CANCELLED'), null);
+    assert.equal(await foreign.softDelete(first.id), false);
+    await assert.rejects(repo.create({ ...input, is_overbook: true }), /already has/);
+    await assert.rejects(repo.create({ ...input, unit_id: 'appt-unit2', room_id: 'appt-room2', is_overbook: true }), /already has/);
+    await assert.rejects(repo.create({ ...input, practitioner_id: 'appt-practitioner2', is_overbook: true }), /already has/);
+    const adjacent = await repo.create({ ...input, appointment_date: '2026-10-05T09:30:00Z' });
+    await assert.rejects(repo.update(adjacent.id, { appointment_date: input.appointment_date }), /already has/);
+    assert.equal((await repo.getById(adjacent.id))!.appointment_date.toISOString(), '2026-10-05T09:30:00.000Z');
+    assert.equal((await repo.list({ offset: 0, limit: 20, from: '2026-10-05T09:00:00Z', to: '2026-10-05T09:30:00Z' })).total, 1);
+    assert.equal((await repo.list({ offset: 100, limit: 20 })).total, 2);
+    await assert.rejects(repo.changeStatus(first.id, 'COMPLETED'), /Cannot change/);
+    for (const status of ['CONFIRMED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED'] as const) assert.equal((await repo.changeStatus(first.id, status))!.status, status);
+    await assert.rejects(repo.softDelete(first.id));
+    await assert.rejects(repo.update(first.id, { notes: 'change' }));
+    await assert.rejects(repo.changeStatus(first.id, 'SCHEDULED'));
+    await repo.changeStatus(adjacent.id, 'CANCELLED');
+    const replacement = await repo.create({ ...input, appointment_date: '2026-10-05T09:30:00Z' });
+    await repo.softDelete(replacement.id);
+    assert.equal(await repo.getById(replacement.id), null);
+    const blockRepo = new PostgresScheduleBlockRepository(drizzle(sql), 'appt-a');
+    await blockRepo.create({ practitioner_id: 'appt-practitioner', starts_at: '2026-10-05T10:00:00Z', ends_at: '2026-10-05T11:00:00Z', timezone: 'UTC', recurrence: { frequency: 'WEEKLY', interval: 1 } });
+    await assert.rejects(repo.create({ ...input, appointment_date: '2026-10-12T10:00:00Z', is_overbook: true }), /resource block/);
+    await blockRepo.create({ room_id: 'appt-room', starts_at: '2026-10-05T11:00:00Z', ends_at: '2026-10-05T11:30:00Z', timezone: 'UTC' });
+    await assert.rejects(repo.create({ ...input, appointment_date: '2026-10-05T11:00:00Z', is_overbook: true }), /resource block/);
+    await assert.rejects(repo.create({ ...input, appointment_date: '2026-11-02T09:00:00Z' }), /availability/);
+    await repo.create({ ...input, appointment_date: '2026-11-02T09:00:00Z', is_overbook: true });
+    await sql`INSERT INTO app_procedure_practitioners (tenant_id, procedure_id, practitioner_id) VALUES ('appt-a', 'appt-procedure', 'appt-practitioner2')`;
+    await assert.rejects(repo.create({ ...input, appointment_date: '2026-11-03T09:00:00Z', is_overbook: true }), /eligible/);
+    await sql`DELETE FROM app_procedure_practitioners WHERE tenant_id = 'appt-a'`;
+    for (const resource of [{ practitioner_id: 'appt-practitioner' }, { room_id: 'appt-room' }]) {
+      await availability.create({ ...resource, unit_id: 'appt-unit', day_of_week: 0, start_time: '09:00', end_time: '10:00', slot_duration_minutes: 30, timezone: 'America/New_York', valid_from: '2026-03-01', valid_until: '2026-04-01' });
+    }
+    await repo.create({ ...input, appointment_date: '2026-03-08T13:00:00Z' });
+    await assert.rejects(repo.create({ ...input, appointment_date: '2026-03-08T14:00:00Z' }), /availability/);
+    const roomRepo = new PostgresRoomRepository(drizzle(sql), 'appt-a');
+    await assert.rejects(roomRepo.update('appt-room', { unit_id: 'appt-unit2' }), /appointment history/);
+    // Independent database connections are essential: a max:1 pool would hide races.
+    const concurrent = postgres(url, { max: 4, onnotice: () => {} });
+    try {
+      const other = new PostgresAppointmentRepository(drizzle(concurrent), 'appt-a');
+      const results = await Promise.allSettled([other.create({ ...input, appointment_date: '2026-11-04T09:00:00Z', is_overbook: true }), other.create({ ...input, appointment_date: '2026-11-04T09:00:00Z', is_overbook: true })]);
+      assert.equal(results.filter(r => r.status === 'fulfilled').length, 1);
+      assert.equal(results.filter(r => r.status === 'rejected').length, 1);
+      const rejected = results.find(r => r.status === 'rejected') as PromiseRejectedResult;
+      assert.equal(rejected.reason.statusCode, 409);
+    } finally { await concurrent.end(); }
+  });
+});
+
+test('appointment migration preserves legacy appointments without inventing resource links', async () => {
+  await isolated(async (_url, sql) => {
+    const migrations = loadMigrations();
+    const target = migrations.findIndex(m => m.sql.some(statement => statement.includes('ADD COLUMN "source_channel"')));
+    assert.ok(target > 0);
+    for (const migration of migrations.slice(0, target)) for (const statement of migration.sql) await sql.unsafe(statement);
+    await sql`INSERT INTO sys_tenants (id, name) VALUES ('legacy-appt', 'Legacy')`;
+    await sql`INSERT INTO app_patients (id, tenant_id, full_name) VALUES ('legacy-patient', 'legacy-appt', 'Patient')`;
+    await sql`INSERT INTO app_practitioners (id, tenant_id, full_name, practitioner_type) VALUES ('legacy-practitioner', 'legacy-appt', 'Professional', 'PHYSICIAN')`;
+    await sql`INSERT INTO app_appointments (id, tenant_id, patient_id, practitioner_id, appointment_date, duration_minutes, status, type, notes)
+      VALUES ('legacy-appointment', 'legacy-appt', 'legacy-patient', 'legacy-practitioner', '2026-10-01T09:00:00Z', 45, 'CONFIRMED', 'ROUTINE', 'Keep this history')`;
+    for (const statement of migrations[target]!.sql) await sql.unsafe(statement);
+    const [row] = await sql`SELECT * FROM app_appointments WHERE id = 'legacy-appointment'`;
+    assert.equal(row!.notes, 'Keep this history');
+    assert.equal(row!.status, 'CONFIRMED');
+    assert.equal(row!.duration_minutes, 45);
+    assert.equal(row!.procedure_id, null);
+    assert.equal(row!.unit_id, null);
+    assert.equal(row!.source_channel, 'LEGACY');
+  });
+});
+
 async function isolated(run: (url: string, client: postgres.Sql) => Promise<void>) {
   const url = new URL(adminUrl);
   if (!['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) throw new Error('Tests only accept a loopback database server.');

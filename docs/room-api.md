@@ -84,3 +84,6 @@ compatibilidade com procedimentos. Reservas, conflitos, manutenção predial,
 auditoria por autor e proveniência ficam para seus respectivos módulos.
 
 Contrato completo no [OpenAPI](./openapi/openapi.yaml).
+
+Salas com histórico de agendamento também não podem mudar de unidade (409),
+mesmo após exclusão lógica dos agendamentos.

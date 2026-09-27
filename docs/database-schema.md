@@ -82,44 +82,35 @@ O OpenClinic organiza seu banco de dados em 3 camadas conceituais com prefixos d
 
 ---
 
-### 1. `app_appointments` — Agendamento de Consultas e Procedimentos (FHIR Appointment)
+### 1. `app_appointments` — Agendamento de consultas e procedimentos
 
-Gerencia o fluxo de marcação de horários de consultas presenciais e teleconsultas.
+Contrato atual em [appointment-api.md](./appointment-api.md). A migração
+`0006_appointment_scheduling.sql` estende a tabela da baseline com procedimento,
+unidade, sala, encaixe, pagador e canal de origem. Paciente e profissional têm
+chaves estrangeiras compostas por tenant; a sala deve pertencer à unidade.
 
-```sql
-CREATE TABLE IF NOT EXISTS app_appointments (
-    id VARCHAR(36) PRIMARY KEY,
-    tenant_id VARCHAR(36) NOT NULL,
-    patient_id VARCHAR(36) NOT NULL,
-    practitioner_id VARCHAR(36) NOT NULL,
-    appointment_date TIMESTAMPTZ NOT NULL,
-    duration_minutes INTEGER NOT NULL DEFAULT 30,
-    status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED',
-    type VARCHAR(30) NOT NULL DEFAULT 'ROUTINE',
-    notes TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ
-);
-```
+| Coluna | Tipo | Regra |
+| --- | --- | --- |
+| `id`, `tenant_id` | varchar(36) | Identidade e tenant definidos pelo servidor |
+| `patient_id`, `practitioner_id` | varchar(36) | Referências obrigatórias no tenant |
+| `procedure_id`, `unit_id` | varchar(36) | Obrigatórias na nova API; nullable para preservar registros antigos |
+| `room_id` | varchar(36) | Obrigatória na API quando o procedimento exige sala |
+| `appointment_date` | timestamptz | Início do agendamento |
+| `duration_minutes` | integer | Herdada do procedimento; ajustável de 1 a 1440 na API |
+| `status` | varchar(20) | SCHEDULED, CONFIRMED, ARRIVED, IN_PROGRESS, COMPLETED, NO_SHOW, CANCELLED |
+| `is_overbook` | boolean | Encaixe explícito, padrão false |
+| `payer_type` | varchar(20) | PARTICULAR na V1 |
+| `source_channel` | varchar(30) | RECEPTION, PHONE ou API; LEGACY nos registros antigos |
+| `type` | varchar(30) | Campo legado preservado; PROCEDURE nos novos registros |
+| `notes` | text | Observações da recepção |
+| `is_active` | boolean | False após exclusão lógica |
+| `created_at`, `updated_at`, `deleted_at` | timestamptz | Datas de controle; deleted_at nullable |
 
-| Coluna | Tipo | Restrições & Padrão | Descrição |
-| :--- | :--- | :--- | :--- |
-| `id` | `VARCHAR(36)` | PK | UUID v4 gerado na aplicação |
-| `tenant_id` | `VARCHAR(36)` | NOT NULL, FK $\rightarrow$ `sys_tenants(id)` | Clínica / Tenant vinculado |
-| `patient_id` | `VARCHAR(36)` | NOT NULL, FK $\rightarrow$ `app_patients(id)` | Paciente agendado |
-| `practitioner_id` | `VARCHAR(36)` | NOT NULL, FK $\rightarrow$ `app_practitioners(id)` | Profissional de saúde |
-| `appointment_date` | `TIMESTAMPTZ` | NOT NULL | Data e horário previsto da consulta |
-| `duration_minutes` | `INTEGER` | DEFAULT 30 | Duração estimada do atendimento |
-| `status` | `VARCHAR(20)` | DEFAULT 'SCHEDULED' | `SCHEDULED`, `CONFIRMED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`, `NO_SHOW` |
-| `type` | `VARCHAR(30)` | DEFAULT 'ROUTINE' | `ROUTINE`, `FIRST_VISIT`, `FOLLOW_UP`, `EMERGENCY`, `TELEMEDICINE` |
-| `notes` | `TEXT` | Nullable | Observações ou motivo do agendamento |
-| `is_active` | `BOOLEAN` | DEFAULT TRUE | Status do registro |
-| `deleted_at` | `TIMESTAMPTZ` | Nullable | Timestamp de exclusão lógica (soft delete) |
+Conflitos de profissional/sala, bloqueios e cobertura de disponibilidade são
+validados na transação da API. Uma trava por tenant serializa reservas
+concorrentes. O cadastro não envia mensagens nem cria atendimentos.
 
 ---
-
 ### 2. `app_encounters` — Atendimentos e Sessões Clínicas (FHIR Encounter)
 
 Representa o encontro assistencial entre o paciente e o profissional de saúde.

@@ -350,6 +350,7 @@ export const appPatients = pgTable('app_patients', {
   deleted_at: timestamp('deleted_at', { withTimezone: true }),
 }, (table) => [
   index('idx_app_patients_tenant_id').on(table.tenant_id),
+  unique('uq_app_patients_tenant_id_id').on(table.tenant_id, table.id),
   index('idx_app_patients_cpf').on(table.cpf),
   index('idx_app_patients_name').on(table.tenant_id, table.full_name),
   foreignKey({ name: 'fk_app_patients_tenant', columns: [table.tenant_id], foreignColumns: [sysTenants.id] }).onDelete('restrict'),
@@ -493,6 +494,12 @@ export const appAppointments = pgTable('app_appointments', {
   tenant_id: varchar('tenant_id', { length: 36 }).notNull(),
   patient_id: varchar('patient_id', { length: 36 }).notNull(),
   practitioner_id: varchar('practitioner_id', { length: 36 }).notNull(),
+  procedure_id: varchar('procedure_id', { length: 36 }),
+  unit_id: varchar('unit_id', { length: 36 }),
+  room_id: varchar('room_id', { length: 36 }),
+  is_overbook: boolean('is_overbook').notNull().default(false),
+  payer_type: varchar('payer_type', { length: 20 }).$type<'PARTICULAR'>().notNull().default('PARTICULAR'),
+  source_channel: varchar('source_channel', { length: 30 }).notNull().default('LEGACY'),
   appointment_date: timestamp('appointment_date', { withTimezone: true }).notNull(),
   duration_minutes: integer('duration_minutes').notNull(),
   status: varchar('status', { length: 20 }).notNull().default('SCHEDULED'),
@@ -504,12 +511,16 @@ export const appAppointments = pgTable('app_appointments', {
   deleted_at: timestamp('deleted_at', { withTimezone: true }),
 }, (table) => [
   index('idx_app_appointments_tenant').on(table.tenant_id),
+  index('idx_app_appointments_room').on(table.tenant_id, table.room_id, table.appointment_date),
+  foreignKey({ name: 'fk_app_appointments_procedure', columns: [table.tenant_id, table.procedure_id], foreignColumns: [appProcedures.tenant_id, appProcedures.id] }).onDelete('restrict'),
+  foreignKey({ name: 'fk_app_appointments_unit', columns: [table.tenant_id, table.unit_id], foreignColumns: [appOrganizationUnits.tenant_id, appOrganizationUnits.id] }).onDelete('restrict'),
+  foreignKey({ name: 'fk_app_appointments_room_unit', columns: [table.tenant_id, table.unit_id, table.room_id], foreignColumns: [appRooms.tenant_id, appRooms.unit_id, appRooms.id] }).onDelete('restrict'),
   index('idx_app_appointments_patient').on(table.patient_id),
   index('idx_app_appointments_practitioner').on(table.practitioner_id),
   index('idx_app_appointments_date').on(table.appointment_date),
   foreignKey({ name: 'fk_app_appointments_tenant', columns: [table.tenant_id], foreignColumns: [sysTenants.id] }).onDelete('restrict'),
-  foreignKey({ name: 'fk_app_appointments_patient', columns: [table.patient_id], foreignColumns: [appPatients.id] }).onDelete('restrict'),
-  foreignKey({ name: 'fk_app_appointments_practitioner', columns: [table.practitioner_id], foreignColumns: [appPractitioners.id] }).onDelete('restrict'),
+  foreignKey({ name: 'fk_app_appointments_patient', columns: [table.tenant_id, table.patient_id], foreignColumns: [appPatients.tenant_id, appPatients.id] }).onDelete('restrict'),
+  foreignKey({ name: 'fk_app_appointments_practitioner', columns: [table.tenant_id, table.practitioner_id], foreignColumns: [appPractitioners.tenant_id, appPractitioners.id] }).onDelete('restrict'),
 ]);
 
 export const appEncounters = pgTable('app_encounters', {

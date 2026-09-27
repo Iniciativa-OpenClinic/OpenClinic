@@ -108,6 +108,8 @@ export type {
   RoomDTO,
   AvailabilityDTO,
   ScheduleBlockDTO,
+  AppointmentDTO,
+  AppointmentStatus,
 } from './domain/clinical.dtos.js';
 export {
   APP_RESOURCE_MANIFEST,

@@ -43,6 +43,13 @@
       "when": 1790444435936,
       "tag": "0005_schedule_blocks",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790466070287,
+      "tag": "0006_appointment_scheduling",
+      "breakpoints": true
     }
   ]
 }

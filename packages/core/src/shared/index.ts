@@ -74,6 +74,8 @@ export type {
   RoomDTO,
   AvailabilityDTO,
   ScheduleBlockDTO,
+  AppointmentDTO,
+  AppointmentStatus,
 } from '../domain/clinical.dtos.js';
 export { ErrorCode } from '../errors/index.js';
 export type { ProblemDetail, ErrorCodeValue } from '../errors/index.js';

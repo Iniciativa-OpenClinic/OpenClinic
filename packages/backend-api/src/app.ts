@@ -1,3 +1,4 @@
+import { registerAppointmentRoutes } from './arch/presentation/appointment.router.js';
 import { registerScheduleBlockRoutes } from './arch/presentation/schedule-block.router.js';
 import { registerAvailabilityRoutes } from './arch/presentation/availability.router.js';
 import { registerRoomRoutes } from './arch/presentation/room.router.js';
@@ -275,6 +276,19 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     });
     registerScheduleBlockRoutes(scheduleBlockApp, {
       scheduleBlocks: (request) => uow.scheduleBlocksForTenant(request.user!.tenant_id!),
+    });
+  });
+
+  await app.register(async (appointmentApp) => {
+    appointmentApp.addHook('onRequest', createAuthenticateJwt(jwtConfig, uow));
+    appointmentApp.addHook('preHandler', async (request, reply) => {
+      if (!request.user?.tenant_id) throw new AccessDeniedError(ErrorCode.FORBIDDEN);
+      const action = request.method === 'DELETE' ? ResourceAction.DELETE
+        : request.method === 'GET' || request.method === 'HEAD' ? ResourceAction.READ : ResourceAction.WRITE;
+      await requirePermission(uow, 'op_schedule', action)(request, reply);
+    });
+    registerAppointmentRoutes(appointmentApp, {
+      appointments: (request) => uow.appointmentsForTenant(request.user!.tenant_id!),
     });
   });
 

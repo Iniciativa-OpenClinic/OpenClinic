@@ -213,3 +213,25 @@ export interface ProcedureDTO {
   updated_at: string;
   deleted_at: string | null;
 }
+
+export type AppointmentStatus = 'SCHEDULED' | 'CONFIRMED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED';
+export interface AppointmentDTO {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  practitioner_id: string;
+  procedure_id: string | null;
+  unit_id: string | null;
+  room_id: string | null;
+  appointment_date: string;
+  duration_minutes: number;
+  status: string;
+  is_overbook: boolean;
+  payer_type: 'PARTICULAR';
+  source_channel: string;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}

@@ -1,3 +1,4 @@
+import { PostgresAppointmentRepository } from './appointment.repository.js';
 import { PostgresScheduleBlockRepository } from './schedule-block.repository.js';
 import { PostgresAvailabilityRepository } from './availability.repository.js';
 import { PostgresRoomRepository } from './room.repository.js';
@@ -95,6 +96,9 @@ export class UnitOfWork implements IAMUnitOfWork {
   }
   scheduleBlocksForTenant(tenantId: string): PostgresScheduleBlockRepository {
     return new PostgresScheduleBlockRepository(this.db, tenantId);
+  }
+  appointmentsForTenant(tenantId: string): PostgresAppointmentRepository {
+    return new PostgresAppointmentRepository(this.db, tenantId);
   }
   async rollback(): Promise<void> {}
 }

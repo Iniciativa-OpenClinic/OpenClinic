@@ -55,5 +55,10 @@ jobs:
         run: npm run test:migrations
       - name: Functional API tests (real HTTP, authentication and PostgreSQL)
         run: npm run test:api:functional
-      - name: Agenda specification readiness (fails on uncovered requirements)
-        run: npm run verify:agenda-readiness
+      - name: Preserve functional test results and complete failure details
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agenda-functional-results
+          path: artifacts/functional-tests.*
+          if-no-files-found: warn

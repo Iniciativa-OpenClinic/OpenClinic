@@ -13,7 +13,7 @@ function fixture() {
   const app = Fastify(); app.setErrorHandler(errorHandler); registerAppointmentRoutes(app, { appointments }); apps.push(app);
   return { app, appointments };
 }
-describe('Appointment routes', () => {
+describe('Appointment HTTP component (mocked persistence)', () => {
   it.each([
     ['POST', '', { ...input, status: 'COMPLETED' }],
     ['POST', '', { ...input, session_id: 'unsupported-session' }],
@@ -27,7 +27,7 @@ describe('Appointment routes', () => {
     expect(appointments.update).not.toHaveBeenCalled();
     expect(appointments.changeStatus).not.toHaveBeenCalled();
   });
-  it('creates and serializes the procedure duration and server status', async () => {
+  it('serializes the repository result and forwards creation fields', async () => {
     const { app, appointments } = fixture();
     const response = await app.inject({ method: 'POST', url: base, payload: input });
     expect(response.statusCode).toBe(201);
@@ -49,12 +49,12 @@ describe('Appointment routes', () => {
     expect((await app.inject(base + '?from=2026-10-02T00:00:00Z&to=2026-10-01T00:00:00Z')).statusCode).toBe(422);
     expect(appointments.list).not.toHaveBeenCalled();
   });
-  it('updates supplied fields and clears a room', async () => {
+  it('forwards update fields including a null room', async () => {
     const { app, appointments } = fixture();
     expect((await app.inject({ method: 'PUT', url: base + '/a-1', payload: { room_id: null, is_overbook: true } })).statusCode).toBe(200);
     expect(appointments.update).toHaveBeenCalledWith('a-1', { room_id: null, is_overbook: true });
   });
-  it('changes status through a dedicated endpoint', async () => {
+  it('forwards the requested status to the repository', async () => {
     const { app, appointments } = fixture();
     expect((await app.inject({ method: 'PATCH', url: base + '/a-1/status', payload: { status: 'CONFIRMED' } })).statusCode).toBe(200);
     expect(appointments.changeStatus).toHaveBeenCalledWith('a-1', 'CONFIRMED');

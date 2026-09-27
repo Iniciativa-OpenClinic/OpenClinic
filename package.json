@@ -32,7 +32,7 @@
     "db:generate": "npm run db:generate -w packages/backend-api",
     "db:verify": "tsx infra/database/verify-migrations.ts",
     "test:migrations": "tsx --test infra/database/tests/*.test.ts infra/database/tests/*.test.mjs",
-    "test:api:functional": "tsx --test --test-concurrency=1 infra/testing/*.functional.test.ts",
+    "test:api:functional": "node infra/testing/run-functional.mjs",
     "verify:agenda-readiness": "node infra/testing/agenda-readiness.mjs",
     "db:init": "npm run cli -- db:init",
     "db:migrate": "npm run cli -- db:migrate",

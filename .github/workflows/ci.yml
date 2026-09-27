@@ -42,3 +42,19 @@ jobs:
 
   migrations:
     uses: ./.github/workflows/migrations.yml
+
+  agenda-readiness:
+    name: Agenda specification readiness
+    needs: [validate, migrations]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: agenda-functional-results
+          path: artifacts
+      - name: Check documented requirements still awaiting acceptance
+        run: npm run verify:agenda-readiness

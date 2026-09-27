@@ -33,7 +33,7 @@ async function fixture(tenantId: string | undefined = 'tenant-a', role: string =
   return { app, uow, headers: { authorization: `Bearer ${token}` } };
 }
 
-describe('Appointment application integration', () => {
+describe('Appointment authentication and routing component (mocked storage)', () => {
   it.each([
     ['GET', '', 'READ'], ['POST', '', 'WRITE'],
     ['PUT', '/block-1', 'WRITE'], ['DELETE', '/block-1', 'DELETE'], ['PATCH', '/block-1/status', 'WRITE'],

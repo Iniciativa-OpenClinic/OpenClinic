@@ -103,3 +103,6 @@ backups/
 # ── 9. Compliance Reports (Generated Outputs) ──
 infra/compliance/reports/*
 !infra/compliance/reports/README.md
+
+# Functional test run evidence (uploaded by CI)
+/artifacts/functional-tests.*

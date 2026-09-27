@@ -10,6 +10,67 @@ const base = '/api/v1/business/appointments';
 before(async () => { api = await startApiHarness(); });
 after(async () => { await api?.close(); });
 
+for (const [resource, key, field, table] of [
+  ['patients', 'patient', 'full_name', 'app_patients'],
+  ['practitioners', 'practitioner', 'full_name', 'app_practitioners'],
+  ['units', 'unit', 'name', 'app_organization_units'],
+  ['procedures', 'procedure', 'name', 'app_procedures'],
+  ['rooms', 'room', 'name', 'app_rooms'],
+] as const) {
+  test(`[REG-CRUD] ${resource}: read, update, list, tenant isolation and logical deletion use persisted data`, async () => {
+    const s = await api.scenario();
+    const route = '/api/v1/business/' + resource;
+    const row = s[key];
+    assert.equal((await api.expectHttp(200, 'GET', route + '/' + row.id, s.token)).id, row.id);
+    await api.expectHttp(200, 'PUT', route + '/' + row.id, s.token, { [field]: 'Updated synthetic record' });
+    assert.equal((await api.expectHttp(200, 'GET', route + '/' + row.id, s.token))[field], 'Updated synthetic record');
+    const list = await api.expectHttp(200, 'GET', route, s.token);
+    assert.ok(list.items.some((item: { id: string }) => item.id === row.id));
+    const foreign = await api.identity();
+    await api.expectHttp(404, 'GET', route + '/' + row.id, foreign.token);
+    await api.expectHttp(404, 'PUT', route + '/' + row.id, foreign.token, { [field]: 'Unauthorized update' });
+    await api.expectHttp(404, 'DELETE', route + '/' + row.id, foreign.token);
+    await api.expectHttp(204, 'DELETE', route + '/' + row.id, s.token);
+    await api.expectHttp(404, 'GET', route + '/' + row.id, s.token);
+    assert.ok(!(await api.expectHttp(200, 'GET', route, s.token)).items.some((item: { id: string }) => item.id === row.id));
+    const [stored] = await api.sql`SELECT deleted_at FROM ${api.sql(table)} WHERE id = ${row.id}`;
+    assert.ok(stored?.deleted_at, 'Logical deletion must preserve the physical row');
+  });
+}
+
+test('[AG-VERSION] changing availability preserves the old version and changes coverage only from the new validity date', async () => {
+  const s = await api.scenario();
+  const old = await s.create('availabilities', { practitioner_id: s.practitioner.id, unit_id: s.unit.id, day_of_week: 1,
+    start_time: '09:00', end_time: '10:00', slot_duration_minutes: 30, timezone: 'UTC', valid_from: '2026-10-01' });
+  // The published availability contract creates a new version: HTTP 201, not an in-place 200 update.
+  const changed = await api.expectHttp(201, 'PUT', '/api/v1/business/availabilities/' + old.id, s.token, { valid_from: '2026-10-12', start_time: '10:00', end_time: '11:00' });
+  assert.notEqual(changed.id, old.id);
+  const history = await api.expectHttp(200, 'GET', '/api/v1/business/availabilities/' + old.id + '/history', s.token);
+  assert.equal(history.total, 2);
+  const original = history.items.find((item: { id: string }) => item.id === old.id);
+  assert.equal(original.start_time, '09:00'); assert.equal(original.valid_until, '2026-10-12');
+  await s.create('availabilities', { room_id: s.room.id, unit_id: s.unit.id, day_of_week: 1,
+    start_time: '09:00', end_time: '12:00', slot_duration_minutes: 30, timezone: 'UTC', valid_from: '2026-10-01' });
+  await s.create('appointments', s.input);
+  await api.expectHttp(409, 'POST', base, s.token, { ...s.input, appointment_date: '2026-10-12T09:00:00Z' });
+  await s.create('appointments', { ...s.input, appointment_date: '2026-10-12T10:00:00Z' });
+});
+
+test('[AG-BLOCK-CRUD] block update changes effective occurrences and logical deletion releases the period', async () => {
+  const s = await api.scenario();
+  const block = await s.create('blocks', { practitioner_id: s.practitioner.id, starts_at: '2026-10-05T09:00:00Z', ends_at: '2026-10-05T10:00:00Z', timezone: 'UTC' });
+  await api.expectHttp(200, 'PUT', '/api/v1/business/blocks/' + block.id, s.token, { ends_at: '2026-10-05T11:00:00Z' });
+  const occurrences = await api.expectHttp(200, 'GET', '/api/v1/business/blocks/occurrences?from=2026-10-05T10:00:00Z&to=2026-10-05T10:30:00Z', s.token);
+  assert.equal(occurrences.total, 1);
+  assert.equal(occurrences.items[0].ends_at, '2026-10-05T11:00:00.000Z');
+  await api.expectHttp(409, 'POST', base, s.token, { ...s.input, appointment_date: '2026-10-05T10:00:00Z', is_overbook: true });
+  await api.expectHttp(204, 'DELETE', '/api/v1/business/blocks/' + block.id, s.token);
+  await api.expectHttp(404, 'GET', '/api/v1/business/blocks/' + block.id, s.token);
+  await s.create('appointments', { ...s.input, appointment_date: '2026-10-05T10:00:00Z', is_overbook: true });
+  const [stored] = await api.sql`SELECT deleted_at FROM app_schedule_blocks WHERE id = ${block.id}`;
+  assert.ok(stored.deleted_at);
+});
+
 test('[AG-CREATE] HTTP creation persists relationships, defaults and a retrievable reservation', async () => {
   const s = await api.scenario(); await s.windows();
   const created = await s.create('appointments', s.input);
@@ -66,16 +127,26 @@ test('[AG-FITIN] outside availability requires an explicit fit-in, persisted as 
   assert.equal((await api.expectHttp(200, 'GET', base + '/' + row.id, s.token)).is_overbook, true);
 });
 
+test('[AG-AVAILABILITY-INPUT] a slot larger than its availability window is rejected', async () => {
+  const s = await api.scenario();
+  await api.expectHttp(422, 'POST', '/api/v1/business/availabilities', s.token, {
+    practitioner_id: s.practitioner.id, unit_id: s.unit.id, day_of_week: 1,
+    start_time: '09:00', end_time: '09:15', slot_duration_minutes: 30,
+    timezone: 'UTC', valid_from: '2026-10-01',
+  });
+  assert.equal((await api.expectHttp(200, 'GET', '/api/v1/business/availabilities', s.token)).total, 0);
+});
+
 test('[AG-AVAILABILITY] windows form a union but gaps, wrong weekdays and expired validity remain unavailable', async () => {
   const s = await api.scenario();
-  await s.windows({ start_time: '09:00', end_time: '09:15' });
-  await s.windows({ start_time: '09:15', end_time: '09:30' });
+  await s.windows({ start_time: '09:00', end_time: '09:15', slot_duration_minutes: 15 });
+  await s.windows({ start_time: '09:15', end_time: '09:30', slot_duration_minutes: 15 });
   await s.create('appointments', s.input);
   for (const date of ['2026-10-05T09:30:00Z', '2026-10-06T09:00:00Z', '2026-11-02T09:00:00Z']) {
     await api.expectHttp(409, 'POST', base, s.token, { ...s.input, appointment_date: date });
   }
   const gapped = await api.scenario();
-  await gapped.windows({ start_time: '09:00', end_time: '09:10' });
+  await gapped.windows({ start_time: '09:00', end_time: '09:10', slot_duration_minutes: 10 });
   await gapped.windows({ start_time: '09:15', end_time: '10:00' });
   await api.expectHttp(409, 'POST', base, gapped.token, gapped.input);
 });

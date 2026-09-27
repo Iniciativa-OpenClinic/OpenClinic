@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "defaultScope": "auth,sessions,authorization,tenants,recovery",
+  "profiles": {
+    "local": [
+      "catalog",
+      "runner-tests",
+      "typecheck",
+      "unit",
+      "migration-metadata"
+    ],
+    "integration": [
+      "catalog",
+      "runner-tests",
+      "typecheck",
+      "unit",
+      "migration-metadata",
+      "postgres"
+    ]
+  },
+  "gates": {
+    "catalog": {
+      "kind": "catalog",
+      "label": "Integridade do catálogo"
+    },
+    "typecheck": {
+      "script": "typecheck",
+      "label": "Tipagem e build de core (global)"
+    },
+    "unit": {
+      "script": "test",
+      "label": "Suites unitárias e secrets (global)",
+      "requiresTests": true
+    },
+    "migration-metadata": {
+      "script": "db:verify",
+      "label": "Metadados de migrations"
+    },
+    "postgres": {
+      "script": "test:migrations",
+      "label": "PostgreSQL descartável",
+      "disposable": true,
+      "requiresTests": true
+    },
+    "runner-tests": {
+      "script": "compliance:test",
+      "label": "Testes do próprio runner",
+      "requiresTests": true
+    }
+  },
+  "tasks": {
+    "verification": "application-verification.md",
+    "architecture": "architecture-review.md",
+    "governance": "engineering-governance.md",
+    "review": "technical-review.md",
+    "catalog": "scenario-catalog-maintenance.md"
+  }
+}

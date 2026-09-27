@@ -1,0 +1,962 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "auth",
+      "title": "Autenticação"
+    },
+    {
+      "id": "recovery",
+      "title": "Recuperação e troca de senha"
+    },
+    {
+      "id": "sessions",
+      "title": "Sessões e frontend"
+    },
+    {
+      "id": "authorization",
+      "title": "Autorização e grupos"
+    },
+    {
+      "id": "tenants",
+      "title": "Isolamento institucional"
+    },
+    {
+      "id": "platform",
+      "title": "Infraestrutura e contratos"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "AUTH-LOGIN-001",
+      "module": "auth",
+      "title": "Login válido e credenciais inválidas",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Executar login válido; repetir com senha errada e identidade inexistente."
+      ],
+      "expected": [
+        "Somente credencial válida emite sessão; erros seguem o contrato público."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "AUTH-INPUT-001",
+      "module": "auth",
+      "title": "JSON inválido e campos ausentes",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Enviar JSON malformado, objeto vazio e tipos inválidos para login."
+      ],
+      "expected": [
+        "Erro de cliente serializável; não retornar 500."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "formats JSON parse / syntax errors as HTTP 400 problem details",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "AUTH-TIMING-001",
+      "module": "auth",
+      "title": "Enumeração por tempo",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Alternar amostras aquecidas de senha errada e identidade inexistente em ambiente controlado."
+      ],
+      "expected": [
+        "Sem atalho de hashing distinguível; registrar distribuição e incerteza, não apenas média."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "AUTH-LOCKOUT-001",
+      "module": "auth",
+      "title": "Lockout por aliases e concorrência",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Tentar aliases normalizados da mesma identidade até o limite; testar tentativa seguinte, concorrência e desbloqueio."
+      ],
+      "expected": [
+        "Contagem e limiar seguem a política; aliases não contornam bloqueio."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "AUTH-POLICY-001",
+      "module": "auth",
+      "title": "Configuração de senha, MFA e inatividade",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Alterar parâmetros em fixture; testar requisitos no servidor e expiração sem atividade."
+      ],
+      "expected": [
+        "Configuração anunciada modifica o comportamento; MFA ativo não permite concluir login sem fator."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "AUTH-REGISTER-001",
+      "module": "auth",
+      "title": "Cadastro e mass assignment",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Tentar cadastro público e enviar role, tenant e permissões não autorizados."
+      ],
+      "expected": [
+        "Cadastro respeita habilitação; cliente não concede a si autoridade."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "REC-PRIVACY-001",
+      "module": "recovery",
+      "title": "Recuperação sem vazamento ou enumeração",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Solicitar recuperação para identidade existente e inexistente; inspecionar corpo e logs sintéticos."
+      ],
+      "expected": [
+        "Respostas públicas neutras, sem token/simulação de e-mail; nenhuma credencial em logs."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "does not return reset_token or simulated_email in public response",
+          "gate": "unit",
+          "coverage": "partial"
+        },
+        {
+          "file": "packages/backend-api/tests/unit/password-reset.use-cases.spec.ts",
+          "title": "should return generic success when user is not found to prevent user enumeration",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "REC-DELIVERY-001",
+      "module": "recovery",
+      "title": "Entrega de recuperação por canal controlado",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Usar caixa de e-mail sintética; solicitar recuperação e seguir o link recebido."
+      ],
+      "expected": [
+        "Entrega funcional separada da resposta pública; URL válida e sem exposição desnecessária."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "REC-EXPIRY-001",
+      "module": "recovery",
+      "title": "Expiração e token incorreto",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "unit",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Usar tokens inválidos/expirados e verificar alteração de senha e persistência."
+      ],
+      "expected": [
+        "Tokens inválidos/expirados são rejeitados e senha permanece intacta."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/password-reset.use-cases.spec.ts",
+          "title": "should throw AuthenticationError if token has expired",
+          "gate": "unit",
+          "coverage": "partial"
+        },
+        {
+          "file": "packages/backend-api/tests/unit/password-reset.use-cases.spec.ts",
+          "title": "should throw AuthenticationError if token does not match any user",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "REC-RACE-001",
+      "module": "recovery",
+      "title": "Consumo único concorrente e revogação",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "postgres",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Consumir o mesmo reset em conexões independentes; injetar falha entre senha, consumo e revogação."
+      ],
+      "expected": [
+        "Um vencedor; estado consistente; sessões anteriores revogadas conforme política."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "REC-ADMIN-001",
+      "module": "recovery",
+      "title": "Reset administrativo e primeiro acesso",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Resetar senha com ator autorizado; verificar token antigo, sessões e exigência de troca; repetir sem autorização."
+      ],
+      "expected": [
+        "Respeitar autoridade e invalidação prevista em API/CLI."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/password-reset.use-cases.spec.ts",
+          "title": "should clear password_reset_token and password_reset_expires_at upon administrative reset",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "SES-BIND-001",
+      "module": "sessions",
+      "title": "JWT vinculado à sessão e ao proprietário",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Usar chave sintética para tokens sem sid, sid inexistente e sid de outro usuário."
+      ],
+      "expected": [
+        "Todos rejeitados; token e sessão ativa do mesmo usuário aceitos."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/session-lifecycle.spec.ts",
+          "title": "A01: rejects token without sid with TOKEN_INVALID (401)",
+          "gate": "unit",
+          "coverage": "partial"
+        },
+        {
+          "file": "packages/backend-api/tests/unit/session-lifecycle.spec.ts",
+          "title": "A02: rejects access token with TOKEN_INVALID if sid belongs to another user",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "SES-LOGOUT-001",
+      "module": "sessions",
+      "title": "Access e refresh rejeitados após logout",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Capturar access/refresh vigentes; logout via contrato cookie/corpo; tentar ambos novamente."
+      ],
+      "expected": [
+        "Não autorizar access nem criar sessão via refresh; limpar cookie no mesmo escopo."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/session-lifecycle.spec.ts",
+          "title": "rejects access token with TOKEN_INVALID if session was revoked (after logout)",
+          "gate": "unit",
+          "coverage": "partial"
+        },
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "revokes session when session belongs to calling user",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "SES-OWNER-001",
+      "module": "sessions",
+      "title": "Logout não revoga sessão alheia",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Enviar credencial de sessão de B em logout autenticado como A, inclusive conflito cookie/corpo."
+      ],
+      "expected": [
+        "Rejeição conforme contrato; sessão de B não é revogada."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "does not revoke session if session belongs to another user",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "SES-STATE-001",
+      "module": "sessions",
+      "title": "Revogação por estado e mudança de privilégio",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Desativar usuário e mudar papel/organização em fixture com sessão ativa; testar próxima requisição."
+      ],
+      "expected": [
+        "Estado atual determina acesso, sem confiar apenas em claims antigas."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/session-lifecycle.spec.ts",
+          "title": "rejects access token with USER_DISABLED if user account was deactivated",
+          "gate": "unit",
+          "coverage": "partial"
+        },
+        {
+          "file": "packages/backend-api/tests/unit/session-lifecycle.spec.ts",
+          "title": "synchronizes updated user role in token payload when privileges change",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "SES-ROTATE-001",
+      "module": "sessions",
+      "title": "Rotação concorrente com um vencedor",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "postgres",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Sincronizar múltiplas conexões para consumir o mesmo refresh e observar rollback."
+      ],
+      "expected": [
+        "Exatamente um vencedor; sem credenciais órfãs ou consumo múltiplo."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "infra/database/tests/session-concurrency.test.ts",
+          "title": "additional simultaneous rotations have exactly one winner in real postgres pool",
+          "gate": "postgres",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "SES-REUSE-001",
+      "module": "sessions",
+      "title": "Interleaving de reutilização e revogação",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "postgres",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Forçar A rotaciona, B detecta reuso/revoga, A prossegue; verificar sessões remanescentes."
+      ],
+      "expected": [
+        "Nenhuma sessão sobrevive à revogação prevista; retry respeita política."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "infra/database/tests/session-concurrency.test.ts",
+          "title": "additional use-case interleaving leaves zero active sessions after reuse detection",
+          "gate": "postgres",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "SES-BOOT-001",
+      "module": "sessions",
+      "title": "F5 renova sessão por cookie",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "browser",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Autenticar, recarregar navegador e testar cookie expirado/revogado e falha de rede."
+      ],
+      "expected": [
+        "Sessão válida restaurada; falhas tratadas sem loop ou capacidades residuais."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/frontend-webapp/tests/session-bootstrap.spec.ts",
+          "title": "refreshTokens succeeds via HttpOnly cookie when _refreshToken is null in RAM",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "SES-FRONTEND-001",
+      "module": "sessions",
+      "title": "Refresh paralelo e logout com resposta tardia",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "browser",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Abrir abas, provocar 401 simultâneos e logout enquanto refresh está pendente; testar 403."
+      ],
+      "expected": [
+        "Sem tempestade de refresh; resposta tardia não restaura sessão; 403 não renova token."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "SES-CSRF-001",
+      "module": "sessions",
+      "title": "Cookies, CORS e CSRF",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Verificar atributos do cookie e mutações com origem não permitida em cenário cross-site e cross-origin."
+      ],
+      "expected": [
+        "Transporte segue ambiente; CORS não é usado isoladamente como prova de proteção CSRF."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "rejects untrusted origins by omitting allow-origin header",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "ACL-DENY-001",
+      "module": "authorization",
+      "title": "DENY prevalece sobre ações amplas",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Combinar ALLOW MANAGE/ALL com DENY individual e de grupo; chamar API diretamente."
+      ],
+      "expected": [
+        "Negação prevalece conforme política aprovada; menu oculto não é prova."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "enforces that DENY overrides broad MANAGE/ALL actions",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "ACL-GROUP-001",
+      "module": "authorization",
+      "title": "Grupo inativo e cache de capacidades",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Desativar grupo e alterar concessões com sessão ativa; consultar capacidades e API."
+      ],
+      "expected": [
+        "Grupo inativo não concede acesso; cache obedece mudança."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "excludes inactive groups from ACL resolution",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "ACL-ESCALATION-001",
+      "module": "authorization",
+      "title": "Limites do administrador e default deny",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Conceder recurso superior à autoridade do ator; testar ação desconhecida e autoelevação."
+      ],
+      "expected": [
+        "Negação por padrão; autoridade não pode ser ampliada pelo payload."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/iam-permission.service.spec.ts",
+          "title": "should throw AccessDeniedError when non-owner operator attempts to assign platform/OWNER resource to a group",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "TEN-SCOPE-001",
+      "module": "tenants",
+      "title": "Isolamento A/B de usuários",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "ADMIN de A lista, edita e exclui usuário de B; verificar registros retornados."
+      ],
+      "expected": [
+        "Leitura/escrita limitadas à política institucional aprovada."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "blocks ADMIN from editing a user belonging to another tenant",
+          "gate": "unit",
+          "coverage": "partial"
+        },
+        {
+          "file": "packages/backend-api/tests/unit/compliance-remediation.spec.ts",
+          "title": "blocks ADMIN from deleting a user belonging to another tenant",
+          "gate": "unit",
+          "coverage": "partial"
+        }
+      ],
+      "coverageNote": "Referências verificadas por título e arquivo; cobertura parcial. Gate/suite aprovada não valida automaticamente todos os passos nem comprova HTTP/navegador real."
+    },
+    {
+      "id": "TEN-RELATIONS-001",
+      "module": "tenants",
+      "title": "Isolamento de grupos, concessões e sessões",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Usar IDs de B em associações, concessões e consultas feitas em A; testar tenant ausente/suspenso."
+      ],
+      "expected": [
+        "Sem leitura ou vínculo cruzado; contexto inválido não abre acesso global."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "TEN-ATOMIC-001",
+      "module": "tenants",
+      "title": "Tenant padrão, ACL e auditoria sob falha",
+      "status": "active",
+      "priority": "P1",
+      "required": true,
+      "method": "postgres",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "docs/auth-spec.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Injetar falha parcial em troca de tenant padrão e sincronização de permissões."
+      ],
+      "expected": [
+        "Estado consistente, evento com ator/alvo e organização sem credenciais."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "PLT-CONTRACT-001",
+      "module": "platform",
+      "title": "Entrada inválida e criação serializada",
+      "status": "active",
+      "priority": "P2",
+      "required": true,
+      "method": "http",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "infra/compliance/prompts/engineering-governance.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Criar recurso IAM válido/inválido e reler o registro; comparar schema/JSON/cliente."
+      ],
+      "expected": [
+        "400/422 conforme contrato para entrada; criação devolve dados públicos e persistência coerente."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "PLT-RELEASE-001",
+      "module": "platform",
+      "title": "CLI portátil e release verificável",
+      "status": "active",
+      "priority": "P2",
+      "required": true,
+      "method": "manual",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "infra/compliance/prompts/engineering-governance.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Executar ajuda/versão src/dist sem banco; simular proposta/recusa de versão e falha parcial de deploy."
+      ],
+      "expected": [
+        "Metadados canônicos; recusa não altera estado; nenhuma versão pretendida anunciada como implantada."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    },
+    {
+      "id": "PLT-SECRETS-001",
+      "module": "platform",
+      "title": "Secrets, privilégios e imagem final",
+      "status": "active",
+      "priority": "P2",
+      "required": true,
+      "method": "distribution",
+      "applicability": "Camada transversal presente; decisões de política pendentes devem ser explicitadas antes de concluir conformidade.",
+      "sources": [
+        "infra/compliance/prompts/application-verification.md",
+        "infra/compliance/prompts/engineering-governance.md"
+      ],
+      "preconditions": [
+        "Usar apenas fixtures sintéticas e ambiente autorizado; confirmar contrato aplicável.",
+        "Não ler secrets reais nem modificar contas existentes; para PostgreSQL usar servidor descartável explícito."
+      ],
+      "steps": [
+        "Em alvo descartável, testar provider válido/inválido, runtime sem DDL e imagem final."
+      ],
+      "expected": [
+        "Sem fallback silencioso, credencial pública ou autorização excessiva; cleanup comprovado."
+      ],
+      "cleanup": "Encerrar sessões e remover somente fixtures/recursos criados pela execução; registrar falhas de limpeza.",
+      "tests": [],
+      "coverageNote": "Lacuna de automação específica; exige evidência manual ou implementação de teste de regressão."
+    }
+  ]
+}

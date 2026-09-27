@@ -1,6 +1,6 @@
 # Mapa regulatório
 
-*Revisado em: 2026-08-11 · v0.1*
+## Revisado em: 2026-08-11 · v0.1
 
 ## Antes de tudo, dois avisos que valem mais que o resto do documento
 
@@ -17,7 +17,7 @@ Por isso, cada seção abaixo separa **quem é o obrigado por lei** de **o que o
 ## Resumo
 
 | Regime | Obrigatório para um EHR básico? | Quem é o obrigado |
-|---|---|---|
+| --- | --- | --- |
 | LGPD | Sim, sempre | A clínica (controladora); o software deve suportar |
 | Certificação SBIS (S-RES) | Não — voluntária | Quem opta por buscar o selo |
 | ANVISA (SaMD) | Não, se o núcleo só armazena/organiza dados | Só se o software ganhar finalidade médica autônoma |
@@ -54,6 +54,7 @@ Os artigos da Resolução CFM nº 1.821/2007 que tratam da guarda de prontuário
 **A certificação SBIS é voluntária.** Não é exigida por lei para operar um prontuário eletrônico. Ela é, no entanto, o padrão técnico de referência reconhecido pelo mercado e pelos conselhos profissionais para demonstrar que um sistema atende aos requisitos de segurança esperados.
 
 Dois níveis de garantia de segurança:
+
 - **NGS1** (básico): múltiplos perfis de usuário com controle de acesso, autenticação, bloqueio de sessão por inatividade, trilha de auditoria imutável, disponibilidade, backup, documentação. Um sistema NGS1 ainda depende de impressão em papel para validade jurídica plena.
 - **NGS2**: tudo do NGS1, **mais assinatura digital com certificado ICP-Brasil** para os processos de assinatura e autenticação. É o nível que permite eliminar totalmente o papel, com validade jurídica plena.
 
@@ -67,7 +68,8 @@ A base regulatória atual é a **RDC nº 751/2022** (que revogou a antiga RDC n�
 
 Um software se torna **SaMD** (sujeito a notificação/registro na ANVISA conforme sua classe de risco) quando tem **finalidade médica** — destinado a diagnóstico, prevenção, monitoramento ou tratamento de doenças, ou a apoiar decisão clínica. O próprio material de Perguntas e Respostas da ANVISA sobre a RDC 657/2022 esclarece que um software que apenas registra dados em prontuário, para verificação posterior por um profissional de saúde, **não** se enquadra como SaMD.
 
-**Posição do OpenClinic — núcleo deliberadamente neutro**: o núcleo do projeto é desenhado para **armazenar, organizar e expor dados via API**, sem nenhuma finalidade médica autônoma. Concretamente, o núcleo **não terá**:
+### Posição do OpenClinic — núcleo deliberadamente neutro**: o núcleo do projeto é desenhado para **armazenar, organizar e expor dados via API**, sem nenhuma finalidade médica autônoma. Concretamente, o núcleo **não terá
+
 - alertas clínicos automatizados;
 - escores ou cálculos de risco clínico;
 - checagem automatizada de interação medicamentosa;

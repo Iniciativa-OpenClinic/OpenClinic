@@ -6,7 +6,7 @@ O OpenClinic ainda está numa fase inicial (ver [`roadmap.md`](./docs/roadmap.md
 
 Em vez disso, entre em contato diretamente em:
 
-**iniciativa.openclinic@gmail.com**
+### iniciativa.openclinic@gmail.com
 
 Se este repositório já tiver o recurso de **Private Vulnerability Reporting** do GitHub habilitado (aba "Security"), esse é o canal preferencial.
 

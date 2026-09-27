@@ -1,0 +1,271 @@
+# =============================================================================
+# 🛡️ OPENCLINIC - STANDALONE PRODUCTION VPS STACK (DATABASE + API + WEBAPP)
+# =============================================================================
+# File: infra/docker/stacks/openclinic-db-api-webapp.yml
+# Purpose: Production deployment for dedicated single-node VPS environments
+#          (e.g., small-to-medium clinics, medical practices, private offices).
+# Topology:
+#   - PostgreSQL 17: Stateful DB with persistent volume (host port 5432 NOT exposed).
+#   - Fastify API: Node.js engine consuming Swarm Secrets and private DB network.
+#   - React WebApp: Nginx SPA serving frontend and proxying internal API calls.
+#   - Traefik Ingress: Automated HTTPS certificate provisioning via Let's Encrypt.
+# Images: Pulls official pre-built images from container registry.
+# Usage:
+#   docker stack deploy -c infra/docker/stacks/openclinic-db-api-webapp.yml openclinic
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # 1. POSTGRESQL 17 DATABASE
+  # ===========================================================================
+  postgres:
+    image: postgres:17-alpine
+    container_name: openclinic-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-openclinic}
+      POSTGRES_USER: ${DB_USER:-${POSTGRES_USER:-postgres}}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    secrets:
+      - source: postgres_password
+        target: postgres_password
+        mode: 0400
+    volumes:
+      - openclinic_postgres_data:/var/lib/postgresql/data
+    networks:
+      postgres_network:
+        aliases:
+          - openclinic-db
+          - postgres
+    # Note: DB_HOST is consumed by client applications (api), not by the postgres engine itself.
+    # PostgreSQL listens on 0.0.0.0:5432 inside postgres_network under aliases 'postgres' and 'openclinic-db'.
+    # In production VPS, port 5432 is strictly internal to postgres_network.
+    # Uncomment only for temporary maintenance or local host debugging.
+    # ports:
+    #   - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-${POSTGRES_USER:-postgres}} -d ${DB_NAME:-openclinic}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "2.0"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
+
+  # ===========================================================================
+  # 2. BACKEND REST API (Fastify Node.js Engine)
+  # ===========================================================================
+  api:
+    image: ${API_IMAGE:-openclinic/openclinic-api}:${IMAGE_TAG:-latest}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - APP_HOST=${APP_HOST:-0.0.0.0}
+      - APP_PORT=${APP_PORT:-3000}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://${DOMAIN_NAME:-openclinic.example.com}}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+
+      # === DATABASE (Connection via postgres_network - DML Runtime Only) ===
+      - SECRETS_PROVIDER=${SECRETS_PROVIDER:-file}
+      - DB_APP_SECRET_NAME=database-secret-app
+
+      # === SECURITY & JWT ===
+      - JWT_SECRET_NAME=jwt-secret
+    secrets:
+      - source: database_secret_app
+        target: database-secret-app
+        uid: "1001"
+        gid: "1001"
+        mode: 0400
+      - source: jwt_secret
+        target: jwt-secret
+        uid: "1001"
+        gid: "1001"
+        mode: 0400
+    networks:
+      - traefik_network
+      - postgres_network
+      - openclinic_internal
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:${APP_PORT:-3000}/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: pause
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+          cpus: "0.20"
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik_network
+
+        # === SWAGGER DOCS ROUTING DIRECT TO API ===
+        - traefik.http.routers.openclinic-vps-docs.rule=Host(`${DOMAIN_NAME:-openclinic.example.com}`) && PathPrefix(`/docs`)
+        - traefik.http.routers.openclinic-vps-docs.entrypoints=websecure
+        - traefik.http.routers.openclinic-vps-docs.tls=true
+        - traefik.http.routers.openclinic-vps-docs.tls.certresolver=myresolver
+        - traefik.http.routers.openclinic-vps-docs.service=openclinic-vps-docs-service
+        - traefik.http.services.openclinic-vps-docs-service.loadbalancer.server.port=${APP_PORT:-3000}
+
+        # === METADATA ===
+        - org.openclinic.app=openclinic-api
+        - org.openclinic.environment=${ENVIRONMENT:-prod}
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===========================================================================
+  # 3. FRONTEND WEBAPP (Vite SPA + Nginx Reverse Proxy)
+  # ===========================================================================
+  webapp:
+    image: ${WEBAPP_IMAGE:-openclinic/openclinic-webapp}:${IMAGE_TAG:-latest}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - traefik_network
+      - openclinic_internal
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.50"
+        reservations:
+          memory: 64M
+          cpus: "0.10"
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik_network
+
+        # === MAIN HTTPS ROUTING ===
+        - traefik.http.routers.openclinic-vps-webapp.rule=Host(`${DOMAIN_NAME:-openclinic.example.com}`)
+        - traefik.http.routers.openclinic-vps-webapp.entrypoints=websecure
+        - traefik.http.routers.openclinic-vps-webapp.tls=true
+        - traefik.http.routers.openclinic-vps-webapp.tls.certresolver=myresolver
+        - traefik.http.routers.openclinic-vps-webapp.service=openclinic-vps-webapp-service
+
+        # === SERVICE CONFIGURATION (Nginx Port 80) ===
+        - traefik.http.services.openclinic-vps-webapp-service.loadbalancer.server.port=80
+
+        # === AUTOMATIC HTTP -> HTTPS REDIRECT ===
+        - traefik.http.routers.openclinic-vps-webapp-http.rule=Host(`${DOMAIN_NAME:-openclinic.example.com}`)
+        - traefik.http.routers.openclinic-vps-webapp-http.entrypoints=web
+        - traefik.http.routers.openclinic-vps-webapp-http.middlewares=openclinic-vps-webapp-https
+        - traefik.http.middlewares.openclinic-vps-webapp-https.redirectscheme.scheme=https
+
+        # === SECURITY HEADERS AND REVERSE PROXY ===
+        - traefik.http.routers.openclinic-vps-webapp.middlewares=openclinic-vps-webapp-headers
+        - traefik.http.middlewares.openclinic-vps-webapp-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+        - traefik.http.middlewares.openclinic-vps-webapp-headers.headers.customrequestheaders.X-Forwarded-Port=443
+
+        # === METADATA ===
+        - org.openclinic.app=openclinic-webapp
+        - org.openclinic.environment=${ENVIRONMENT:-prod}
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# =============================================================================
+# NETWORKS, VOLUMES & SECRETS
+# =============================================================================
+secrets:
+  # PostgreSQL root superuser password (Secrets-First: mounted into /run/secrets/postgres_password)
+  postgres_password:
+    external: true
+    name: ${DB_ROOT_SECRET_NAME:-openclinic-${ENVIRONMENT:-prod}-postgres-password}
+
+  # Database DML application credentials (structured JSON payload)
+  database_secret_app:
+    external: true
+    name: ${DB_APP_SECRET_NAME:-openclinic-${ENVIRONMENT:-prod}-app-postgres-credentials}
+
+  # Atomic cryptographic JWT signing key
+  jwt_secret:
+    external: true
+    name: ${JWT_SECRET_NAME:-openclinic-${ENVIRONMENT:-prod}-jwt-secret}
+
+networks:
+  # Traefik public edge network (shared reverse proxy)
+  traefik_network:
+    external: true
+
+  # PostgreSQL database network (isolated database layer)
+  postgres_network:
+    name: ${POSTGRES_NETWORK_NAME:-postgres_network}
+    driver: overlay
+    attachable: true
+
+  # Isolated internal network for Nginx webapp proxy to Fastify API (api:3000)
+  openclinic_internal:
+    driver: overlay
+    attachable: true
+
+volumes:
+  openclinic_postgres_data:
+    name: ${POSTGRES_VOLUME_NAME:-openclinic_postgres_data}

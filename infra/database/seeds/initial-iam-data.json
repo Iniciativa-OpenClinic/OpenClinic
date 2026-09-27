@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Canonical Open Source initial IAM seed data for OpenClinic",
+  "tenant": {
+    "id": "ee720158-6f98-42c3-b371-3d216d7f421a",
+    "name": "Acme Organization",
+    "slug": "acme-organization",
+    "cnpj": "00000000000191",
+    "is_default": true,
+    "is_active": true
+  },
+  "users": [
+    {
+      "id": "671b5b17-b31a-459e-8707-bdc80994e0d4",
+      "username": "joao.silva",
+      "email": "joao@clinica.com.br",
+      "cpf": "12345678909",
+      "full_name": "João Silva",
+      "display_name": "João Silva",
+      "role": "OWNER",
+      "job_title": "Superadministrador / Proprietário",
+      "is_tenant_owner": true,
+      "is_active": true,
+      "groups": ["All Users"]
+    },
+    {
+      "id": "0ff9708d-b06e-4548-b74c-a2849a7daee0",
+      "username": "lucas.santos",
+      "email": "lucas@clinica.com.br",
+      "cpf": "98765432100",
+      "full_name": "Lucas Santos",
+      "display_name": "Lucas Santos",
+      "role": "ADMIN",
+      "job_title": "Administrador de Sistemas",
+      "is_tenant_owner": false,
+      "is_active": true,
+      "groups": ["All Users", "Gestão Operacional"]
+    },
+    {
+      "id": "d4185f9d-5512-4df3-bf46-d120549acd87",
+      "username": "marcos.ferreira",
+      "email": "marcos@clinica.com.br",
+      "cpf": "11122233396",
+      "full_name": "Dr. Marcos Ferreira",
+      "display_name": "Dr. Marcos Ferreira",
+      "role": "USER",
+      "job_title": "Diretor Clínico / Responsável Técnico",
+      "is_tenant_owner": false,
+      "is_active": true,
+      "groups": ["All Users", "Corpo Clínico & Médicos", "Gestão Institucional"]
+    },
+    {
+      "id": "a9a370dd-56e6-4155-8578-e2767b4d1be1",
+      "username": "mateus.oliveira",
+      "email": "mateus@clinica.com.br",
+      "cpf": "22233344405",
+      "full_name": "Dr. Mateus Oliveira",
+      "display_name": "Dr. Mateus Oliveira",
+      "role": "USER",
+      "job_title": "Médico Cardiologista",
+      "is_tenant_owner": false,
+      "is_active": true,
+      "groups": ["All Users", "Corpo Clínico & Médicos"]
+    },
+    {
+      "id": "bf0a0b41-1c99-4c23-8ef9-93ec3cbc2923",
+      "username": "marta.lima",
+      "email": "marta@clinica.com.br",
+      "cpf": "33344455508",
+      "full_name": "Marta Lima",
+      "display_name": "Marta Lima",
+      "role": "USER",
+      "job_title": "Enfermeira Chefe",
+      "is_tenant_owner": false,
+      "is_active": true,
+      "groups": ["All Users", "Enfermagem"]
+    },
+    {
+      "id": "35901974-55c9-4f09-8738-1475c55f253b",
+      "username": "ana.souza",
+      "email": "ana@clinica.com.br",
+      "cpf": "44455566619",
+      "full_name": "Ana Souza",
+      "display_name": "Ana Souza",
+      "role": "USER",
+      "job_title": "Atendente de Recepção e Triagem",
+      "is_tenant_owner": false,
+      "is_active": true,
+      "groups": ["All Users", "Atendimento & Recepção"]
+    }
+  ]
+}

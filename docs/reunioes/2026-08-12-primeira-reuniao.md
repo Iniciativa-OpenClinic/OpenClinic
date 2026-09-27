@@ -75,13 +75,13 @@ Quem usa o sistema o dia inteiro é a equipe de recepção. A qualidade do agend
 
 Dois requisitos foram levantados com uma justificativa que o próprio repositório não sustenta. Ficam registrados como **a confirmar**, e não como fato — publicar afirmação regulatória incorreta é o tipo de erro que custa credibilidade num projeto de saúde.
 
-**1. "Os dados não podem sair do país porque a LGPD proíbe."**
+### 1. "Os dados não podem sair do país porque a LGPD proíbe."
 
 O [`compliance.md`](../compliance.md) do projeto registra algo diferente e mais preciso: a LGPD **não proíbe** hospedagem no exterior — ela sujeita a transferência internacional às regras dos artigos 33 a 36.
 
 Manter os dados no Brasil continua sendo uma **decisão de projeto legítima e provavelmente desejável** — simplifica a conformidade, atende à expectativa do mercado de saúde e evita discussão jurídica desnecessária. Mas é uma decisão do OpenClinic, não uma imposição legal preexistente. Se o projeto quiser adotá-la, ela merece um registro próprio em [`decisions/`](../decisions/) com essa justificativa honesta.
 
-**2. "Senha de no mínimo 8 caracteres é exigência obrigatória."**
+#### 2. "Senha de no mínimo 8 caracteres é exigência obrigatória."
 
 Atribuído em reunião aos requisitos de certificação. O `compliance.md` declara abertamente que seu levantamento foi feito com auxílio de inteligência artificial e não foi verificado contra as fontes primárias. Antes de virar requisito firme, precisa ser confirmado no manual de certificação de S-RES da SBIS.
 

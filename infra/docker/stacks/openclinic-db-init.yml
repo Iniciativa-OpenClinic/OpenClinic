@@ -1,0 +1,53 @@
+# =============================================================================
+# 🚀 OPENCLINIC - EPHEMERAL DATABASE INITIALIZATION STACK (ONE-TIME INIT)
+# =============================================================================
+# File: infra/docker/stacks/openclinic-db-init.yml
+# Purpose: Single-purpose bootstrap container used strictly to initialize the
+#          persistent volume (openclinic_postgres_data) on the very first run.
+# Lifecycle: Ephemeral (run once, initialize cluster, then tear down).
+# Security: Prevents keeping root credentials permanently in operational stacks.
+#           - Local Dev: Supports passwordless authentication (trust) with empty DB_PASS.
+#           - Remote / VPS / Production: MANDATORY to set a strong superuser password
+#             (DB_PASS) and POSTGRES_HOST_AUTH_METHOD=scram-sha-256. Never use 'trust'
+#             or an empty password in remote or production deployments.
+# =============================================================================
+
+services:
+  postgres-init:
+    image: postgres:17-alpine
+    container_name: openclinic-db-init
+    environment:
+      POSTGRES_DB: ${DB_NAME:-openclinic}
+      POSTGRES_USER: ${DB_USER:-${POSTGRES_USER:-postgres}}
+      POSTGRES_PASSWORD: ${DB_PASS:-${POSTGRES_PASSWORD:-}}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-trust}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - openclinic_postgres_data:/var/lib/postgresql/data
+    networks:
+      postgres_network:
+        aliases:
+          - openclinic-db-init
+          - postgres
+    # Note: During initialization, this container listens on 0.0.0.0:5432.
+    # External migration or CLI scripts connect using DB_HOST (e.g. localhost or postgres).
+    ports:
+      # Exposed temporarily during initialization so CLI tools can run migrations
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-${POSTGRES_USER:-postgres}} -d ${DB_NAME:-openclinic}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+    restart: "no"
+
+networks:
+  postgres_network:
+    name: ${POSTGRES_NETWORK_NAME:-postgres_network}
+    driver: overlay
+    attachable: true
+
+volumes:
+  openclinic_postgres_data:
+    name: ${POSTGRES_VOLUME_NAME:-openclinic_postgres_data}

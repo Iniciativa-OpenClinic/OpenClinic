@@ -1,0 +1,237 @@
+export type PatientGender = 'MALE' | 'FEMALE' | 'OTHER' | 'UNKNOWN';
+
+export interface PatientDTO {
+  id: string;
+  tenant_id: string;
+  full_name: string;
+  cpf?: string | null;
+  cns?: string | null;
+  birth_date?: string | null;
+  gender?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  emergency_contact?: string | null;
+  insurance_name?: string | null;
+  insurance_number?: string | null;
+  allergies_notes?: string | null;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date | null;
+}
+
+export interface CreatePatientDTO {
+  full_name: string;
+  cpf?: string | null;
+  cns?: string | null;
+  birth_date?: string | null;
+  gender?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  emergency_contact?: string | null;
+  insurance_name?: string | null;
+  insurance_number?: string | null;
+  allergies_notes?: string | null;
+}
+
+export type PractitionerType =
+  | 'PHYSICIAN'
+  | 'NURSE'
+  | 'PHYSIOTHERAPIST'
+  | 'PSYCHOLOGIST'
+  | 'DENTIST'
+  | 'PHARMACIST'
+  | 'NUTRITIONIST'
+  | 'ADMINISTRATIVE'
+  | 'OTHER';
+
+export interface PractitionerDTO {
+  id: string;
+  tenant_id: string;
+  user_id?: string | null;
+  full_name: string;
+  cpf?: string | null;
+  practitioner_type: string;
+  job_title?: string | null;
+  council_type?: string | null;
+  council_number?: string | null;
+  council_uf?: string | null;
+  primary_specialty?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  is_clinical_staff: boolean;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date | null;
+}
+
+export interface CreatePractitionerDTO {
+  full_name: string;
+  cpf?: string | null;
+  practitioner_type?: string;
+  job_title?: string | null;
+  council_type?: string | null;
+  council_number?: string | null;
+  council_uf?: string | null;
+  primary_specialty?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  is_clinical_staff?: boolean;
+}
+
+export type EncounterStatus =
+  | 'PLANNED'
+  | 'ARRIVED'
+  | 'TRIAGED'
+  | 'IN_PROGRESS'
+  | 'ON_LEAVE'
+  | 'FINISHED'
+  | 'CANCELLED';
+
+export interface EncounterDTO {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  practitioner_id: string;
+  appointment_id?: string | null;
+  start_time: Date;
+  end_time?: Date | null;
+  status: string;
+  chief_complaint?: string | null;
+  diagnosis?: string | null;
+  clinical_notes?: string | null;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date | null;
+}
+
+export interface EncounterSummaryDTO {
+  id: string;
+  start_time: Date;
+  end_time?: Date | null;
+  status: string;
+  chief_complaint?: string | null;
+  diagnosis?: string | null;
+  clinical_notes?: string | null;
+  patient_id: string;
+  patient_name: string;
+  practitioner_id: string;
+  practitioner_name: string;
+  specialty?: string | null;
+}
+
+export interface CreateEncounterDTO {
+  patient_id: string;
+  practitioner_id: string;
+  appointment_id?: string | null;
+  chief_complaint?: string | null;
+  diagnosis?: string | null;
+  clinical_notes?: string | null;
+}
+
+export interface HealthPlanDTO {
+  id: string;
+  name: string;
+  ans_code?: string | null;
+  tiss_version?: string | null;
+  payment_term_days?: number | null;
+  is_active: boolean;
+}
+
+export interface RoomDTO {
+  id: string;
+  tenant_id: string;
+  unit_id: string;
+  name: string;
+  room_type?: string | null;
+  is_schedulable: boolean;
+  equipment: string[];
+  notes?: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface AvailabilityDTO {
+  id: string;
+  tenant_id: string;
+  unit_id: string;
+  practitioner_id?: string | null;
+  room_id?: string | null;
+  series_id: string;
+  replaces_id: string | null;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  slot_duration_minutes: number;
+  timezone: string;
+  valid_from: string;
+  valid_until?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface ScheduleBlockDTO {
+  id: string;
+  tenant_id: string;
+  unit_id?: string | null;
+  practitioner_id?: string | null;
+  room_id?: string | null;
+  starts_at: string;
+  ends_at: string;
+  timezone: string;
+  reason?: string | null;
+  recurrence?: { frequency: 'DAILY' | 'WEEKLY'; interval: number; until?: string | null } | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface ProcedureDTO {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  tuss_code?: string | null;
+  estimated_duration_minutes: number;
+  requires_room: boolean;
+  preparation_instructions?: string | null;
+  return_after_days?: number | null;
+  minimum_interval_days?: number | null;
+  calendar_color?: string | null;
+  practitioner_ids: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type AppointmentStatus = 'SCHEDULED' | 'CONFIRMED' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED';
+export interface AppointmentDTO {
+  id: string;
+  tenant_id: string;
+  patient_id: string;
+  practitioner_id: string;
+  procedure_id: string | null;
+  unit_id: string | null;
+  room_id: string | null;
+  appointment_date: string;
+  duration_minutes: number;
+  status: string;
+  is_overbook: boolean;
+  payer_type: 'PARTICULAR';
+  source_channel: string;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}

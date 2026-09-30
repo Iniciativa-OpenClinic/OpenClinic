@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@openclinic/core": "*",
+    "@openclinic/terminology": "*",
     "commander": "^13.0.0",
     "drizzle-orm": "^0.38.3",
     "postgres": "^3.4.5",

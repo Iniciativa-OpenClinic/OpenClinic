@@ -78,6 +78,16 @@ async function ensureAppTablePrivileges(config: DatabaseConfig): Promise<void> {
       GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO "${appRole}";
       ALTER DEFAULT PRIVILEGES FOR ROLE "${ownerRole}" IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "${appRole}";
       ALTER DEFAULT PRIVILEGES FOR ROLE "${ownerRole}" IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO "${appRole}";
+
+      DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'terminology') THEN
+          EXECUTE format('GRANT USAGE ON SCHEMA terminology TO %I;', '${appRole}');
+          EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA terminology TO %I;', '${appRole}');
+          EXECUTE format('GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA terminology TO %I;', '${appRole}');
+          EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA terminology GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %I;', '${ownerRole}', '${appRole}');
+          EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA terminology GRANT USAGE, SELECT ON SEQUENCES TO %I;', '${ownerRole}', '${appRole}');
+        END IF;
+      END $$;
     `);
   } catch {
     // Non-blocking fallback

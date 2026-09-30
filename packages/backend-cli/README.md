@@ -14,6 +14,7 @@ O fluxo vigente está no [guia de versionamento e operação](../../infra/databa
 | `npm run db:sync-remote -- --mode users` | Consulta atividade, sem copiar dados. |
 | `npm run db:sync-remote -- --mode audit` | Comparação de dados somente leitura. |
 | `npm run db:sync-remote -- --mode clone --maintenance --confirm-target <HOST>:<PORT>/<DB_NAME>` | Substituição excepcional da base remota, com staging, backups e retenção da base anterior. |
+| `npm run terminology:sync -- --source <codigo>` | Importa uma tabela de código oficial (TUSS, CID-10, CBO, ...) para o schema `terminology`. Ver [`packages/terminology/README.md`](../terminology/README.md). |
 
 O destino padrão de migrations é local, resolvido por `DATABASE_OWNER_URL` (ou sintetizado automaticamente a partir das variáveis atômicas `DB_*` do `.env`). Para o remoto use `REMOTE_DATABASE_OWNER_URL` e `--target remote`. Escritas remotas exigem também `--confirm-target HOST:PORT/DATABASE` e fazem backup antes de alterar o banco. `DATABASE_URL` é exclusiva do runtime e de comandos de autenticação, nunca fallback de migrations.
 

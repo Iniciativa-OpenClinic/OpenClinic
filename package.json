@@ -6,7 +6,8 @@
     "packages/core",
     "packages/backend-api",
     "packages/backend-cli",
-    "packages/frontend-webapp"
+    "packages/frontend-webapp",
+    "packages/terminology"
   ],
   "scripts": {
     "cli": "tsx packages/backend-cli/src/index.ts",
@@ -20,7 +21,7 @@
     "test": "npm test --workspaces --if-present && npm run test:secrets",
     "test:secrets": "node --test infra/secrets/runtime.test.mjs",
     "test:secrets:swarm": "node infra/secrets/swarm-smoke.mjs",
-    "typecheck": "npm run build -w packages/core && tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/backend-api/tsconfig.json && tsc --noEmit -p packages/backend-cli/tsconfig.json && tsc --noEmit -p packages/frontend-webapp/tsconfig.json",
+    "typecheck": "npm run build -w packages/core && npm run build -w packages/terminology && tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/backend-api/tsconfig.json && tsc --noEmit -p packages/backend-cli/tsconfig.json && tsc --noEmit -p packages/frontend-webapp/tsconfig.json && tsc --noEmit -p packages/terminology/tsconfig.json",
     "export:openapi": "npm run export:openapi -w @openclinic/backend-api",
     "compliance": "node infra/compliance/runner.mjs",
     "compliance:quick": "node infra/compliance/runner.mjs verify --profile local --non-interactive",
@@ -34,12 +35,14 @@
     "test:migrations": "tsx --test infra/database/tests/*.test.ts infra/database/tests/*.test.mjs",
     "test:api:functional": "node infra/testing/run-functional.mjs",
     "verify:agenda-readiness": "node infra/testing/agenda-readiness.mjs",
+    "verify:terminology-readiness": "node infra/testing/terminology-readiness.mjs",
     "db:init": "npm run cli -- db:init",
     "db:migrate": "npm run cli -- db:migrate",
     "db:seed": "npm run cli -- db:seed",
     "db:backup": "npm run cli -- db:backup",
     "db:restore": "npm run cli -- db:restore",
     "db:sync-remote": "npm run cli -- db:sync-remote",
+    "terminology:sync": "npm run cli -- terminology:sync",
     "auth:check": "npm run cli -- auth:check",
     "user:create-admin": "npm run cli -- user:create-admin",
     "user:reset-password": "npm run cli -- user:reset-password",

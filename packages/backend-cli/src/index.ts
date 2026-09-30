@@ -12,6 +12,7 @@ import { userCreateAdmin } from './commands/user-create-admin.js';
 import { userResetPassword } from './commands/user-reset-password.js';
 import { authCheck } from './commands/auth-check.js';
 import { dbSyncRemote } from './commands/db-sync-remote.js';
+import { terminologySync } from './commands/terminology-sync.js';
 
 
 
@@ -147,6 +148,15 @@ program
   .command('auth:check')
   .description('Validates database connection, Argon2id hashing, and JWT signing/decoding')
   .action(authCheck);
+
+program
+  .command('terminology:sync')
+  .description('Fetches official code-system data (TUSS, ANS operadoras, CID-10, CIAP-2, CBO, conselhos profissionais, MS domain tables) and versions it into the terminology schema')
+  .option('--source <code>', 'Sync only this source code (e.g. tuss-22, cid10, ans-operadoras)')
+  .option('--target <target>', 'Target environment: local or remote', 'local')
+  .option('--confirm-target <identity>', 'Confirm host:port/database identity for remote write')
+  .option('--resume', 'When syncing all sources, skip any source that already has a successful sync recorded and continue with the next; only affects --all runs, not --source')
+  .action((options) => terminologySync(options));
 
 program.parseAsync().catch((error: unknown) => {
   console.error('[ERROR]', error instanceof Error ? error.message : 'Operation failed.');

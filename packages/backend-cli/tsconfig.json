@@ -5,7 +5,9 @@
     "rootDir": "src",
     "paths": {
       "@openclinic/core": ["../core/src"],
-      "@openclinic/core/*": ["../core/src/*"]
+      "@openclinic/core/*": ["../core/src/*"],
+      "@openclinic/terminology": ["../terminology/src"],
+      "@openclinic/terminology/*": ["../terminology/src/*"]
     }
   },
   "include": ["src"]

@@ -284,17 +284,27 @@ export async function dbInit(options?: DbInitOptions): Promise<void> {
           GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "${roleAppUser}";
         ALTER DEFAULT PRIVILEGES FOR ROLE "${roleOwnerUser}" IN SCHEMA public
           GRANT USAGE, SELECT ON SEQUENCES TO "${roleAppUser}";
+
+        DO $$ BEGIN
+          IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'terminology') THEN
+            EXECUTE format('GRANT ALL ON SCHEMA terminology TO %I;', '${roleOwnerUser}');
+            EXECUTE format('GRANT USAGE ON SCHEMA terminology TO %I;', '${roleAppUser}');
+            EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA terminology GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %I;', '${roleOwnerUser}', '${roleAppUser}');
+            EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA terminology GRANT USAGE, SELECT ON SEQUENCES TO %I;', '${roleOwnerUser}', '${roleAppUser}');
+          END IF;
+        END $$;
+
         DO $$
         DECLARE
           r RECORD;
         BEGIN
-          FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-            EXECUTE format('ALTER TABLE public.%I OWNER TO "${roleOwnerUser}";', r.tablename);
-            EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.%I TO "${roleAppUser}";', r.tablename);
+          FOR r IN (SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN ('public', 'terminology')) LOOP
+            EXECUTE format('ALTER TABLE %I.%I OWNER TO "${roleOwnerUser}";', r.schemaname, r.tablename);
+            EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE %I.%I TO "${roleAppUser}";', r.schemaname, r.tablename);
           END LOOP;
         END $$;
       `);
-      console.log(`  [OK] Public schema permissions and ownerships on database "${targetDb}" configured successfully.`);
+      console.log(`  [OK] Schema permissions and ownerships on database "${targetDb}" configured successfully.`);
     } finally {
       await sqlTargetAdmin.end();
     }

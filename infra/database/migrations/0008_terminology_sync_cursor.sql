@@ -1,0 +1,1 @@
+ALTER TABLE "terminology"."sync_runs" ADD COLUMN "cursor" jsonb;

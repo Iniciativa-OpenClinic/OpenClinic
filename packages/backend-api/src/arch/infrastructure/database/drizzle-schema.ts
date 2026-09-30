@@ -1,7 +1,7 @@
 import { UserRole } from '@openclinic/core/enums';
 import type { BlockRecurrence } from '../../domain/schedule-block.js';
 import { sql } from 'drizzle-orm';
-import { pgTable, varchar, text, boolean, integer, timestamp, jsonb, date, uniqueIndex, index, foreignKey, unique, check } from 'drizzle-orm/pg-core';
+import { pgTable, pgSchema, varchar, text, boolean, integer, timestamp, jsonb, date, uniqueIndex, index, foreignKey, unique, check } from 'drizzle-orm/pg-core';
 
 // -- SYS_* Tables --
 export const sysTenants = pgTable('sys_tenants', {
@@ -593,4 +593,66 @@ export const appMedicalRecords = pgTable('app_medical_records', {
   foreignKey({ name: 'fk_app_medical_records_tenant', columns: [table.tenant_id], foreignColumns: [sysTenants.id] }).onDelete('restrict'),
   foreignKey({ name: 'fk_app_medical_records_patient', columns: [table.patient_id], foreignColumns: [appPatients.id] }).onDelete('restrict'),
   foreignKey({ name: 'fk_app_medical_records_encounter', columns: [table.encounter_id], foreignColumns: [appEncounters.id] }).onDelete('set null'),
+]);
+
+// -- TERMINOLOGY.* Tables --
+// Separate schema (not `public`): externally-governed reference vocabularies (TUSS, CID-10,
+// CIAP-2, CBO, ANS operadoras, professional councils, MS domain tables), never tenant data.
+// One standardized shape (`concepts`) shared by every source — see @openclinic/terminology.
+export const terminologySchema = pgSchema('terminology');
+
+export const terminologySources = terminologySchema.table('sources', {
+  code: varchar('code', { length: 64 }).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  kind: varchar('kind', { length: 32 }).notNull(),
+  is_active: boolean('is_active').notNull().default(true),
+  last_synced_at: timestamp('last_synced_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  check('terminology_sources_code_check', sql`${table.code} ~ '^[a-z0-9][a-z0-9-]*$'`),
+  check('terminology_sources_kind_check', sql`${table.kind} IN ('TUSS_OCL','ANS_CSV','FHIR_CODESYSTEM','CBO_CSV')`),
+]);
+
+export const terminologyConcepts = terminologySchema.table('concepts', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  source_code: varchar('source_code', { length: 64 }).notNull(),
+  code: varchar('code', { length: 64 }).notNull(),
+  version: varchar('version', { length: 64 }).notNull(),
+  language: varchar('language', { length: 10 }).notNull().default('pt-BR'),
+  display_name: text('display_name').notNull(),
+  description: text('description'),
+  extra: jsonb('extra').notNull().default({}),
+  inicio_vigencia: timestamp('inicio_vigencia', { withTimezone: true }).notNull().defaultNow(),
+  fim_implantacao: timestamp('fim_implantacao', { withTimezone: true }),
+  fim_vigencia: timestamp('fim_vigencia', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ name: 'fk_terminology_concepts_source', columns: [table.source_code], foreignColumns: [terminologySources.code] }).onDelete('restrict'),
+  uniqueIndex('uq_terminology_concepts_current').on(table.source_code, table.code, table.language).where(sql`${table.fim_vigencia} IS NULL`),
+  index('idx_terminology_concepts_source_code').on(table.source_code, table.code),
+  index('idx_terminology_concepts_display').on(table.source_code, table.display_name),
+  check('terminology_concepts_code_check', sql`length(trim(${table.code})) > 0`),
+  check('terminology_concepts_display_check', sql`length(trim(${table.display_name})) > 0`),
+  check('terminology_concepts_version_check', sql`length(trim(${table.version})) > 0`),
+  check('terminology_concepts_vigencia_order_check', sql`(${table.fim_implantacao} IS NULL OR ${table.fim_implantacao} >= ${table.inicio_vigencia}) AND (${table.fim_vigencia} IS NULL OR ${table.fim_vigencia} >= ${table.inicio_vigencia})`),
+]);
+
+export const terminologySyncRuns = terminologySchema.table('sync_runs', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  source_code: varchar('source_code', { length: 64 }).notNull(),
+  started_at: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  finished_at: timestamp('finished_at', { withTimezone: true }),
+  status: varchar('status', { length: 20 }).notNull().default('RUNNING'),
+  records_fetched: integer('records_fetched'),
+  records_upserted: integer('records_upserted'),
+  records_versioned: integer('records_versioned'),
+  error_message: text('error_message'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ name: 'fk_terminology_sync_runs_source', columns: [table.source_code], foreignColumns: [terminologySources.code] }).onDelete('restrict'),
+  index('idx_terminology_sync_runs_source_started').on(table.source_code, table.started_at),
+  check('terminology_sync_runs_status_check', sql`${table.status} IN ('RUNNING','SUCCESS','FAILED')`),
 ]);

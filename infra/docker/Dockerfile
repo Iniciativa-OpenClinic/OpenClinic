@@ -10,6 +10,7 @@ COPY packages/core/package.json packages/core/
 COPY packages/backend-api/package.json packages/backend-api/
 COPY packages/backend-cli/package.json packages/backend-cli/
 COPY packages/frontend-webapp/package.json packages/frontend-webapp/
+COPY packages/terminology/package.json packages/terminology/
 RUN npm ci
 COPY tsconfig.base.json ./
 COPY packages/core/ packages/core/
@@ -31,6 +32,7 @@ COPY --from=builder /app/packages/backend-api/package.json packages/backend-api/
 COPY --from=builder /app/packages/backend-api/dist packages/backend-api/dist/
 COPY --from=builder /app/packages/backend-cli/package.json packages/backend-cli/
 COPY --from=builder /app/packages/frontend-webapp/package.json packages/frontend-webapp/
+COPY --from=builder /app/packages/terminology/package.json packages/terminology/
 RUN npm ci --omit=dev
 USER appuser
 EXPOSE 3000

@@ -57,6 +57,13 @@
       "when": 1790702865282,
       "tag": "0007_terminology_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790728663669,
+      "tag": "0008_terminology_sync_cursor",
+      "breakpoints": true
     }
   ]
 }

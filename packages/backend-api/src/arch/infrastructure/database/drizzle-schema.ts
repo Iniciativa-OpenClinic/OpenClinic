@@ -650,6 +650,7 @@ export const terminologySyncRuns = terminologySchema.table('sync_runs', {
   records_upserted: integer('records_upserted'),
   records_versioned: integer('records_versioned'),
   error_message: text('error_message'),
+  cursor: jsonb('cursor'),
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   foreignKey({ name: 'fk_terminology_sync_runs_source', columns: [table.source_code], foreignColumns: [terminologySources.code] }).onDelete('restrict'),
